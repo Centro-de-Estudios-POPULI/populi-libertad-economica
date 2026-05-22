@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Libertad Económica y Ausencia de Corrupción - Populi</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300..800&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+  <style>
+    :root {
+      --populi:#8B1A1A; --populi-light:#C00000;
+      --cream:#F5EFE0; --brown-dark:#3D2B1F;
+      --navy:#0D1B2A; --navy-light:#1A2940; --slate:#475569; --slate-light:#64748B;
+      --warm-white:#FAF8F3; --light-gray:#F1EDE5; --border:#E2DDD3; --dark-border:#2A3A50;
+      --bg:var(--warm-white); --card:#FFFFFF; --text:var(--brown-dark); --muted:var(--slate-light);
+      --accent:#6366F1;
+      --radius:12px;
+    }
+    [data-theme="dark"] {
+      --bg:#080808; --card:#141414; --text:#E2E8F0; --muted:#64748B;
+      --border:#2A3A50; --light-gray:#1A1A1A; --cream:#1A2940;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;-webkit-font-smoothing:antialiased;transition:background .25s,color .25s}
+    .wrap{max-width:1200px;margin:0 auto;padding:20px 16px}
+    .sec-hd{margin-bottom:12px}
+    .sec-title{font-family:'Playfair Display',Georgia,serif;font-size:1.55rem;font-weight:700;color:var(--navy);display:flex;align-items:center;gap:10px;line-height:1.15}
+    [data-theme="dark"] .sec-title{color:#fff}
+    .accent-bar{width:4px;height:26px;background:var(--accent);border-radius:2px;flex-shrink:0}
+    .sec-sub{font-size:.78rem;color:var(--muted);padding-left:14px;margin-top:2px}
+    [data-theme="dark"] .sec-sub{color:rgba(255,255,255,.4)}
+    .controls-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;padding-left:14px;flex-wrap:wrap}
+    .hz-lbl{font-size:.62rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+    .hz-grp{display:flex;flex-wrap:wrap;gap:0;background:var(--light-gray);border-radius:8px;padding:2px;border:1px solid var(--border)}
+    [data-theme="dark"] .hz-grp{background:#1A1A1A;border-color:var(--dark-border)}
+    .hz-btn{padding:5px 14px;border:none;border-radius:6px;font-family:'Inter',sans-serif;font-size:.68rem;font-weight:600;cursor:pointer;background:transparent;color:var(--muted);transition:all .2s}
+    .hz-btn:hover{color:var(--text)}
+    .hz-btn.active{background:var(--accent);color:#fff;box-shadow:0 2px 8px #6366F140}
+    .legend-bar{display:flex;flex-wrap:wrap;gap:4px 10px;padding:2px 14px 10px;align-items:center}
+    .leg-item{display:flex;align-items:center;gap:3px;font-size:.58rem;font-weight:600;color:var(--muted);white-space:nowrap}
+    .leg-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+    .leg-line{width:16px;height:0;flex-shrink:0}
+    .leg-r2{font-family:'JetBrains Mono',monospace;font-size:.52rem;opacity:.7}
+    .main-grid{display:grid;grid-template-columns:3fr 2fr;gap:16px}
+    @media(max-width:900px){.main-grid{grid-template-columns:1fr}}
+    @media(max-width:500px){.sec-title{font-size:1.2rem}.hz-btn{padding:4px 10px;font-size:.6rem}}
+    .chart-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;height:560px}
+    [data-theme="dark"] .chart-card{background:#141414;border-color:var(--dark-border)}
+    @media(max-width:900px){.chart-card{height:440px}}
+    @media(max-width:500px){.chart-card{height:340px}}
+    #chart{width:100%;height:100%}
+    .panel{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;display:flex;flex-direction:column}
+    [data-theme="dark"] .panel{background:#141414;border-color:var(--dark-border)}
+    .panel-hd{background:#312E81;padding:10px 14px;display:flex;align-items:center;justify-content:space-between}
+    [data-theme="dark"] .panel-hd{background:#1E1B4B}
+    .panel-hd-t{font-size:.56rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.8)}
+    .panel-body{padding:14px;flex:1;overflow-y:auto}
+    .pb{margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+    [data-theme="dark"] .pb{border-color:var(--dark-border)}
+    .pb:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+    .pb-lbl{font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px;color:var(--accent)}
+    .pb-desc{font-size:.68rem;line-height:1.5;color:var(--muted)}
+    [data-theme="dark"] .pb-desc{color:rgba(255,255,255,.45)}
+    .pb-desc strong{color:var(--navy)}
+    [data-theme="dark"] .pb-desc strong{color:#E2E8F0}
+    .ctx{background:var(--cream);border-radius:6px;padding:8px 10px;border-left:3px solid var(--accent);margin-top:6px}
+    [data-theme="dark"] .ctx{background:var(--navy-light)}
+    .ctx p{font-size:.68rem;line-height:1.5;color:var(--muted)}
+    [data-theme="dark"] .ctx p{color:#94A3B8}
+    .source{display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding:0 2px}
+    .source-txt{font-size:.6rem;color:var(--muted)}
+    .source-txt a{color:var(--populi);font-weight:600;text-decoration:none}
+    .source-txt a:hover{text-decoration:underline}
+    .loading{display:flex;align-items:center;justify-content:center;height:300px;flex-direction:column;gap:12px;color:var(--muted)}
+    .spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+  </style>
+</head>
+<body>
+  <div class="wrap" id="app">
+    <div class="loading" id="loader"><div class="spinner"></div><span style="font-size:.8rem">Cargando datos...</span></div>
+  </div>
+  <script>
+    const DATA_URL = '../data/consolidated.json';
+    const VAR_KEY = 'cpi_score';
+    const TITLE = 'Libertad Económica y Ausencia de Corrupción';
+    const SUBTITLE = 'Promedio EFW 2000–2023 vs Corruption Perceptions Index 2024';
+    const Y_LABEL = 'CPI Score (0-100, mayor = menos corrupto)';
+    const Y_FORMAT = v => v.toFixed(0);
+    const Y_AXIS_FMT = v => v.toFixed(0);
+    const LOG_Y = false;
+    const Y_MIN = 5;
+    const Y_MAX = 95;
+    const ACCENT = '#6366F1';
+    const REG_ORDER = 2;
+    const REG_TYPE = 'poly';
+
+    const Q_COLORS = { 1:'#10B981', 2:'#3B82F6', 3:'#F59E0B', 4:'#EF4444' };
+    const Q_LABELS = { 1:'Cuartil 1 (mas libre)', 2:'Cuartil 2', 3:'Cuartil 3', 4:'Cuartil 4 (menos libre)' };
+    const R_COLORS = {
+      'East Asia & Pacific':'#3B82F6','Europe & Central Asia':'#8B5CF6',
+      'Latin America & the Caribbean':'#F59E0B','Middle East & North Africa':'#EF4444',
+      'North America':'#10B981','South Asia':'#EC4899','Sub-Saharan Africa':'#6366F1'
+    };
+    const R_SHORT = {
+      'East Asia & Pacific':'Asia Pacifico','Europe & Central Asia':'Europa y Asia Central',
+      'Latin America & the Caribbean':'Latinoamerica','Middle East & North Africa':'Medio Oriente',
+      'North America':'Norteamerica','South Asia':'Asia del Sur','Sub-Saharan Africa':'Africa Subsahariana'
+    };
+
+    let DATA, chart, colorMode = 'quartile', _r2 = 0;
+    function dk(){ return document.documentElement.getAttribute('data-theme') === 'dark'; }
+
+    function regress(pts, order) {
+      const n = pts.length;
+      const xs = pts.map(p=>p[0]), ys = pts.map(p=>p[1]);
+      const yMean = ys.reduce((s,v)=>s+v,0)/n;
+      const ssTot = ys.reduce((s,v)=>s+(v-yMean)**2,0);
+      let evalFn;
+      if(order <= 1) {
+        let sx=0,sy=0,sxy=0,sx2=0;
+        for(let i=0;i<n;i++){ sx+=xs[i]; sy+=ys[i]; sxy+=xs[i]*ys[i]; sx2+=xs[i]*xs[i]; }
+        const b=(n*sxy-sx*sy)/(n*sx2-sx*sx), a=(sy-b*sx)/n;
+        evalFn = x => a + b*x;
+      } else {
+        let s=[0,0,0,0,0], t=[0,0,0];
+        for(let i=0;i<n;i++){
+          const x=xs[i],y=ys[i],x2=x*x;
+          s[0]++;s[1]+=x;s[2]+=x2;s[3]+=x*x2;s[4]+=x2*x2;
+          t[0]+=y;t[1]+=x*y;t[2]+=x2*y;
+        }
+        const A=[[s[0],s[1],s[2]],[s[1],s[2],s[3]],[s[2],s[3],s[4]]];
+        function det(m){return m[0][0]*(m[1][1]*m[2][2]-m[1][2]*m[2][1])-m[0][1]*(m[1][0]*m[2][2]-m[1][2]*m[2][0])+m[0][2]*(m[1][0]*m[2][1]-m[1][1]*m[2][0]);}
+        const D=det(A);
+        const c0=det([[t[0],A[0][1],A[0][2]],[t[1],A[1][1],A[1][2]],[t[2],A[2][1],A[2][2]]])/D;
+        const c1=det([[A[0][0],t[0],A[0][2]],[A[1][0],t[1],A[1][2]],[A[2][0],t[2],A[2][2]]])/D;
+        const c2=det([[A[0][0],A[0][1],t[0]],[A[1][0],A[1][1],t[1]],[A[2][0],A[2][1],t[2]]])/D;
+        evalFn = x => c0 + c1*x + c2*x*x;
+      }
+      const ssRes = pts.reduce((s,p)=>s+(p[1]-evalFn(p[0]))**2,0);
+      return { evalFn, r2: ssTot > 0 ? 1 - ssRes/ssTot : 0 };
+    }
+
+    function expRegress(pts) {
+      const n = pts.length;
+      const xs = pts.map(p=>p[0]), ys = pts.map(p=>p[1]);
+      const yMean = ys.reduce((s,v)=>s+v,0)/n;
+      const ssTot = ys.reduce((s,v)=>s+(v-yMean)**2,0);
+      const lys = ys.map(v => Math.log(Math.max(v, 0.1)));
+      let sx=0,sl=0,sxl=0,sx2=0;
+      for(let i=0;i<n;i++){sx+=xs[i];sl+=lys[i];sxl+=xs[i]*lys[i];sx2+=xs[i]*xs[i];}
+      let b=(n*sxl-sx*sl)/(n*sx2-sx*sx), a=Math.exp((sl-b*sx)/n);
+      for(let it=0;it<30;it++){
+        let g00=0,g01=0,g11=0,r0=0,r1=0;
+        for(let i=0;i<n;i++){
+          const e=Math.exp(b*xs[i]), res=ys[i]-a*e;
+          g00+=e*e; g01+=a*xs[i]*e*e; g11+=a*a*xs[i]*xs[i]*e*e;
+          r0+=e*res; r1+=a*xs[i]*e*res;
+        }
+        const det=g00*g11-g01*g01;
+        if(Math.abs(det)<1e-30) break;
+        a+=(g11*r0-g01*r1)/det;
+        b+=(g00*r1-g01*r0)/det;
+      }
+      const evalFn = x => Math.max(0, a*Math.exp(b*x));
+      const ssRes = pts.reduce((s,p)=>s+(p[1]-evalFn(p[0]))**2,0);
+      return { evalFn, r2: ssTot>0 ? 1-ssRes/ssTot : 0 };
+    }
+
+    async function init(){
+      const r = await fetch(DATA_URL);
+      DATA = await r.json();
+      document.getElementById('loader').style.display = 'none';
+      render();
+    }
+
+    function render(){
+      const app = document.getElementById('app');
+      app.innerHTML = `
+        <div class="sec-hd">
+          <div class="sec-title"><span class="accent-bar"></span>${TITLE}</div>
+          <div class="sec-sub">${SUBTITLE}</div>
+        </div>
+        <div class="controls-row">
+          <span class="hz-lbl">Color:</span>
+          <div class="hz-grp">
+            <button class="hz-btn${colorMode==='quartile'?' active':''}" onclick="setColor('quartile')">Cuartil EFW</button>
+            <button class="hz-btn${colorMode==='region'?' active':''}" onclick="setColor('region')">Region</button>
+          </div>
+        </div>
+        <div class="legend-bar" id="legend"></div>
+        <div class="main-grid">
+          <div class="chart-card"><div id="chart"></div></div>
+          <div class="panel">
+            <div class="panel-hd"><span class="panel-hd-t">Lectura del indicador</span></div>
+            <div class="panel-body">
+              <div class="pb"><div class="pb-lbl">Relacion observada</div><div class="pb-desc">La correlación entre libertad económica y transparencia es de las <strong>más fuertes del análisis</strong>. Los países del cuartil más libre promedian CPI de <strong>65+</strong>, contra menos de <strong>27</strong> en el cuartil inferior.</div></div>
+              <div class="pb"><div class="pb-lbl">Marco teorico</div><div class="pb-desc">La libertad económica reduce la corrupción al <strong>limitar el poder discrecional</strong> de funcionarios. Menos regulaciones = menos oportunidades de soborno. <strong>Estado de derecho</strong> y <strong>derechos de propiedad</strong> refuerzan instituciones transparentes.</div></div>
+              <div class="pb"><div class="pb-lbl">Bolivia</div><div class="pb-desc" id="bol-desc"></div></div>
+              <div class="ctx"><p><strong>Fuente:</strong> Fraser Institute EFW 2025, Transparency International CPI 2024. Tamano de burbuja = poblacion.</p></div>
+            </div>
+          </div>
+        </div>
+        <div class="source"><span class="source-txt">Fuente: <a href="https://www.fraserinstitute.org/economic-freedom" target="_blank">Fraser Institute</a> - Elaboracion: <a href="https://populi.org.bo" target="_blank">POPULI</a></span></div>
+      `;
+      buildChart();
+      updateBol();
+    }
+
+    function updateBol(){
+      const bol = DATA.find(d => d.iso === 'BOL');
+      const el = document.getElementById('bol-desc');
+      if(bol && el){
+        const yv = bol[VAR_KEY];
+        const yStr = yv != null ? Y_FORMAT(yv) : 'N/D';
+        el.innerHTML = `Bolivia (EFW: <strong>{efw}</strong>) tiene un CPI de <strong>{yval}</strong>/100, en el tercio inferior mundial. La concentración de poder estatal en la economía y la debilidad del Estado de derecho facilitan la corrupción sistémica.`.replace('{efw}', bol.efw_avg.toFixed(2)).replace('{q}', bol.efw_quartile).replace('{yval}', yStr);
+      }
+    }
+
+    function buildChart(){
+      const el = document.getElementById('chart');
+      chart = echarts.init(el, null, {renderer:'canvas'});
+      const isDk = dk();
+      const pts = DATA.filter(d => d[VAR_KEY] != null && d.efw_avg != null && d.population != null);
+      const maxPop = Math.max(...pts.map(d => d.population));
+      const minB = 4, maxB = 44;
+
+      function getColor(d){
+        if(colorMode === 'quartile') return Q_COLORS[d.efw_quartile] || '#999';
+        return R_COLORS[d.region] || '#999';
+      }
+
+      const scatterData = pts.map(d => ({
+        value: [d.efw_avg, d[VAR_KEY], d.population, d.country, d.iso, d.efw_quartile, d.region],
+        symbolSize: minB + (Math.sqrt(d.population)/Math.sqrt(maxPop)) * maxB,
+        itemStyle: {
+          color: getColor(d),
+          opacity: d.iso === 'BOL' ? 1 : 0.55,
+          borderColor: d.iso === 'BOL' ? ACCENT : 'transparent',
+          borderWidth: d.iso === 'BOL' ? 2.5 : 0
+        },
+        label: d.iso === 'BOL' ? {
+          show:true, formatter:'BOL', position:'top', distance:4,
+          fontSize:9, fontWeight:700, fontFamily:'JetBrains Mono',
+          color:isDk?'#fff':'#1E293B',
+          textBorderColor:isDk?'rgba(0,0,0,.6)':'rgba(255,255,255,.8)', textBorderWidth:2
+        } : {show:false}
+      }));
+
+      let evalFn, r2Val;
+      if(REG_TYPE === 'exp') {
+        ({evalFn, r2: r2Val} = expRegress(pts.map(d => [d.efw_avg, d[VAR_KEY]])));
+      } else {
+        const regPts = pts.map(d => [d.efw_avg, LOG_Y ? Math.log10(d[VAR_KEY]) : d[VAR_KEY]]);
+        ({evalFn, r2: r2Val} = regress(regPts, REG_ORDER));
+      }
+      _r2 = r2Val;
+
+      const xArr = pts.map(d => d.efw_avg);
+      const xMin = Math.min(...xArr), xMax = Math.max(...xArr);
+      const trendData = Array.from({length:80}, (_, i) => {
+        const x = xMin + (xMax - xMin) * i / 79;
+        const yFit = evalFn(x);
+        return [x, LOG_Y ? Math.pow(10, yFit) : Math.max(0, yFit)];
+      });
+
+      const gridColor = isDk ? '#1E293B' : '#F0EDE6';
+      const axisColor = isDk ? '#334155' : '#D5CFC5';
+      const labelColor = isDk ? '#64748B' : '#94A3B8';
+      const nameColor = isDk ? '#94A3B8' : '#64748B';
+      const mc = isDk ? '#94A3B8' : '#64748B';
+
+      const qBands = [
+        [{xAxis:3.5},{xAxis:5.5, itemStyle:{color:isDk?'rgba(239,68,68,.06)':'rgba(239,68,68,.04)'}}],
+        [{xAxis:5.5},{xAxis:6.5, itemStyle:{color:isDk?'rgba(245,158,11,.06)':'rgba(245,158,11,.04)'}}],
+        [{xAxis:6.5},{xAxis:7.5, itemStyle:{color:isDk?'rgba(59,130,246,.06)':'rgba(59,130,246,.04)'}}],
+        [{xAxis:7.5},{xAxis:9.2, itemStyle:{color:isDk?'rgba(16,185,129,.06)':'rgba(16,185,129,.04)'}}]
+      ];
+
+      chart.setOption({
+        backgroundColor:'transparent',
+        grid:{ left:68, right:24, top:18, bottom:58, containLabel:false },
+        xAxis:{
+          type:'value', min:3.5, max:9.2,
+          name:'Libertad Economica (EFW promedio 2000-2023)',
+          nameLocation:'center', nameGap:36,
+          nameTextStyle:{ fontSize:11, fontFamily:'Inter', color:nameColor },
+          axisLabel:{ fontSize:10, fontFamily:'JetBrains Mono', color:labelColor },
+          splitLine:{ lineStyle:{ color:gridColor, type:'dashed' } },
+          axisLine:{ lineStyle:{ color:axisColor } }
+        },
+        yAxis:{
+          type: LOG_Y ? 'log' : 'value',
+          name:Y_LABEL, nameLocation:'center', nameGap:52,
+          nameTextStyle:{ fontSize:11, fontFamily:'Inter', color:nameColor },
+          min: Y_MIN, max: Y_MAX,
+          axisLabel:{ fontSize:10, fontFamily:'JetBrains Mono', color:labelColor, formatter: Y_AXIS_FMT },
+          splitLine:{ lineStyle:{ color:gridColor, type:'dashed' } },
+          axisLine:{ lineStyle:{ color:axisColor } }
+        },
+        tooltip:{
+          trigger:'item', confine:true,
+          backgroundColor:isDk?'#1E293B':'#fff',
+          borderColor:isDk?'#334155':'#E2E8F0',
+          borderRadius:10, padding:[12,14],
+          textStyle:{ color:isDk?'#E2E8F0':'#1E293B', fontSize:12, fontFamily:'Inter' },
+          formatter: p => {
+            if(p.seriesIndex!==0) return '';
+            const [efw,yv,pop,name,iso,q,reg] = p.value;
+            const qc = Q_COLORS[q]||'#999';
+            const ql = Q_LABELS[q]||'';
+            return `<div style="min-width:190px">`
+              +`<div style="font-weight:700;font-size:13px;margin-bottom:6px">${name} <span style="font-weight:400;font-size:11px;color:${mc}">${iso}</span></div>`
+              +`<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">`
+              +`<span style="background:${qc};color:#fff;padding:2px 10px;border-radius:5px;font-size:12px;font-weight:700;font-family:JetBrains Mono,monospace">${efw.toFixed(2)}</span>`
+              +`<span style="font-size:10px;color:${mc}">${ql}</span></div>`
+              +`<div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:11px;color:${mc}">${Y_LABEL}</span><span style="font-size:11px;font-weight:700">${Y_FORMAT(yv)}</span></div>`
+              +`<div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:11px;color:${mc}">Poblacion</span><span style="font-size:11px;font-weight:700">${pop>1e6?(pop/1e6).toFixed(1)+'M':(pop/1e3).toFixed(0)+'k'}</span></div>`
+              +`<div style="font-size:10px;color:${mc};margin-top:4px;border-top:1px solid ${isDk?'#334155':'#E2E8F0'};padding-top:4px">${R_SHORT[reg]||reg}</div></div>`;
+          }
+        },
+        series:[
+          { type:'scatter', data:scatterData, animationDuration:800, animationEasing:'cubicOut', z:2,
+             markArea:{ silent:true, data:qBands } },
+          { type:'line', data:trendData, smooth:true, symbol:'none',
+             lineStyle:{ color:isDk?'rgba(255,255,255,.25)':'rgba(0,0,0,.18)', width:2.5, type:'dashed' },
+             tooltip:{show:false}, z:1, silent:true }
+        ]
+      });
+      window.addEventListener('resize', () => chart.resize());
+      renderLegend();
+    }
+
+    function renderLegend(){
+      const el = document.getElementById('legend');
+      let html = '';
+      if(colorMode==='quartile'){
+        html = Object.entries(Q_LABELS).map(([q,l])=>`<span class="leg-item"><span class="leg-dot" style="background:${Q_COLORS[q]}"></span>${l}</span>`).join('');
+      } else {
+        html = Object.entries(R_SHORT).map(([r,l])=>`<span class="leg-item"><span class="leg-dot" style="background:${R_COLORS[r]}"></span>${l}</span>`).join('');
+      }
+      const regLabel = REG_TYPE === 'exp' ? 'exponencial' : REG_ORDER === 2 ? 'cuadratica' : 'lineal';
+      const dkC = dk() ? 'rgba(255,255,255,.3)' : 'rgba(0,0,0,.22)';
+      html += `<span class="leg-item"><span class="leg-line" style="border-top:2.5px dashed ${dkC}"></span>Tendencia ${regLabel} <span class="leg-r2">(R²=${_r2.toFixed(2)})</span></span>`;
+      el.innerHTML = html;
+    }
+
+    function setColor(mode){ colorMode=mode; render(); }
+
+    window.addEventListener('message', e => {
+      if(e.data && e.data.theme){
+        document.documentElement.setAttribute('data-theme', e.data.theme);
+        if(chart){ chart.dispose(); buildChart(); }
+      }
+    });
+    init();
+  </script>
+</body>
+</html>

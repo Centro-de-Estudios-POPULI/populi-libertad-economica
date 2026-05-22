@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mapa Mundial de Libertad Económica · Populi</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300..800&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+  <style>
+    :root {
+      --populi:#8B1A1A; --populi-light:#C00000;
+      --cream:#F5EFE0; --brown-dark:#3D2B1F;
+      --navy:#0D1B2A; --navy-light:#1A2940; --slate:#475569; --slate-light:#64748B;
+      --warm-white:#FAF8F3; --light-gray:#F1EDE5; --border:#E2DDD3; --dark-border:#2A3A50;
+      --bg:var(--warm-white); --card:#FFFFFF; --text:var(--brown-dark); --muted:var(--slate-light);
+      --accent:#10B981;
+      --radius:12px;
+    }
+    [data-theme="dark"] {
+      --bg:#080808; --card:#141414; --text:#E2E8F0; --muted:#64748B;
+      --border:#2A3A50; --light-gray:#1A1A1A; --cream:#1A2940;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;-webkit-font-smoothing:antialiased;transition:background .25s,color .25s}
+    .wrap{max-width:1200px;margin:0 auto;padding:20px 16px}
+    .sec-hd{margin-bottom:16px}
+    .sec-title{font-family:'Playfair Display',Georgia,serif;font-size:1.55rem;font-weight:700;color:var(--navy);display:flex;align-items:center;gap:10px;line-height:1.15}
+    [data-theme="dark"] .sec-title{color:#fff}
+    .accent-bar{width:4px;height:26px;background:var(--accent);border-radius:2px;flex-shrink:0}
+    .sec-sub{font-size:.78rem;color:var(--muted);padding-left:14px;margin-top:2px}
+    [data-theme="dark"] .sec-sub{color:rgba(255,255,255,.4)}
+
+    .hz-bar{display:flex;align-items:center;gap:8px;margin-bottom:14px;padding-left:14px;flex-wrap:wrap}
+    .hz-lbl{font-size:.62rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+    .hz-grp{display:flex;flex-wrap:wrap;gap:0;background:var(--light-gray);border-radius:8px;padding:2px;border:1px solid var(--border)}
+    [data-theme="dark"] .hz-grp{background:#1A1A1A;border-color:var(--dark-border)}
+    .hz-btn{padding:5px 14px;border:none;border-radius:6px;font-family:'Inter',sans-serif;font-size:.68rem;font-weight:600;cursor:pointer;background:transparent;color:var(--muted);transition:all .2s}
+    .hz-btn:hover{color:var(--text)}
+    .hz-btn.active{background:var(--accent);color:#fff;box-shadow:0 2px 8px rgba(16,185,129,.25)}
+
+    .q-legend{display:flex;flex-wrap:wrap;gap:4px 12px;padding:0 2px 10px;align-items:center}
+    .q-item{display:flex;align-items:center;gap:4px;font-size:.6rem;font-weight:600;color:var(--muted);white-space:nowrap}
+    .q-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+    .main-grid{display:grid;grid-template-columns:3fr 2fr;grid-template-rows:560px;gap:16px}
+    @media(max-width:900px){.main-grid{grid-template-columns:1fr;grid-template-rows:400px auto}}
+    @media(max-width:500px){.main-grid{grid-template-rows:300px auto}.sec-title{font-size:1.2rem}.hz-btn{padding:4px 10px;font-size:.6rem}}
+
+    .chart-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;display:flex;flex-direction:column;height:100%;overflow:hidden}
+    [data-theme="dark"] .chart-card{background:#141414;border-color:var(--dark-border)}
+    #chart{flex:1;min-height:0}
+
+    .slider-wrap{padding:0 8px;margin-top:8px}
+    .slider-wrap input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer}
+    .slider-labels{display:flex;justify-content:space-between;font-size:.6rem;font-family:'JetBrains Mono',monospace;color:var(--muted);margin-top:2px}
+    .year-display{text-align:center;font-family:'JetBrains Mono',monospace;font-size:1.8rem;font-weight:800;color:var(--accent);margin-bottom:4px;letter-spacing:-.02em}
+
+    .panel{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;display:flex;flex-direction:column;height:100%}
+    [data-theme="dark"] .panel{background:#141414;border-color:var(--dark-border)}
+    .panel-hd{background:#065F46;padding:10px 14px}
+    [data-theme="dark"] .panel-hd{background:#1A3A2A}
+    .panel-hd-t{font-size:.56rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.8)}
+    .panel-body{padding:14px;flex:1;overflow-y:auto}
+    .pb{margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+    [data-theme="dark"] .pb{border-color:var(--dark-border)}
+    .pb:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+    .pb-lbl{font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px;color:var(--accent)}
+    .pb-val{font-family:'JetBrains Mono',monospace;font-size:.95rem;font-weight:700;margin-bottom:3px}
+    .pb-desc{font-size:.68rem;line-height:1.5;color:var(--muted)}
+    [data-theme="dark"] .pb-desc{color:rgba(255,255,255,.45)}
+    .pb-desc strong{color:var(--navy)}
+    [data-theme="dark"] .pb-desc strong{color:#E2E8F0}
+    .ctx{background:var(--cream);border-radius:6px;padding:8px 10px;border-left:3px solid var(--accent);margin-top:6px}
+    [data-theme="dark"] .ctx{background:var(--navy-light)}
+    .ctx p{font-size:.68rem;line-height:1.5;color:var(--muted)}
+    [data-theme="dark"] .ctx p{color:#94A3B8}
+
+    .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px}
+    @media(max-width:700px){.kpi-grid{grid-template-columns:repeat(2,1fr)}}
+    .kpi{background:var(--warm-white);border:1px solid var(--border);border-radius:8px;padding:8px 10px;position:relative;overflow:hidden}
+    [data-theme="dark"] .kpi{background:#0A0A0A;border-color:var(--dark-border)}
+    .kpi::after{content:'';position:absolute;top:0;left:0;width:100%;height:2px;background:var(--accent)}
+    .kpi-lbl{font-size:.58rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:2px}
+    .kpi-val{font-family:'JetBrains Mono',monospace;font-size:1rem;font-weight:700}
+
+    .play-btn{background:var(--accent);color:#fff;border:none;border-radius:6px;padding:4px 12px;font-family:'Inter',sans-serif;font-size:.68rem;font-weight:600;cursor:pointer;transition:all .2s}
+    .play-btn:hover{opacity:.85;transform:translateY(-1px)}
+
+    .rank-list{list-style:none;padding:0}
+    .rank-list li{display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:.72rem;border-bottom:1px solid var(--border)}
+    [data-theme="dark"] .rank-list li{border-color:var(--dark-border)}
+    .rank-list li:last-child{border-bottom:none}
+    .rank-list .rank-pos{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:.65rem;width:22px;color:var(--muted)}
+    .rank-list .rank-name{flex:1;padding:0 6px}
+    .rank-list .rank-score{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:.75rem}
+    .rank-list .bol{color:var(--accent);font-weight:700}
+
+    .source{display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding:0 2px}
+    .source-txt{font-size:.6rem;color:var(--muted)}
+    .source-txt a{color:var(--populi);font-weight:600;text-decoration:none}
+    .source-txt a:hover{text-decoration:underline}
+
+    .loading{display:flex;align-items:center;justify-content:center;height:300px;flex-direction:column;gap:12px;color:var(--muted)}
+    .spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+  </style>
+</head>
+<body>
+  <div class="wrap" id="app">
+    <div class="loading" id="loader"><div class="spinner"></div><span style="font-size:.8rem">Cargando mapa mundial...</span></div>
+  </div>
+
+  <script>
+    const MAP_DATA_URL = '../data/efw_panel_map.json';
+    const META_URL = '../data/efw_country_meta.json';
+    const GEO_URL = '../data/world.json';
+
+    const YEARS = [1950,1955,1960,1965,1970,1975,1980,1985,1990,1995,2000,2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,2014,2015,2016,2017,2018,2019,2020,2021,2022,2023];
+
+    const ISO_TO_ECHART = {
+      'USA':'United States','GBR':'United Kingdom','RUS':'Russia',
+      'KOR':'Korea','PRK':'Dem. Rep. Korea','IRN':'Iran','VEN':'Venezuela',
+      'BOL':'Bolivia','TZA':'Tanzania','COD':'Dem. Rep. Congo',
+      'COG':'Congo','LAO':'Lao PDR','VNM':'Vietnam','SYR':'Syria',
+      'CIV':"Côte d'Ivoire",'BRN':'Brunei','MDA':'Moldova',
+      'MKD':'Macedonia','PSE':'Palestine',
+      'SGP':'Singapore','BHR':'Bahrain','CZE':'Czech Rep.',
+      'SVK':'Slovakia','SRB':'Serbia','MNE':'Montenegro',
+      'BIH':'Bosnia and Herz.','HRV':'Croatia','SVN':'Slovenia',
+      'EST':'Estonia','LVA':'Latvia','LTU':'Lithuania',
+      'ARE':'United Arab Emirates','SAU':'Saudi Arabia','OMN':'Oman',
+      'QAT':'Qatar','KWT':'Kuwait','JOR':'Jordan','LBN':'Lebanon',
+      'ISR':'Israel','GEO':'Georgia','ARM':'Armenia','AZE':'Azerbaijan',
+      'KAZ':'Kazakhstan','UZB':'Uzbekistan','KGZ':'Kyrgyzstan','TJK':'Tajikistan',
+      'TKM':'Turkmenistan','MNG':'Mongolia','MMR':'Myanmar','KHM':'Cambodia',
+      'BGD':'Bangladesh','NPL':'Nepal','LKA':'Sri Lanka','MDG':'Madagascar',
+      'MOZ':'Mozambique','ZMB':'Zambia','ZWE':'Zimbabwe','BWA':'Botswana',
+      'NAM':'Namibia','SWZ':'Swaziland','LSO':'Lesotho','MWI':'Malawi',
+      'TTO':'Trinidad and Tobago','JAM':'Jamaica','GUY':'Guyana','SUR':'Suriname',
+      'BLZ':'Belize','HTI':'Haiti','DOM':'Dominican Rep.','CRI':'Costa Rica',
+      'PAN':'Panama','SLV':'El Salvador','GTM':'Guatemala','HND':'Honduras',
+      'NIC':'Nicaragua','CYP':'Cyprus','MLT':'Malta','LUX':'Luxembourg',
+      'ISL':'Iceland','MUS':'Mauritius','FJI':'Fiji','PNG':'Papua New Guinea',
+      'BHS':'Bahamas','CAF':'Central African Rep.','CPV':'Cape Verde',
+      'EGY':'Egypt','GMB':'Gambia','TUR':'Turkey','YEM':'Yemen',
+    };
+
+    let MAP_DATA, META, chart, curYear = 2023, playing = false, playTimer = null;
+
+    function dk(){ return document.documentElement.getAttribute('data-theme') === 'dark'; }
+
+    async function init(){
+      try {
+        const [mapRes, metaRes, geoRes] = await Promise.all([
+          fetch(MAP_DATA_URL).then(r=>{if(!r.ok)throw new Error('panel data '+r.status);return r.json();}),
+          fetch(META_URL).then(r=>{if(!r.ok)throw new Error('meta '+r.status);return r.json();}),
+          fetch(GEO_URL).then(r=>{if(!r.ok)throw new Error('geojson '+r.status);return r.json();}),
+        ]);
+        MAP_DATA = mapRes;
+        META = metaRes;
+        echarts.registerMap('world', geoRes);
+        document.getElementById('loader').style.display = 'none';
+        render();
+      } catch(err) {
+        document.getElementById('loader').innerHTML = '<span style="color:#EF4444;font-size:.85rem">Error: '+err.message+'</span>';
+        console.error('Map init error:', err);
+      }
+    }
+
+    function getMapName(iso){
+      if(ISO_TO_ECHART[iso]) return ISO_TO_ECHART[iso];
+      const m = META[iso];
+      return m ? m.name : iso;
+    }
+
+    function render(){
+      const app = document.getElementById('app');
+      const yearData = MAP_DATA[curYear] || {};
+      const entries = Object.entries(yearData).map(([iso,d])=>({iso,name:getMapName(iso),score:d.s,meta:META[iso]}));
+      entries.sort((a,b)=>b.score-a.score);
+
+      const top10 = entries.slice(0,10);
+      const bottom10 = entries.slice(-10).reverse();
+      const bol = yearData['BOL'];
+      const bolRank = entries.findIndex(e=>e.iso==='BOL') + 1;
+      const avg = entries.length ? (entries.reduce((s,e)=>s+e.score,0)/entries.length).toFixed(2) : '—';
+
+      app.innerHTML = `
+        <div class="sec-hd">
+          <div class="sec-title"><span class="accent-bar"></span>Mapa Mundial de Libertad Económica</div>
+          <div class="sec-sub">Índice de Libertad Económica del Mundo (EFW) — Fraser Institute, 165 jurisdicciones</div>
+        </div>
+        <div class="kpi-grid">
+          <div class="kpi"><div class="kpi-lbl">Promedio mundial</div><div class="kpi-val" style="color:var(--accent)">${avg}</div></div>
+          <div class="kpi"><div class="kpi-lbl">Países medidos</div><div class="kpi-val">${entries.length}</div></div>
+          <div class="kpi"><div class="kpi-lbl">Más libre</div><div class="kpi-val" style="font-size:.85rem">${top10[0]?top10[0].name:'—'}</div></div>
+          <div class="kpi"><div class="kpi-lbl">Bolivia</div><div class="kpi-val">${bol?bol.s.toFixed(2):'N/D'} <span style="font-size:.7rem;color:var(--muted)">#${bolRank||'—'}</span></div></div>
+        </div>
+        <div class="q-legend">
+          <span class="q-item"><span class="q-dot" style="background:#10B981"></span>Q1 · Mas libre (≥7.5)</span>
+          <span class="q-item"><span class="q-dot" style="background:#3B82F6"></span>Q2 · (6.5–7.5)</span>
+          <span class="q-item"><span class="q-dot" style="background:#F59E0B"></span>Q3 · (5.5–6.5)</span>
+          <span class="q-item"><span class="q-dot" style="background:#EF4444"></span>Q4 · Menos libre (<5.5)</span>
+          <span class="q-item"><span class="q-dot" style="background:var(--muted);opacity:.3"></span>Sin datos</span>
+        </div>
+        <div class="main-grid">
+          <div class="chart-card">
+            <div id="chart"></div>
+            <div class="slider-wrap">
+              <div style="display:flex;align-items:center;gap:10px">
+                <button class="play-btn" onclick="togglePlay()">${playing?'&#9724; Pausa':'&#9654; Animar'}</button>
+                <div class="year-display">${curYear}</div>
+              </div>
+              <input type="range" min="0" max="${YEARS.length-1}" value="${YEARS.indexOf(curYear)}" oninput="setYear(YEARS[this.value])"/>
+              <div class="slider-labels"><span>${YEARS[0]}</span><span>1990</span><span>2010</span><span>${YEARS[YEARS.length-1]}</span></div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-hd"><span class="panel-hd-t">Ranking ${curYear}</span></div>
+            <div class="panel-body">
+              <div class="pb">
+                <div class="pb-lbl">Top 10 — Más libres</div>
+                <ol class="rank-list">${top10.map((e,i)=>`<li${e.iso==='BOL'?' class="bol"':''}><span class="rank-pos">${i+1}</span><span class="rank-name">${e.name}</span><span class="rank-score" style="color:${scoreColor(e.score)}">${e.score.toFixed(2)}</span></li>`).join('')}</ol>
+              </div>
+              <div class="pb">
+                <div class="pb-lbl">Bottom 10 — Menos libres</div>
+                <ol class="rank-list">${bottom10.map((e,i)=>`<li${e.iso==='BOL'?' class="bol"':''}><span class="rank-pos">${entries.length-9+i}</span><span class="rank-name">${e.name}</span><span class="rank-score" style="color:${scoreColor(e.score)}">${e.score.toFixed(2)}</span></li>`).join('')}</ol>
+              </div>
+              <div class="pb">
+                <div class="pb-lbl">Bolivia en ${curYear}</div>
+                <div class="pb-desc">${bol?`Score: <strong>${bol.s.toFixed(2)}</strong> · Posición: <strong>#${bolRank}</strong> de ${entries.length}<br/>Áreas: Gobierno ${bol.a1?.toFixed(1)||'—'} · Legal ${bol.a2?.toFixed(1)||'—'} · Moneda ${bol.a3?.toFixed(1)||'—'} · Comercio ${bol.a4?.toFixed(1)||'—'} · Regulación ${bol.a5?.toFixed(1)||'—'}`:'Sin datos para este año'}</div>
+              </div>
+              <div class="ctx"><p><strong>Escala:</strong> 0 (menos libre) a 10 (más libre). Basado en 45 indicadores en 5 áreas: tamaño del gobierno, sistema legal, moneda sana, comercio internacional y regulación.</p></div>
+            </div>
+          </div>
+        </div>
+        <div class="source"><span class="source-txt">Fuente: <a href="https://www.fraserinstitute.org/economic-freedom" target="_blank">Fraser Institute</a> EFW 2025 · Elaboración: <a href="https://populi.org.bo" target="_blank">POPULI</a></span></div>
+      `;
+      buildChart();
+    }
+
+    function scoreColor(s){
+      if(s>=7.5) return '#10B981';
+      if(s>=6.5) return '#3B82F6';
+      if(s>=5.5) return '#F59E0B';
+      return '#EF4444';
+    }
+
+    function buildChart(){
+      const el = document.getElementById('chart');
+      chart = echarts.init(el, null, {renderer:'canvas'});
+      const yearData = MAP_DATA[curYear] || {};
+      const isDk = dk();
+      var RAD = Math.PI / 180;
+      var QC = {1:'#10B981',2:'#3B82F6',3:'#F59E0B',4:'#EF4444'};
+      var QL = {1:'Mas libre',2:'2do cuartil',3:'3er cuartil',4:'Menos libre'};
+      function sQ(s){ return s>=7.5?1:s>=6.5?2:s>=5.5?3:4; }
+
+      var entries = Object.entries(yearData)
+        .map(([iso,d])=>({iso,name:getMapName(iso),s:d.s,a1:d.a1,a2:d.a2,a3:d.a3,a4:d.a4,a5:d.a5}))
+        .sort((a,b)=>b.s-a.s);
+      var total = entries.length;
+
+      var mapData = entries.map((e,i)=>({
+        name:e.name, value:e.s, rank:i+1, total:total,
+        a1:e.a1,a2:e.a2,a3:e.a3,a4:e.a4,a5:e.a5,
+        itemStyle:{areaColor:QC[sQ(e.s)]}
+      }));
+
+      var mc = isDk?'#94A3B8':'#64748B';
+      var bc = isDk?'#334155':'#E2E8F0';
+      function aBar(lbl,val,qc){
+        if(val==null) return '';
+        var pct = Math.min(100,(val/10*100).toFixed(0));
+        return '<div style="display:flex;align-items:center;gap:4px;margin-bottom:2px">'
+          +'<span style="width:66px;font-size:10px;color:'+mc+'">'+lbl+'</span>'
+          +'<div style="flex:1;height:5px;background:'+bc+';border-radius:3px;overflow:hidden">'
+          +'<div style="width:'+pct+'%;height:100%;background:'+qc+';border-radius:3px"></div></div>'
+          +'<span style="font-size:10px;font-weight:600;width:26px;text-align:right;font-family:JetBrains Mono,monospace">'+val.toFixed(1)+'</span></div>';
+      }
+
+      chart.setOption({
+        backgroundColor:'transparent',
+        tooltip: {
+          trigger:'item', confine:true,
+          backgroundColor: isDk?'#1E293B':'#fff',
+          borderColor: isDk?'#334155':'#E2E8F0',
+          borderRadius:10, padding:[12,14],
+          textStyle:{color:isDk?'#E2E8F0':'#1E293B',fontSize:12,fontFamily:'Inter'},
+          formatter: function(p){
+            if(p.value==null) return '<div style="text-align:center;padding:4px"><strong>'+p.name+'</strong><br/><span style="color:#94A3B8;font-size:11px">Sin datos para '+curYear+'</span></div>';
+            var d=p.data, q=sQ(d.value), qc=QC[q];
+            return '<div style="min-width:220px">'
+              +'<div style="font-weight:700;font-size:13px;margin-bottom:8px">'+p.name+'</div>'
+              +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">'
+              +'<span style="background:'+qc+';color:#fff;padding:3px 10px;border-radius:5px;font-size:13px;font-weight:700;font-family:JetBrains Mono,monospace">'+d.value.toFixed(2)+'</span>'
+              +'<span style="font-size:11px;color:'+mc+'">'+QL[q]+' · #'+d.rank+' de '+d.total+'</span></div>'
+              +'<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:'+mc+';margin-bottom:5px">Areas EFW</div>'
+              +aBar('Gobierno',d.a1,qc)
+              +aBar('Sist. Legal',d.a2,qc)
+              +aBar('Moneda',d.a3,qc)
+              +aBar('Comercio',d.a4,qc)
+              +aBar('Regulacion',d.a5,qc)
+              +'</div>';
+          }
+        },
+        visualMap: {
+          type:'piecewise', show:false,
+          pieces:[
+            {min:7.5, max:10, color:'#10B981'},
+            {min:6.5, max:7.499, color:'#3B82F6'},
+            {min:5.5, max:6.499, color:'#F59E0B'},
+            {min:0, max:5.499, color:'#EF4444'}
+          ]
+        },
+        series:[{
+          type:'map', map:'world',
+          roam:true,
+          scaleLimit:{min:1,max:8},
+          layoutCenter:['50%','50%'], layoutSize:'165%',
+          data:mapData, nameProperty:'name',
+          projection: {
+            project: function(p) {
+              var lam=p[0]*RAD, phi=p[1]*RAD, phi2=phi*phi, phi4=phi2*phi2;
+              return [
+                lam*(0.8707-0.131979*phi2+phi4*(-0.013791+phi4*(0.003971*phi2-0.001529*phi4)))/RAD,
+                -(phi*(1.007226+phi2*(0.015085+phi4*(-0.044475+0.028874*phi2-0.005916*phi4)))/RAD)
+              ];
+            },
+            unproject: function(p) {
+              var x=p[0]*RAD, y=-p[1]*RAD, phi=y;
+              for(var i=0;i<10;i++){
+                var phi2=phi*phi,phi4=phi2*phi2;
+                var f=phi*(1.007226+phi2*(0.015085+phi4*(-0.044475+0.028874*phi2-0.005916*phi4)))-y;
+                var df=1.007226+phi2*(3*0.015085+phi4*(-7*0.044475+9*0.028874*phi2-11*0.005916*phi4));
+                phi-=f/df;
+              }
+              var phi2=phi*phi,phi4=phi2*phi2;
+              var lam=x/(0.8707-0.131979*phi2+phi4*(-0.013791+phi4*(0.003971*phi2-0.001529*phi4)));
+              return [lam/RAD, phi/RAD];
+            }
+          },
+          emphasis:{
+            label:{show:true,fontSize:10,fontFamily:'Inter',color:'#fff'},
+            itemStyle:{areaColor:'#059669',borderColor:'#fff',borderWidth:1}
+          },
+          itemStyle:{
+            areaColor:isDk?'#1A1A1A':'#E2E8F0',
+            borderColor:isDk?'#222':'#bbb',
+            borderWidth:0.4
+          },
+          select:{disabled:true}
+        }]
+      });
+      window.addEventListener('resize', ()=>chart.resize());
+    }
+
+    function setYear(y){
+      curYear = y;
+      if(!playing) render();
+      else { render(); }
+    }
+
+    function togglePlay(){
+      if(playing){
+        playing = false;
+        clearInterval(playTimer);
+        render();
+        return;
+      }
+      playing = true;
+      let idx = YEARS.indexOf(curYear);
+      if(idx >= YEARS.length-1) idx = 0;
+      render();
+      playTimer = setInterval(()=>{
+        idx++;
+        if(idx >= YEARS.length){
+          playing = false;
+          clearInterval(playTimer);
+          render();
+          return;
+        }
+        curYear = YEARS[idx];
+        render();
+      }, 800);
+    }
+
+    window.addEventListener('message', e => {
+      if(e.data && e.data.theme){
+        document.documentElement.setAttribute('data-theme', e.data.theme);
+        if(chart){ chart.dispose(); buildChart(); }
+      }
+    });
+
+    init();
+  </script>
+</body>
+</html>

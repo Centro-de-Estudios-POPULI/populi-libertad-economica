@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Monitor de Libertad Económica — Embeds Preview</title>
+  <style>
+    body{font-family:'Inter',system-ui,sans-serif;background:#FAF8F3;color:#3D2B1F;max-width:900px;margin:0 auto;padding:40px 20px}
+    h1{font-size:1.8rem;margin-bottom:8px}
+    p.sub{color:#64748B;font-size:.85rem;margin-bottom:30px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+    a.card{display:block;padding:16px;background:#fff;border:1px solid #E2DDD3;border-radius:10px;text-decoration:none;color:#3D2B1F;transition:all .2s}
+    a.card:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.08);border-color:#10B981}
+    .card .dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:6px}
+    .card h3{font-size:.9rem;margin:0 0 4px}
+    .card p{font-size:.72rem;color:#64748B;margin:0}
+    .sep{margin:24px 0 16px;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#94A3B8}
+  </style>
+</head>
+<body>
+  <h1>Monitor de Libertad Económica</h1>
+  <p class="sub">Preview de todos los embeds — 12 visualizaciones interactivas</p>
+
+  <div class="sep">Mapa Coroplético</div>
+  <div class="grid">
+    <a class="card" href="mapa_mundial.html"><h3><span class="dot" style="background:#10B981"></span>Mapa Mundial EFW</h3><p>165 países · Slider 1950–2023 · Animación temporal</p></a>
+  </div>
+
+  <div class="sep">Scatter / Bubble Plots — ¿Por qué importa la libertad económica?</div>
+  <div class="grid">
+    <a class="card" href="scatter_gdp.html"><h3><span class="dot" style="background:#10B981"></span>Renta per Cápita</h3><p>PIB per cápita PPP vs EFW · World Bank</p></a>
+    <a class="card" href="scatter_poverty.html"><h3><span class="dot" style="background:#EF4444"></span>Pobreza</h3><p>Tasa de pobreza <$3.65/día vs EFW</p></a>
+    <a class="card" href="scatter_life_exp.html"><h3><span class="dot" style="background:#8B5CF6"></span>Esperanza de Vida</h3><p>Esperanza de vida al nacer vs EFW</p></a>
+    <a class="card" href="scatter_infant_mort.html"><h3><span class="dot" style="background:#EC4899"></span>Mortalidad Infantil</h3><p>Mortalidad infantil por 1000 nacidos vs EFW</p></a>
+    <a class="card" href="scatter_satisfaction.html"><h3><span class="dot" style="background:#F59E0B"></span>Satisfacción de Vida</h3><p>Cantril Ladder (WHR 2026) vs EFW</p></a>
+    <a class="card" href="scatter_epi.html"><h3><span class="dot" style="background:#059669"></span>Desempeño Ambiental</h3><p>Yale EPI 2024 vs EFW</p></a>
+    <a class="card" href="scatter_corruption.html"><h3><span class="dot" style="background:#6366F1"></span>Ausencia de Corrupción</h3><p>Transparency Intl CPI 2024 vs EFW</p></a>
+    <a class="card" href="scatter_personal_freedom.html"><h3><span class="dot" style="background:#0EA5E9"></span>Libertad Personal</h3><p>Human Freedom Index 2024 vs EFW</p></a>
+    <a class="card" href="scatter_hours.html"><h3><span class="dot" style="background:#D946EF"></span>Horas Trabajadas</h3><p>Horas anuales por trabajador (PWT) vs EFW</p></a>
+    <a class="card" href="scatter_income_bottom10.html"><h3><span class="dot" style="background:#14B8A6"></span>Ingreso del 10% más Pobre</h3><p>Participación del decil inferior vs EFW</p></a>
+    <a class="card" href="scatter_democracy.html"><h3><span class="dot" style="background:#F97316"></span>Democracia</h3><p>V-Dem Electoral Democracy Index vs EFW</p></a>
+  </div>
+</body>
+</html>
