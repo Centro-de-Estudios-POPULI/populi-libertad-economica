@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Comparativa de PIB per Capita - Populi</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300..800&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+  <style>
+    :root { --accent:#F59E0B; }
+
+    :root {
+      --populi:#8B1A1A; --populi-light:#C00000;
+      --cream:#F5EFE0; --brown-dark:#3D2B1F;
+      --navy:#0D1B2A; --navy-light:#1A2940; --slate:#475569; --slate-light:#64748B;
+      --warm-white:#FAF8F3; --light-gray:#F1EDE5; --border:#E2DDD3; --dark-border:#2A3A50;
+      --bg:var(--warm-white); --card:#FFFFFF; --text:var(--brown-dark); --muted:var(--slate-light);
+      --radius:12px;
+    }
+    [data-theme="dark"] {
+      --bg:#080808; --card:#141414; --text:#E2E8F0; --muted:#64748B;
+      --border:#2A3A50; --light-gray:#1A1A1A; --cream:#1A2940;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;-webkit-font-smoothing:antialiased;transition:background .25s,color .25s}
+    .wrap{max-width:1200px;margin:0 auto;padding:20px 16px}
+    .sec-hd{margin-bottom:12px}
+    .sec-title{font-family:'Playfair Display',Georgia,serif;font-size:1.55rem;font-weight:700;color:var(--navy);display:flex;align-items:center;gap:10px;line-height:1.15}
+    [data-theme="dark"] .sec-title{color:#fff}
+    .accent-bar{width:4px;height:26px;border-radius:2px;flex-shrink:0}
+    .sec-sub{font-size:.78rem;color:var(--muted);padding-left:14px;margin-top:2px}
+    [data-theme="dark"] .sec-sub{color:rgba(255,255,255,.4)}
+    .legend-bar{display:flex;flex-wrap:wrap;gap:4px 10px;padding:2px 14px 10px;align-items:center}
+    .leg-item{display:flex;align-items:center;gap:3px;font-size:.58rem;font-weight:600;color:var(--muted);white-space:nowrap}
+    .leg-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+    .leg-line{width:16px;height:0;flex-shrink:0}
+    .main-grid{display:grid;grid-template-columns:3fr 2fr;gap:16px}
+    @media(max-width:900px){.main-grid{grid-template-columns:1fr}}
+    @media(max-width:500px){.sec-title{font-size:1.2rem}}
+    .chart-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;height:560px}
+    [data-theme="dark"] .chart-card{background:#141414;border-color:var(--dark-border)}
+    @media(max-width:900px){.chart-card{height:440px}}
+    @media(max-width:500px){.chart-card{height:340px}}
+    #chart{width:100%;height:100%}
+    .panel{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;display:flex;flex-direction:column}
+    [data-theme="dark"] .panel{background:#141414;border-color:var(--dark-border)}
+    .panel-hd{padding:10px 14px;display:flex;align-items:center;justify-content:space-between}
+    .panel-hd-t{font-size:.56rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.8)}
+    .panel-body{padding:14px;flex:1;overflow-y:auto}
+    .pb{margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+    [data-theme="dark"] .pb{border-color:var(--dark-border)}
+    .pb:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+    .pb-lbl{font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px}
+    .pb-desc{font-size:.68rem;line-height:1.5;color:var(--muted)}
+    [data-theme="dark"] .pb-desc{color:rgba(255,255,255,.45)}
+    .pb-desc strong{color:var(--navy)}
+    [data-theme="dark"] .pb-desc strong{color:#E2E8F0}
+    .ctx{background:var(--cream);border-radius:6px;padding:8px 10px;margin-top:6px}
+    [data-theme="dark"] .ctx{background:var(--navy-light)}
+    .ctx p{font-size:.68rem;line-height:1.5;color:var(--muted)}
+    [data-theme="dark"] .ctx p{color:#94A3B8}
+    .source{display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding:0 2px}
+    .source-txt{font-size:.6rem;color:var(--muted)}
+    .source-txt a{color:var(--populi);font-weight:600;text-decoration:none}
+    .source-txt a:hover{text-decoration:underline}
+    .kpi-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;padding-left:14px}
+    .kpi{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 14px;min-width:110px}
+    [data-theme="dark"] .kpi{background:#141414;border-color:var(--dark-border)}
+    .kpi-label{font-size:.52rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:2px}
+    .kpi-val{font-family:'JetBrains Mono',monospace;font-size:1.1rem;font-weight:700}
+    .kpi-delta{font-size:.6rem;font-family:'JetBrains Mono',monospace}
+
+    .controls-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;padding-left:14px;flex-wrap:wrap}
+    .search-box{position:relative;flex:1;min-width:200px;max-width:360px}
+    .search-box input{width:100%;padding:8px 12px 8px 32px;border:1px solid var(--border);border-radius:8px;
+      font-size:.82rem;font-family:Inter,sans-serif;background:var(--card);color:var(--text);outline:none}
+    .search-box input:focus{border-color:#10B981;box-shadow:0 0 0 2px rgba(16,185,129,.15)}
+    .search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none}
+    .dropdown{position:absolute;top:100%;left:0;right:0;max-height:260px;overflow-y:auto;
+      background:var(--card);border:1px solid var(--border);border-radius:10px;margin-top:4px;z-index:50;
+      box-shadow:0 8px 24px rgba(0,0,0,.1);display:none}
+    .dropdown.open{display:block}
+    .dd-item{display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;
+      font-size:.8rem;transition:background .15s}
+    .dd-item:hover{background:rgba(16,185,129,.08)}
+    .dd-item .q-badge{font-size:.6rem;font-weight:700;color:#fff;padding:2px 6px;border-radius:4px;
+      font-family:'JetBrains Mono',monospace;min-width:36px;text-align:center}
+    .dd-item .cname{flex:1;color:var(--text)}
+    .dd-item .region{font-size:.65rem;color:var(--muted)}
+    .tags{display:flex;flex-wrap:wrap;gap:6px;padding:0 14px 12px;min-height:28px}
+    .tag{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;
+      font-size:.72rem;font-weight:600;cursor:default;border:1px solid var(--border);
+      background:var(--card);color:var(--text);transition:all .15s}
+    [data-theme="dark"] .tag{border-color:var(--dark-border)}
+    .tag .q-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+    .tag .q-score{font-family:'JetBrains Mono',monospace;font-size:.62rem;font-weight:700;opacity:.7}
+    .tag .x{cursor:pointer;opacity:.4;font-size:.85rem;margin-left:1px;transition:opacity .15s}
+    .tag .x:hover{opacity:1}
+    .tag:hover{border-color:var(--muted)}
+    .tag-bol{border-color:#EF4444;border-width:1.5px}
+    .hz-lbl{font-size:.62rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+    .hz-grp{display:flex;flex-wrap:wrap;gap:0;background:var(--light-gray);border-radius:8px;padding:2px;border:1px solid var(--border)}
+    [data-theme="dark"] .hz-grp{background:#1A1A1A;border-color:var(--dark-border)}
+    .hz-btn{padding:5px 14px;border:none;border-radius:6px;font-family:'Inter',sans-serif;font-size:.68rem;font-weight:600;cursor:pointer;background:transparent;color:var(--muted);transition:all .2s}
+    .hz-btn:hover{color:var(--text)}
+    .hz-btn.active{background:var(--accent);color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="sec-hd">
+    <div class="sec-title"><span class="accent-bar" style="background:#F59E0B"></span>Evolucion del PIB per Capita</div>
+    <div class="sec-sub">Selecciona paises para comparar &middot; Dolares internacionales de 2011, 1950-2022 &middot; Maddison Project Database 2023</div>
+  </div>
+  <div class="controls-row">
+    <div class="search-box">
+      <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" id="search" placeholder="Buscar pais para agregar..." autocomplete="off">
+      <div class="dropdown" id="dropdown"></div>
+    </div>
+    <span class="hz-lbl">Escala:</span>
+    <div class="hz-grp">
+      <button class="hz-btn active" id="btn-log">Logaritmica</button>
+      <button class="hz-btn" id="btn-nat">Natural</button>
+    </div>
+  </div>
+  <div class="tags" id="tags"></div>
+  <div class="main-grid">
+    <div class="chart-card"><div id="chart"></div></div>
+    <div class="panel">
+      <div class="panel-hd" style="background:#B45309"><span class="panel-hd-t">Lectura del grafico</span></div>
+      <div class="panel-body">
+        <div class="pb"><div class="pb-lbl" style="color:#F59E0B">Como usar</div><div class="pb-desc">Use el buscador para <strong>agregar paises</strong>. El badge de color indica el <strong>cuartil de libertad economica</strong> (EFW 2023): <span style="color:#10B981">&#9679; mas libre</span> a <span style="color:#EF4444">&#9679; menos libre</span>. Use el toggle <strong>Logaritmica/Natural</strong> para cambiar la escala del eje Y.</div></div>
+        <div class="pb"><div class="pb-lbl" style="color:#F59E0B">Divergencia de ingresos</div><div class="pb-desc">En 1950, la <strong>brecha de ingresos entre paises era mucho menor</strong>. Las trayectorias divergieron dramaticamente segun las instituciones adoptadas. Compare Corea del Sur (libre) con Bolivia, o Irlanda con Argentina, para ver el impacto acumulado de decadas de <strong>politicas mas o menos libres</strong>.</div></div>
+        <div class="pb"><div class="pb-lbl" style="color:#F59E0B">Bolivia</div><div class="pb-desc">Bolivia (linea gruesa roja) muestra un <strong>crecimiento lento y volatil</strong>. En 1950 tenia un PIB per capita similar al de Corea del Sur; hoy es <strong>6 veces menor</strong>. El estancamiento refleja decadas de instituciones debiles y baja libertad economica.</div></div>
+        <div class="ctx" style="border-left:3px solid #F59E0B"><p><strong>Fuente:</strong> Maddison Project Database 2023 (Bolt & van Zanden). PIB per capita en dolares internacionales de 2011 (PPP). Alterne entre escala logaritmica y natural.</p></div>
+      </div>
+    </div>
+  </div>
+  <div class="source"><span class="source-txt">Fuente: Maddison Project Database 2023 (Bolt & van Zanden, 2024) · Elaboracion: <a href="https://populi.org.bo" target="_blank">POPULI</a></span></div>
+<script>
+var YEARS = [1950, 1951, 1952, 1953, 1954, 1955, 1956, 1957, 1958, 1959, 1960, 1961, 1962, 1963, 1964, 1965, 1966, 1967, 1968, 1969, 1970, 1971, 1972, 1973, 1974, 1975, 1976, 1977, 1978, 1979, 1980, 1981, 1982, 1983, 1984, 1985, 1986, 1987, 1988, 1989, 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022];
+var COUNTRIES = [{"iso": "HKG", "name": "Hong Kong SAR, China", "region": "Asia Oriental y Pacifico", "score": 8.55, "q": 1, "rank": 1}, {"iso": "SGP", "name": "Singapore", "region": "Asia Oriental y Pacifico", "score": 8.5, "q": 1, "rank": 2}, {"iso": "NZL", "name": "New Zealand", "region": "Asia Oriental y Pacifico", "score": 8.33, "q": 1, "rank": 3}, {"iso": "USA", "name": "United States", "region": "Norteamerica", "score": 8.1, "q": 1, "rank": 5}, {"iso": "IRL", "name": "Ireland", "region": "Europa y Asia Central", "score": 8.05, "q": 1, "rank": 6}, {"iso": "GBR", "name": "United Kingdom", "region": "Europa y Asia Central", "score": 7.88, "q": 1, "rank": 13}, {"iso": "JPN", "name": "Japan", "region": "Asia Oriental y Pacifico", "score": 7.83, "q": 1, "rank": 17}, {"iso": "CHL", "name": "Chile", "region": "America Latina y el Caribe", "score": 7.65, "q": 1, "rank": 26}, {"iso": "SWE", "name": "Sweden", "region": "Europa y Asia Central", "score": 7.56, "q": 1, "rank": 37}, {"iso": "KOR", "name": "Korea, Rep.", "region": "Asia Oriental y Pacifico", "score": 7.53, "q": 1, "rank": 38}, {"iso": "CHN", "name": "China", "region": "Asia Oriental y Pacifico", "score": 6.13, "q": 3, "rank": 108}, {"iso": "BOL", "name": "Bolivia", "region": "America Latina y el Caribe", "score": 6.05, "q": 3, "rank": 116}, {"iso": "ARG", "name": "Argentina", "region": "America Latina y el Caribe", "score": 4.48, "q": 4, "rank": 159}, {"iso": "VEN", "name": "Venezuela, RB", "region": "America Latina y el Caribe", "score": 3.11, "q": 4, "rank": 165}];
+var ALL_DATA = {"KOR": [998, 991, 1038, 1317, 1373, 1411, 1382, 1467, 1518, 1556, 1548, 1606, 1620, 1721, 1835, 1917, 2094, 2232, 2468, 2764, 2975, 3222, 3388, 3822, 4113, 4362, 4856, 5368, 5856, 6266, 6064, 6399, 6821, 7612, 8304, 8859, 9756, 10865, 12040, 12759, 13874, 15056, 15712, 16503, 17720, 19089, 20205, 21056, 19625, 21541, 23108, 23804, 25251, 25679, 26647, 27443, 28516, 29717, 30118, 29968, 31538, 32225, 32826, 33712, 34573, 35358, 36255, 37296, 38214, 38936, 38607, 40278, 41321], "ARG": [7949, 8086, 7519, 7769, 7938, 8348, 8424, 8705, 9083, 8354, 8861, 9344, 9049, 8695, 9446, 10155, 10076, 10200, 10485, 11217, 11639, 12003, 12170, 12691, 13284, 12946, 12696, 13236, 12444, 13114, 13080, 12125, 11550, 11775, 11837, 10895, 11515, 11633, 11244, 10393, 10254, 11224, 12267, 12927, 13571, 13086, 13715, 14723, 15186, 14578, 14369, 13652, 12095, 13089, 14183, 15344, 16490, 17892, 18520, 17329, 18980, 20003, 19574, 19822, 19112, 19424, 18820, 19151, 18461, 17913, 15976, 17471, 18292], "HKG": [4082, 3688, 3846, 3982, 4124, 4280, 4450, 4626, 4799, 4957, 5088, 5169, 5780, 6381, 6664, 7414, 7412, 7474, 7696, 8534, 9250, 9787, 10632, 11717, 11719, 11456, 12929, 13986, 14689, 15903, 17086, 18301, 18527, 19349, 21042, 20883, 22823, 25414, 27063, 27377, 27960, 29009, 30203, 31242, 32219, 31942, 32262, 33386, 30866, 31134, 32894, 32734, 33038, 33594, 36053, 38192, 40173, 42231, 42635, 41076, 43171, 44532, 44795, 45998, 46942, 47654, 48385, 49841, 50848, 49631, 46550, 50006, 48289], "CHN": [799, 950, 1047, 1157, 1049, 1119, 1189, 1195, 1173, 1117, 1057, 874, 926, 1034, 1152, 1253, 1261, 1237, 1178, 1264, 1398, 1446, 1431, 1513, 1519, 1594, 1519, 1583, 1744, 1859, 1930, 1962, 2128, 2227, 2444, 2619, 2748, 2931, 3045, 3022, 2982, 3051, 3228, 3506, 3730, 4000, 4220, 4311, 4310, 4467, 4730, 4995, 5343, 5649, 6068, 6627, 7271, 7896, 8190, 8734, 9658, 10221, 10947, 11731, 12515, 13325, 14139, 15030, 15977, 16880, 17226, 18667, 19238], "IRL": [5504, 5649, 5805, 5973, 6048, 6248, 6212, 6239, 6169, 6437, 6825, 7186, 7390, 7685, 7948, 8051, 8097, 8531, 9197, 9706, 9881, 10128, 10621, 10946, 11225, 11662, 11639, 12425, 13150, 13335, 13614, 13893, 14061, 13931, 14435, 14834, 14768, 15458, 16313, 17343, 18838, 19254, 20033, 20627, 22005, 24266, 26563, 29456, 31909, 35377, 38807, 40966, 43013, 44373, 47029, 49223, 51296, 52322, 49583, 47376, 48624, 48980, 47360, 48181, 50732, 53197, 53687, 55466, 58083, 59734, 55135, 57278, 60257], "USA": [15240, 16125, 16444, 16917, 16512, 17370, 17397, 17406, 16946, 17900, 18057, 18175, 18976, 19514, 20360, 21390, 22529, 22842, 23691, 24195, 23958, 24394, 25414, 26602, 26286, 25956, 27058, 28001, 29286, 29949, 29611, 30056, 29210, 30158, 32076, 33023, 33850, 34730, 35863, 36756, 36982, 36464, 37240, 37762, 38807, 39391, 40413, 41723, 43073, 44576, 45886, 45878, 46266, 47158, 48493, 49655, 50490, 50902, 50276, 48453, 49267, 49675, 50436, 51011, 51797, 52808, 53301, 54152, 55455, 56469, 54379, 57523, 58487], "NZL": [13479, 12199, 12427, 12522, 13936, 13908, 14346, 14418, 14641, 15350, 15087, 15533, 15511, 16150, 16606, 17341, 18111, 17027, 16809, 18348, 17835, 18452, 18889, 19804, 20529, 19907, 20161, 19110, 19182, 19580, 19681, 20537, 20715, 21015, 21783, 21780, 22124, 22142, 22022, 22107, 21817, 21126, 21093, 21898, 23077, 23752, 24321, 24802, 24861, 25868, 26823, 27167, 28066, 28876, 29807, 30270, 30799, 31784, 31445, 31233, 31586, 32057, 32715, 33109, 33591, 34248, 34880, 35574, 36420, 36912, 35854, 37837, 38250], "VEN": [8462, 9039, 9309, 9500, 10020, 10501, 11136, 11923, 11615, 12078, 12116, 12231, 12848, 13232, 14019, 14347, 14174, 14250, 14520, 14655, 15289, 15192, 15135, 15540, 15943, 16385, 17174, 17693, 17481, 17135, 16270, 15750, 15423, 14155, 13597, 13270, 13751, 13866, 14308, 12750, 13251, 14275, 14902, 14694, 14129, 14448, 14212, 14894, 14739, 13669, 13993, 14298, 12856, 11728, 13713, 14944, 16254, 17386, 18019, 17243, 17106, 17746, 18486, 18484, 17579, 16333, 13429, 11364, 9446, 7062, 4953, 4897, 5267], "JPN": [3062, 3389, 3724, 3944, 4116, 4417, 4699, 4999, 5243, 5665, 6354, 7055, 7614, 8176, 9035, 9459, 10370, 11400, 12725, 14145, 15484, 16004, 17110, 18226, 17765, 18082, 18600, 19230, 20060, 20982, 21404, 21924, 22440, 22805, 23548, 24437, 24992, 25904, 27393, 28601, 29949, 30837, 30978, 30921, 31135, 31887, 32784, 33038, 32558, 32395, 33211, 33246, 33195, 33620, 34314, 34858, 35333, 35893, 35496, 33590, 35011, 34979, 35537, 36312, 36440, 37053, 37385, 38079, 38404, 38333, 36827, 37678, 38269], "SGP": [3572, 3368, 2342, 2794, 3202, 2946, 3241, 2874, 2880, 3239, 3464, 3623, 3775, 4049, 3800, 3991, 4317, 4741, 5294, 5931, 6650, 7318, 8155, 8894, 9314, 9602, 10178, 10790, 11588, 12521, 13601, 14335, 14687, 15720, 16767, 16611, 16831, 18345, 19853, 21221, 22666, 23637, 24776, 27074, 29455, 30957, 32724, 34868, 33590, 35156, 37773, 36865, 37830, 38951, 42111, 44699, 48074, 51844, 52180, 51344, 58613, 61672, 62856, 64822, 66499, 67674, 69211, 72292, 74518, 74650, 71965, 77945, 80320], "CHL": [5880, 6001, 6252, 6582, 6237, 6341, 6285, 6758, 6958, 6409, 6781, 6923, 7071, 7336, 7320, 7208, 7844, 7933, 8053, 8187, 8195, 8773, 8520, 7911, 7857, 6731, 6868, 7438, 7936, 8475, 9024, 9427, 8016, 7667, 7992, 8024, 8325, 8721, 9199, 10005, 10203, 10746, 11773, 12297, 12693, 13716, 14433, 15080, 15260, 14846, 15212, 15448, 15510, 15809, 16479, 17137, 17921, 18488, 18804, 18184, 18910, 19705, 20691, 21171, 21338, 21574, 21716, 21709, 22176, 21924, 20206, 22325, 22741], "BOL": [3011, 3209, 3237, 2869, 2868, 2954, 2719, 2573, 2576, 2511, 2560, 2555, 2636, 2742, 2809, 2879, 3014, 3127, 3314, 3379, 3469, 3513, 3602, 3757, 3854, 4010, 4219, 4289, 4328, 4227, 4100, 4060, 3816, 3585, 3561, 3476, 3306, 3330, 3386, 3408, 3502, 3610, 3592, 3670, 3765, 3865, 3959, 4080, 4206, 4146, 4174, 4166, 4194, 4230, 4331, 4445, 4582, 4713, 4924, 5011, 5142, 5331, 5504, 5776, 5988, 6176, 6338, 6503, 6679, 6731, 6062, 6356, 6481], "SWE": [10742, 11077, 11152, 11389, 11799, 12060, 12428, 12899, 12884, 13211, 13849, 14564, 15093, 15808, 16761, 17239, 17432, 17883, 18428, 19215, 20269, 20320, 20725, 21509, 22132, 22607, 22765, 22322, 22646, 23465, 23809, 23777, 24002, 24412, 25357, 25805, 26309, 27016, 27468, 27933, 28068, 27614, 27199, 26559, 27506, 28519, 29012, 29863, 31187, 32705, 34203, 34667, 35570, 36436, 38016, 39259, 40992, 42400, 42190, 40116, 42635, 42079, 41523, 41662, 42347, 43782, 44131, 44658, 45003, 45434, 44128, 46227, 47126], "GBR": [11061, 11354, 11303, 11709, 12145, 12541, 12639, 12779, 12698, 13134, 13780, 14118, 14131, 14583, 15251, 15545, 15757, 16018, 16593, 16820, 17162, 17440, 18002, 19168, 18903, 18884, 19311, 19740, 20448, 20988, 20612, 20319, 20650, 21366, 21869, 22579, 23498, 24536, 25679, 26164, 26189, 25792, 25790, 26349, 27278, 27861, 28472, 29260, 30077, 30933, 31946, 32660, 33271, 34232, 34866, 35624, 36214, 36817, 36265, 34402, 34754, 34971, 35244, 35661, 36522, 37101, 37594, 38284, 38705, 39113, 34651, 37134, 38407]};
+var QC = {1:'#10B981',2:'#3B82F6',3:'#F59E0B',4:'#EF4444'};
+var QL = {1:'Cuartil Superior',2:'Segundo Cuartil',3:'Tercer Cuartil',4:'Cuartil Inferior'};
+var PALETTE = ["#EF4444", "#10B981", "#3B82F6", "#8B5CF6", "#F59E0B", "#EC4899", "#06B6D4", "#64748B", "#F97316", "#84CC16", "#A855F7", "#14B8A6", "#E11D48", "#0EA5E9", "#D946EF", "#FB923C"];
+var selected = ["BOL", "CHL", "ARG", "VEN", "IRL", "SGP", "KOR", "USA"];
+var colorMap = {};
+var colorIdx = 0;
+var scaleMode = 'log';
+
+function getColor(iso) {
+  if (!colorMap[iso]) { colorMap[iso] = PALETTE[colorIdx % PALETTE.length]; colorIdx++; }
+  return colorMap[iso];
+}
+function getCountry(iso) { return COUNTRIES.find(function(c){return c.iso===iso}); }
+function rebuildChart() { initChart(); }
+
+function setScale(mode) {
+  scaleMode = mode;
+  document.getElementById('btn-log').className = 'hz-btn' + (mode==='log'?' active':'');
+  document.getElementById('btn-nat').className = 'hz-btn' + (mode==='natural'?' active':'');
+  initChart();
+}
+
+document.getElementById('btn-log').addEventListener('click', function(){ setScale('log'); });
+document.getElementById('btn-nat').addEventListener('click', function(){ setScale('natural'); });
+
+function initChart() {
+  var isDk = document.documentElement.getAttribute('data-theme')==='dark';
+  var gc = isDk?'#1E293B':'#F0EDE6';
+  var ac = isDk?'#334155':'#D5CFC5';
+  var lc = isDk?'#64748B':'#94A3B8';
+  var nc = isDk?'#94A3B8':'#64748B';
+  var el = document.getElementById('chart');
+  if(window._chart) window._chart.dispose();
+  var chart = echarts.init(el);
+  window._chart = chart;
+  var allVals = [];
+  var series = selected.map(function(iso) {
+    var c = getCountry(iso), col = getColor(iso), isBol = iso==='BOL';
+    var data = ALL_DATA[iso] || [];
+    data.forEach(function(v){ if(v!=null) allVals.push(v); });
+    return {
+      name: c ? c.name : iso, type:'line', data: data,
+      lineStyle: {width: isBol?3:2, color: col},
+      itemStyle: {color: col},
+      symbol:'none', z: isBol?10:5, connectNulls:true
+    };
+  });
+  var isLog = scaleMode==='log';
+  var yAxisCfg = {
+    name:'PIB per capita (USD 2011)',nameLocation:'center',
+    nameTextStyle:{fontSize:11,fontFamily:'Inter',color:nc},
+    axisLabel:{color:lc,fontSize:10,fontFamily:'JetBrains Mono',
+      formatter:function(v){return '$'+(v>=1000?Math.round(v/1000)+'k':v);}},
+    splitLine:{lineStyle:{color:gc,type:'dashed'}},axisLine:{show:false}
+  };
+  if (isLog) {
+    yAxisCfg.type = 'log'; yAxisCfg.min = 500; yAxisCfg.nameGap = 50;
+  } else {
+    var hi = allVals.length ? Math.max.apply(null,allVals) : 50000;
+    yAxisCfg.type = 'value'; yAxisCfg.min = 0;
+    yAxisCfg.max = Math.ceil(hi/5000)*5000; yAxisCfg.nameGap = 60;
+  }
+  chart.setOption({
+    backgroundColor:'transparent',
+    tooltip: {trigger:'axis',backgroundColor:isDk?'#1E1E1E':'#fff',
+      borderColor:isDk?'#333':'#E2E8F0',
+      textStyle:{color:isDk?'#E2E8F0':'#1E293B',fontSize:12,fontFamily:'Inter'},
+      order:'valueDesc',
+      valueFormatter:function(v){return v?'$'+Math.round(v).toLocaleString():'Sin datos';}},
+    legend: {show:false},
+    grid: {left:65,right:20,bottom:32,top:16,containLabel:false},
+    xAxis: {type:'category',data:YEARS,
+      axisLabel:{color:lc,fontSize:10,fontFamily:'JetBrains Mono',interval:9},
+      axisLine:{lineStyle:{color:ac}},axisTick:{show:false}},
+    yAxis: yAxisCfg,
+    series: series
+  });
+  window.addEventListener('resize',function(){chart.resize()});
+}
+
+function renderTags() {
+  var html = '';
+  selected.forEach(function(iso) {
+    var c = getCountry(iso), col = getColor(iso);
+    var qc = c ? QC[c.q] : '#999';
+    var isBol = iso==='BOL';
+    html += '<span class="tag'+(isBol?' tag-bol':'')+'">'
+      + '<span class="q-dot" style="background:'+qc+'"></span>'
+      + '<span style="border-bottom:2px solid '+col+'">'+(c?c.name:iso)+'</span>'
+      + '<span class="q-score">'+(c?c.score:'')+'</span>'
+      + (isBol?'':' <span class="x" onclick="removeCountry(\x27'+iso+'\x27)">&times;</span>')
+      + '</span>';
+  });
+  document.getElementById('tags').innerHTML = html;
+}
+
+function addCountry(iso) {
+  if (selected.indexOf(iso)===-1) { selected.push(iso); renderTags(); initChart(); }
+  document.getElementById('search').value = '';
+  document.getElementById('dropdown').classList.remove('open');
+}
+function removeCountry(iso) {
+  selected = selected.filter(function(s){return s!==iso});
+  renderTags(); initChart();
+}
+
+var searchEl = document.getElementById('search');
+var ddEl = document.getElementById('dropdown');
+searchEl.addEventListener('input', function() {
+  var q = this.value.toLowerCase().trim();
+  if (!q) { ddEl.classList.remove('open'); return; }
+  var matches = COUNTRIES.filter(function(c) {
+    return (c.name.toLowerCase().indexOf(q)!==-1 || c.iso.toLowerCase().indexOf(q)!==-1)
+      && selected.indexOf(c.iso)===-1;
+  }).slice(0,8);
+  if (!matches.length) { ddEl.classList.remove('open'); return; }
+  ddEl.innerHTML = matches.map(function(c) {
+    return '<div class="dd-item" onclick="addCountry(\x27'+c.iso+'\x27)">'
+      + '<span class="q-badge" style="background:'+QC[c.q]+'">'+c.score+'</span>'
+      + '<span class="cname">'+c.name+'</span>'
+      + '<span class="region">'+c.region+'</span></div>';
+  }).join('');
+  ddEl.classList.add('open');
+});
+searchEl.addEventListener('focus', function() { if(this.value) this.dispatchEvent(new Event('input')); });
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.search-box')) ddEl.classList.remove('open');
+});
+
+renderTags();
+initChart();
+</script>
+</div>
+<script>
+    window.addEventListener('message', function(e) {
+      if (e.data && e.data.theme) {
+        document.documentElement.setAttribute('data-theme', e.data.theme);
+        if (typeof rebuildChart === 'function') rebuildChart();
+      }
+    });
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme:dark)').matches)
+      document.documentElement.setAttribute('data-theme', 'dark');
+</script>
+</body></html>

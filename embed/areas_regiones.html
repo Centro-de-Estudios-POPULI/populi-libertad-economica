@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calificacion por Areas — Regiones del Mundo - Populi</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300..800&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+  <style>
+    :root { --accent:#3B82F6; }
+
+    :root {
+      --populi:#8B1A1A; --populi-light:#C00000;
+      --cream:#F5EFE0; --brown-dark:#3D2B1F;
+      --navy:#0D1B2A; --navy-light:#1A2940; --slate:#475569; --slate-light:#64748B;
+      --warm-white:#FAF8F3; --light-gray:#F1EDE5; --border:#E2DDD3; --dark-border:#2A3A50;
+      --bg:var(--warm-white); --card:#FFFFFF; --text:var(--brown-dark); --muted:var(--slate-light);
+      --radius:12px;
+    }
+    [data-theme="dark"] {
+      --bg:#080808; --card:#141414; --text:#E2E8F0; --muted:#64748B;
+      --border:#2A3A50; --light-gray:#1A1A1A; --cream:#1A2940;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;-webkit-font-smoothing:antialiased;transition:background .25s,color .25s}
+    .wrap{max-width:1200px;margin:0 auto;padding:20px 16px}
+    .sec-hd{margin-bottom:12px}
+    .sec-title{font-family:'Playfair Display',Georgia,serif;font-size:1.55rem;font-weight:700;color:var(--navy);display:flex;align-items:center;gap:10px;line-height:1.15}
+    [data-theme="dark"] .sec-title{color:#fff}
+    .accent-bar{width:4px;height:26px;border-radius:2px;flex-shrink:0}
+    .sec-sub{font-size:.78rem;color:var(--muted);padding-left:14px;margin-top:2px}
+    [data-theme="dark"] .sec-sub{color:rgba(255,255,255,.4)}
+    .legend-bar{display:flex;flex-wrap:wrap;gap:4px 10px;padding:2px 14px 10px;align-items:center}
+    .leg-item{display:flex;align-items:center;gap:3px;font-size:.58rem;font-weight:600;color:var(--muted);white-space:nowrap}
+    .leg-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+    .leg-line{width:16px;height:0;flex-shrink:0}
+    .main-grid{display:grid;grid-template-columns:3fr 2fr;gap:16px}
+    @media(max-width:900px){.main-grid{grid-template-columns:1fr}}
+    @media(max-width:500px){.sec-title{font-size:1.2rem}}
+    .chart-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;height:560px}
+    [data-theme="dark"] .chart-card{background:#141414;border-color:var(--dark-border)}
+    @media(max-width:900px){.chart-card{height:440px}}
+    @media(max-width:500px){.chart-card{height:340px}}
+    #chart{width:100%;height:100%}
+    .panel{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;display:flex;flex-direction:column}
+    [data-theme="dark"] .panel{background:#141414;border-color:var(--dark-border)}
+    .panel-hd{padding:10px 14px;display:flex;align-items:center;justify-content:space-between}
+    .panel-hd-t{font-size:.56rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.8)}
+    .panel-body{padding:14px;flex:1;overflow-y:auto}
+    .pb{margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+    [data-theme="dark"] .pb{border-color:var(--dark-border)}
+    .pb:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+    .pb-lbl{font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px}
+    .pb-desc{font-size:.68rem;line-height:1.5;color:var(--muted)}
+    [data-theme="dark"] .pb-desc{color:rgba(255,255,255,.45)}
+    .pb-desc strong{color:var(--navy)}
+    [data-theme="dark"] .pb-desc strong{color:#E2E8F0}
+    .ctx{background:var(--cream);border-radius:6px;padding:8px 10px;margin-top:6px}
+    [data-theme="dark"] .ctx{background:var(--navy-light)}
+    .ctx p{font-size:.68rem;line-height:1.5;color:var(--muted)}
+    [data-theme="dark"] .ctx p{color:#94A3B8}
+    .source{display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding:0 2px}
+    .source-txt{font-size:.6rem;color:var(--muted)}
+    .source-txt a{color:var(--populi);font-weight:600;text-decoration:none}
+    .source-txt a:hover{text-decoration:underline}
+    .kpi-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;padding-left:14px}
+    .kpi{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 14px;min-width:110px}
+    [data-theme="dark"] .kpi{background:#141414;border-color:var(--dark-border)}
+    .kpi-label{font-size:.52rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:2px}
+    .kpi-val{font-family:'JetBrains Mono',monospace;font-size:1.1rem;font-weight:700}
+    .kpi-delta{font-size:.6rem;font-family:'JetBrains Mono',monospace}
+
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="sec-hd">
+    <div class="sec-title"><span class="accent-bar" style="background:#3B82F6"></span>Calificacion por Areas del Indice de Libertad Economica</div>
+    <div class="sec-sub">Promedio regional por area, 2023 &middot; Fraser Institute EFW &middot; 165 jurisdicciones</div>
+  </div>
+  <div class="kpi-row">
+    <div class="kpi"><div class="kpi-label">Region mas libre</div><div class="kpi-val" style="color:#10B981;font-size:.9rem">Norteamerica</div><div class="kpi-delta" style="color:#10B981">8.01/10</div></div>
+    <div class="kpi"><div class="kpi-label">Region menos libre</div><div class="kpi-val" style="color:#EF4444;font-size:.9rem">Africa Subsahariana</div><div class="kpi-delta" style="color:#EF4444">5.9/10</div></div>
+    <div class="kpi"><div class="kpi-label">Am. Latina</div><div class="kpi-val" style="color:#F59E0B;font-size:.9rem">6.57</div><div class="kpi-delta" style="color:var(--muted)">de 10</div></div>
+  </div>
+  <div class="legend-bar">
+    <span class="leg-item"><span class="leg-dot" style="background:#EF4444"></span>Tamano del Gobierno</span><span class="leg-item"><span class="leg-dot" style="background:#3B82F6"></span>Sistema Legal</span><span class="leg-item"><span class="leg-dot" style="background:#10B981"></span>Moneda Sana</span><span class="leg-item"><span class="leg-dot" style="background:#F59E0B"></span>Comercio Internacional</span><span class="leg-item"><span class="leg-dot" style="background:#8B5CF6"></span>Regulacion</span>
+  </div>
+  <div class="main-grid">
+    <div class="chart-card"><div id="chart"></div></div>
+    <div class="panel">
+      <div class="panel-hd" style="background:#1E40AF"><span class="panel-hd-t">Lectura del grafico</span></div>
+      <div class="panel-body">
+        <div class="pb"><div class="pb-lbl" style="color:#3B82F6">Que muestra</div><div class="pb-desc">Cada grupo de barras representa el <strong>promedio regional</strong> en las 5 areas del Indice de Libertad Economica del Fraser Institute. Las areas miden: tamano del gobierno, sistema legal, estabilidad monetaria, apertura comercial y regulacion.</div></div>
+        <div class="pb"><div class="pb-lbl" style="color:#3B82F6">Patrones clave</div><div class="pb-desc"><strong>Norteamerica y Europa</strong> lideran consistentemente, mientras que <strong>Asia del Sur y Africa Subsahariana</strong> muestran los puntajes mas bajos. El area de <strong>Moneda Sana</strong> es donde mas regiones convergen; las mayores brechas estan en <strong>Sistema Legal</strong> y <strong>Regulacion</strong>.</div></div>
+        <div class="pb"><div class="pb-lbl" style="color:#3B82F6">America Latina</div><div class="pb-desc">La region tiene un desempeno <strong>intermedio-bajo</strong>. Su area mas debil es <strong>Sistema Legal</strong> (4.9/10), reflejando debilidades institucionales, seguida de <strong>Regulacion</strong> (6.24/10). Su mejor area es <strong>Moneda Sana</strong> (7.33/10).</div></div>
+        <div class="ctx" style="border-left:3px solid #3B82F6"><p><strong>Fuente:</strong> Fraser Institute, Economic Freedom of the World 2023. 165 jurisdicciones, 5 areas, 45 variables.</p></div>
+      </div>
+    </div>
+  </div>
+  <div class="source"><span class="source-txt">Fuente: <a href="https://www.fraserinstitute.org/economic-freedom" target="_blank">Fraser Institute</a> · Elaboracion: <a href="https://populi.org.bo" target="_blank">POPULI</a></span></div>
+<script>
+function rebuildChart() { initChart(); }
+function initChart() {
+  var isDk = document.documentElement.getAttribute('data-theme')==='dark';
+  var tc = isDk?'#E2E8F0':'#1E293B';
+  var gc = isDk?'#1E293B':'#F0EDE6';
+  var ac = isDk?'#334155':'#D5CFC5';
+  var lc = isDk?'#64748B':'#94A3B8';
+  var el = document.getElementById('chart');
+  if(window._chart) window._chart.dispose();
+  var chart = echarts.init(el);
+  window._chart = chart;
+  chart.setOption({
+    backgroundColor:'transparent',
+    tooltip:{trigger:'axis',axisPointer:{type:'shadow'},
+      backgroundColor:isDk?'#1E1E1E':'#fff',borderColor:isDk?'#333':'#E2E8F0',
+      textStyle:{color:tc,fontSize:12,fontFamily:'Inter'}},
+    legend:{show:false},
+    grid:{left:55,right:20,bottom:70,top:16,containLabel:false},
+    xAxis:{type:'category',data:["Norteamerica", "Europa y Asia Central", "Asia Oriental y Pacifico", "Medio Oriente y N. de Africa", "America Latina y el Caribe", "Asia del Sur", "Africa Subsahariana"],
+      axisLabel:{color:lc,fontSize:10,interval:0,rotate:25,fontFamily:'Inter'},
+      axisLine:{lineStyle:{color:ac}},axisTick:{show:false}},
+    yAxis:{type:'value',min:0,max:10,
+      axisLabel:{color:lc,fontSize:10,fontFamily:'JetBrains Mono'},
+      splitLine:{lineStyle:{color:gc,type:'dashed'}},axisLine:{show:false}},
+    series:[{name:'Tamano del Gobierno',type:'bar',data:[6.82, 6.1, 6.72, 6.21, 7.17, 7.51, 6.95],itemStyle:{color:'#EF4444',borderRadius:[3,3,0,0]},barMaxWidth:18},{name:'Sistema Legal',type:'bar',data:[7.75, 6.66, 5.84, 4.51, 4.9, 5.17, 4.22],itemStyle:{color:'#3B82F6',borderRadius:[3,3,0,0]},barMaxWidth:18},{name:'Moneda Sana',type:'bar',data:[8.93, 8.1, 8.03, 7.23, 7.33, 6.2, 6.49],itemStyle:{color:'#10B981',borderRadius:[3,3,0,0]},barMaxWidth:18},{name:'Comercio Internacional',type:'bar',data:[8.32, 8.26, 7.54, 6.47, 7.2, 6.33, 6.11],itemStyle:{color:'#F59E0B',borderRadius:[3,3,0,0]},barMaxWidth:18},{name:'Regulacion',type:'bar',data:[8.22, 6.76, 6.82, 5.8, 6.24, 6.38, 5.71],itemStyle:{color:'#8B5CF6',borderRadius:[3,3,0,0]},barMaxWidth:18}]
+  });
+  window.addEventListener('resize',function(){chart.resize()});
+}
+initChart();
+</script>
+</div>
+<script>
+    window.addEventListener('message', function(e) {
+      if (e.data && e.data.theme) {
+        document.documentElement.setAttribute('data-theme', e.data.theme);
+        if (typeof rebuildChart === 'function') rebuildChart();
+      }
+    });
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme:dark)').matches)
+      document.documentElement.setAttribute('data-theme', 'dark');
+</script>
+</body></html>
