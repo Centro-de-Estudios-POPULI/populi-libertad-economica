@@ -79,27 +79,28 @@
 
   <div class="sec-hd">
     <div class="sec-title"><span class="accent-bar" style="background:#8B5CF6"></span>Evolucion de la Libertad Economica en el Mundo</div>
-    <div class="sec-sub">Promedio mundial del EFW y sus 5 areas, 1970-2023 &middot; Fraser Institute</div>
+    <div class="sec-sub">Promedio simple y ponderado por poblacion, 1970-2023 &middot; Fraser Institute</div>
   </div>
   <div class="kpi-row">
     <div class="kpi"><div class="kpi-label">EFW Global 2023</div><div class="kpi-val" style="color:#8B5CF6">6.556</div><div class="kpi-delta" style="color:var(--muted)">de 10</div></div>
     <div class="kpi"><div class="kpi-label">Maximo historico</div><div class="kpi-val" style="color:#10B981">6.756</div><div class="kpi-delta" style="color:#10B981">2019</div></div>
     <div class="kpi"><div class="kpi-label">Minimo historico</div><div class="kpi-val" style="color:#EF4444">5.322</div><div class="kpi-delta" style="color:#EF4444">1975</div></div>
     <div class="kpi"><div class="kpi-label">Jurisdicciones 2023</div><div class="kpi-val">165</div></div>
+    <div class="kpi"><div class="kpi-label">Ponderado 2023</div><div class="kpi-val" style="color:#F97316">6.37</div><div class="kpi-delta" style="color:var(--muted)">por poblacion</div></div>
   </div>
   <div class="legend-bar">
     <span class="leg-item"><span class="leg-line" style="border-top:3px solid var(--text)"></span>EFW Global</span>
-    <span class="leg-item"><span class="leg-line" style="border-top:1.5px dashed #EF4444"></span>Tamano del Gobierno</span><span class="leg-item"><span class="leg-line" style="border-top:1.5px dashed #3B82F6"></span>Sistema Legal</span><span class="leg-item"><span class="leg-line" style="border-top:1.5px dashed #10B981"></span>Moneda Sana</span><span class="leg-item"><span class="leg-line" style="border-top:1.5px dashed #F59E0B"></span>Comercio Internacional</span><span class="leg-item"><span class="leg-line" style="border-top:1.5px dashed #8B5CF6"></span>Regulacion</span>
+    <span class="leg-item"><span class="leg-line" style="border-top:2px dotted #F97316"></span>Ponderado por Poblacion</span>
   </div>
   <div class="main-grid">
     <div class="chart-card"><div id="chart"></div></div>
     <div class="panel">
       <div class="panel-hd" style="background:#6D28D9"><span class="panel-hd-t">Lectura del grafico</span></div>
       <div class="panel-body">
-        <div class="pb"><div class="pb-lbl" style="color:#8B5CF6">Tendencia general</div><div class="pb-desc">La libertad economica mundial cayo en los <strong>anos 70</strong> por la expansion del gasto publico e inflacion. Las reformas de los <strong>80 y 90</strong> (Reagan, Thatcher, apertura asiatica, caida del socialismo) impulsaron un ascenso sostenido hasta alcanzar su <strong>maximo en 2019</strong>.</div></div>
-        <div class="pb"><div class="pb-lbl" style="color:#8B5CF6">Siglo XXI</div><div class="pb-desc">La liberalizacion continuo a ritmo moderado. El <strong>COVID-19</strong> (2020) provoco un fuerte retroceso por aumento del gasto publico y regulacion, eliminando casi <strong>dos decadas de avance</strong>. La recuperacion posterior ha sido parcial.</div></div>
-        <div class="pb"><div class="pb-lbl" style="color:#8B5CF6">Areas</div><div class="pb-desc">Active las 5 areas en la leyenda para ver su evolucion individual. <strong>Moneda Sana</strong> fue el area de mayor mejora desde los 80. <strong>Tamano del Gobierno</strong> muestra la menor variacion temporal.</div></div>
-        <div class="ctx" style="border-left:3px solid #8B5CF6"><p><strong>Fuente:</strong> Fraser Institute, Economic Freedom of the World 2024. Promedio no ponderado de todas las jurisdicciones disponibles cada ano.</p></div>
+        <div class="pb"><div class="pb-lbl" style="color:#8B5CF6">Dos mediciones</div><div class="pb-desc">La linea solida muestra el <strong>promedio simple</strong> de todas las jurisdicciones (cada una pesa igual). La linea punteada es el <strong>promedio ponderado por poblacion</strong>, que refleja como vive el ciudadano global promedio. Este es sistematicamente menor porque paises con grandes poblaciones como <strong>India, China y Brasil</strong> tienen puntajes bajos en libertad economica.</div></div>
+        <div class="pb"><div class="pb-lbl" style="color:#8B5CF6">Periodos historicos</div><div class="pb-desc">En los <strong>anos 70</strong>, la expansion del gasto publico, la inflacion y la regulacion provocaron un declive global. Las <strong>reformas de los 80</strong> en EE.UU., Reino Unido, Suecia y Nueva Zelanda, junto a la <strong>apertura economica asiatica</strong>, revirtieron la tendencia. La <strong>caida del socialismo</strong> (1989-91) y la privatizacion en Europa del Este aceleraron el ascenso. El <strong>siglo XXI</strong> trajo avances graduales hasta el <strong>maximo historico en 2019</strong>. El <strong>COVID-19</strong> provoco un retroceso abrupto por el aumento masivo del gasto publico y la regulacion, eliminando casi una decada de avance.</div></div>
+        <div class="pb"><div class="pb-lbl" style="color:#8B5CF6">Brecha poblacional</div><div class="pb-desc">En 2023, el promedio simple es <strong>6.56</strong> pero el ponderado por poblacion apenas alcanza <strong>6.37</strong>. Esta brecha de <strong>0.19 puntos</strong> indica que la mayoria de la poblacion mundial vive en jurisdicciones con menor libertad economica que el promedio de paises.</div></div>
+        <div class="ctx" style="border-left:3px solid #8B5CF6"><p><strong>Fuente:</strong> Fraser Institute, <em>Economic Freedom of the World 2025</em>. Promedio simple (165 jurisdicciones, 1970-2023) y ponderado por poblacion (EFW Panel Dataset, 2000-2023).</p></div>
       </div>
     </div>
   </div>
@@ -113,6 +114,7 @@ function initChart() {
   var ac = isDk?'#334155':'#D5CFC5';
   var lc = isDk?'#64748B':'#94A3B8';
   var nc = isDk?'#94A3B8':'#64748B';
+  var pw = [null,null,null,null,null,null,6.15,6.13,6.21,6.16,6.18,6.28,6.26,6.29,6.19,6.21,6.26,6.29,6.33,6.36,6.34,6.41,6.48,6.53,6.54,6.55,6.44,6.42,6.37,6.37];
   var el = document.getElementById('chart');
   if(window._chart) window._chart.dispose();
   var chart = echarts.init(el);
@@ -121,19 +123,12 @@ function initChart() {
     backgroundColor:'transparent',
     tooltip:{trigger:'axis',backgroundColor:isDk?'#1E1E1E':'#fff',
       borderColor:isDk?'#333':'#E2E8F0',textStyle:{color:isDk?'#E2E8F0':'#1E293B',fontSize:12,fontFamily:'Inter'}},
-    legend:{
-      data:['EFW Global','Tamano del Gobierno','Sistema Legal','Moneda Sana','Comercio Internacional','Regulacion'],
-      bottom:0,textStyle:{color:lc,fontSize:10},itemWidth:16,itemHeight:8,itemGap:10,
-      selected:{
-        'EFW Global':true,
-        'Tamano del Gobierno':false,'Sistema Legal':false,'Moneda Sana':false,'Comercio Internacional':false,'Regulacion':false
-      }
-    },
-    grid:{left:55,right:20,bottom:50,top:16,containLabel:false},
-    xAxis:{type:'category',data:[1970, 1975, 1980, 1985, 1990, 1995, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023],
+    legend:{show:false},
+    grid:{left:55,right:20,bottom:30,top:16,containLabel:false},
+    xAxis:{type:'category',data:['1970','1975','1980','1985','1990','1995','2000','2001','2002','2003','2004','2005','2006','2007','2008','2009','2010','2011','2012','2013','2014','2015','2016','2017','2018','2019','2020','2021','2022','2023'],
       axisLabel:{color:lc,fontSize:10,fontFamily:'JetBrains Mono'},
       axisLine:{lineStyle:{color:ac}},axisTick:{show:false}},
-    yAxis:{type:'value',min:4,max:8.5,
+    yAxis:{type:'value',min:5,max:7,
       name:'Indice EFW',nameLocation:'center',nameGap:38,
       nameTextStyle:{fontSize:11,fontFamily:'Inter',color:nc},
       axisLabel:{color:lc,fontSize:10,fontFamily:'JetBrains Mono'},
@@ -142,11 +137,18 @@ function initChart() {
       {name:'EFW Global',type:'line',data:[5.711, 5.322, 5.373, 5.439, 5.779, 6.176, 6.314, 6.332, 6.366, 6.396, 6.462, 6.528, 6.53, 6.576, 6.462, 6.5, 6.542, 6.543, 6.577, 6.633, 6.659, 6.68, 6.723, 6.716, 6.743, 6.756, 6.584, 6.57, 6.527, 6.556],
         lineStyle:{width:3,color:tc},itemStyle:{color:tc},
         symbol:'circle',symbolSize:5,z:10,
-        areaStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[
-          {offset:0,color:isDk?'rgba(139,92,246,.15)':'rgba(139,92,246,.1)'},
-          {offset:1,color:'transparent'}
-        ])}},
-      {name:'Tamano del Gobierno',type:'line',data:[6.013, 5.486, 5.346, 5.379, 5.98, 6.409, 6.548, 6.554, 6.543, 6.596, 6.7, 6.808, 6.784, 6.851, 6.789, 6.579, 6.57, 6.646, 6.665, 6.685, 6.641, 6.676, 6.718, 6.695, 6.731, 6.754, 6.549, 6.606, 6.676, 6.639],lineStyle:{width:1.5,color:'#EF4444',type:'dashed'},itemStyle:{color:'#EF4444'},symbol:'none',z:5},{name:'Sistema Legal',type:'line',data:[5.191, 5.005, 5.084, 5.101, 5.289, 5.552, 5.041, 5.016, 5.0, 5.021, 5.05, 5.199, 5.229, 5.266, 5.251, 5.257, 5.255, 5.243, 5.246, 5.248, 5.293, 5.326, 5.327, 5.341, 5.36, 5.331, 5.338, 5.338, 5.335, 5.324],lineStyle:{width:1.5,color:'#3B82F6',type:'dashed'},itemStyle:{color:'#3B82F6'},symbol:'none',z:5},{name:'Moneda Sana',type:'line',data:[7.199, 6.047, 6.094, 6.199, 6.302, 6.493, 6.903, 7.097, 7.25, 7.289, 7.466, 7.515, 7.437, 7.466, 7.054, 7.496, 7.536, 7.458, 7.623, 7.826, 7.924, 7.953, 8.065, 7.989, 8.06, 8.136, 7.968, 7.801, 7.24, 7.382],lineStyle:{width:1.5,color:'#10B981',type:'dashed'},itemStyle:{color:'#10B981'},symbol:'none',z:5},{name:'Comercio Internacional',type:'line',data:[5.182, 4.995, 5.041, 5.102, 5.765, 6.865, 7.227, 7.239, 7.25, 7.286, 7.223, 7.055, 7.168, 7.213, 7.253, 7.236, 7.181, 7.194, 7.154, 7.162, 7.158, 7.168, 7.172, 7.168, 7.165, 7.172, 6.828, 6.849, 7.131, 7.144],lineStyle:{width:1.5,color:'#F59E0B',type:'dashed'},itemStyle:{color:'#F59E0B'},symbol:'none',z:5},{name:'Regulacion',type:'line',data:[5.472, 5.248, 5.351, 5.422, 5.588, 5.756, 6.113, 5.983, 6.019, 6.005, 6.031, 6.132, 6.139, 6.173, 6.087, 6.038, 6.241, 6.261, 6.272, 6.3, 6.315, 6.319, 6.335, 6.365, 6.383, 6.383, 6.235, 6.259, 6.254, 6.29],lineStyle:{width:1.5,color:'#8B5CF6',type:'dashed'},itemStyle:{color:'#8B5CF6'},symbol:'none',z:5}
+        markArea:{silent:true,label:{show:true,position:'insideBottom',fontSize:9,fontFamily:'Inter',fontWeight:700,padding:[0,0,6,0]},data:[
+          [{name:'Años 70',xAxis:'1970',itemStyle:{color:isDk?'rgba(239,68,68,.18)':'rgba(239,68,68,.12)'},label:{color:isDk?'rgba(239,68,68,.7)':'rgba(220,38,38,.55)',fontSize:8}},{xAxis:'1975'}],
+          [{name:'Reformas\nde mercado',xAxis:'1980',itemStyle:{color:isDk?'rgba(16,185,129,.15)':'rgba(16,185,129,.1)'},label:{color:isDk?'rgba(16,185,129,.65)':'rgba(16,163,127,.5)'}},{xAxis:'1995'}],
+          [{name:'Siglo XXI\nLiberalizacion moderada',xAxis:'2000',itemStyle:{color:isDk?'rgba(59,130,246,.12)':'rgba(59,130,246,.07)'},label:{color:isDk?'rgba(59,130,246,.55)':'rgba(37,99,235,.4)'}},{xAxis:'2019'}],
+          [{name:'COVID-19',xAxis:'2020',itemStyle:{color:isDk?'rgba(239,68,68,.22)':'rgba(239,68,68,.14)'},label:{color:isDk?'rgba(239,68,68,.75)':'rgba(220,38,38,.6)'}},{xAxis:'2023'}]
+        ]},
+        markLine:{silent:true,symbol:'none',lineStyle:{type:'dashed',width:1.5,color:isDk?'rgba(16,185,129,.25)':'rgba(16,163,127,.3)'},label:{fontSize:8,fontFamily:'Inter',fontWeight:600},data:[
+          {xAxis:'1990',label:{formatter:'Caida del\nsocialismo',position:'insideEndTop',color:isDk?'rgba(16,185,129,.6)':'rgba(16,163,127,.55)'}}
+        ]}},
+      {name:'Ponderado por Poblacion',type:'line',data:pw,
+        lineStyle:{width:2.5,color:'#F97316',type:'dotted'},itemStyle:{color:'#F97316'},
+        symbol:'circle',symbolSize:3,z:8}
     ]
   });
   window.addEventListener('resize',function(){chart.resize()});
