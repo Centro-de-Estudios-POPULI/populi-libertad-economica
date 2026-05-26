@@ -48,7 +48,9 @@
     @media(max-width:900px){.chart-card{height:440px}}
     @media(max-width:500px){.chart-card{height:340px}}
     #chart{width:100%;height:100%}
-    .panel{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;display:flex;flex-direction:column}
+    .panel{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;display:flex;flex-direction:column;height:560px}
+    @media(max-width:900px){.panel{height:440px}}
+    @media(max-width:500px){.panel{height:340px}}
     [data-theme="dark"] .panel{background:#141414;border-color:var(--dark-border)}
     .panel-hd{padding:10px 14px;display:flex;align-items:center;justify-content:space-between}
     .panel-hd-t{font-size:.56rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.8)}
