@@ -114,7 +114,6 @@ function initChart() {
   var ac = isDk?'#334155':'#D5CFC5';
   var lc = isDk?'#64748B':'#94A3B8';
   var nc = isDk?'#94A3B8':'#64748B';
-  var pw = [null,null,null,null,null,null,6.15,6.13,6.21,6.16,6.18,6.28,6.26,6.29,6.19,6.21,6.26,6.29,6.33,6.36,6.34,6.41,6.48,6.53,6.54,6.55,6.44,6.42,6.37,6.37];
   var el = document.getElementById('chart');
   if(window._chart) window._chart.dispose();
   var chart = echarts.init(el);
@@ -122,31 +121,34 @@ function initChart() {
   chart.setOption({
     backgroundColor:'transparent',
     tooltip:{trigger:'axis',backgroundColor:isDk?'#1E1E1E':'#fff',
-      borderColor:isDk?'#333':'#E2E8F0',textStyle:{color:isDk?'#E2E8F0':'#1E293B',fontSize:12,fontFamily:'Inter'}},
+      borderColor:isDk?'#333':'#E2E8F0',textStyle:{color:isDk?'#E2E8F0':'#1E293B',fontSize:12,fontFamily:'Inter'},
+      axisPointer:{type:'line',lineStyle:{color:isDk?'#475569':'#CBD5E1'}}},
     legend:{show:false},
-    grid:{left:55,right:20,bottom:30,top:16,containLabel:false},
-    xAxis:{type:'category',data:['1970','1975','1980','1985','1990','1995','2000','2001','2002','2003','2004','2005','2006','2007','2008','2009','2010','2011','2012','2013','2014','2015','2016','2017','2018','2019','2020','2021','2022','2023'],
-      axisLabel:{color:lc,fontSize:10,fontFamily:'JetBrains Mono'},
-      axisLine:{lineStyle:{color:ac}},axisTick:{show:false}},
+    grid:{left:55,right:15,bottom:30,top:16,containLabel:false},
+    xAxis:{type:'value',min:1968,max:2025,
+      axisLabel:{color:lc,fontSize:10,fontFamily:'JetBrains Mono',formatter:function(v){return v%5===0?v:''}},
+      axisLine:{lineStyle:{color:ac}},axisTick:{show:false},
+      splitLine:{show:false}},
     yAxis:{type:'value',min:5,max:7,
       name:'Indice EFW',nameLocation:'center',nameGap:38,
       nameTextStyle:{fontSize:11,fontFamily:'Inter',color:nc},
       axisLabel:{color:lc,fontSize:10,fontFamily:'JetBrains Mono'},
       splitLine:{lineStyle:{color:gc,type:'dashed'}},axisLine:{show:false}},
     series:[
-      {name:'EFW Global',type:'line',data:[5.711, 5.322, 5.373, 5.439, 5.779, 6.176, 6.314, 6.332, 6.366, 6.396, 6.462, 6.528, 6.53, 6.576, 6.462, 6.5, 6.542, 6.543, 6.577, 6.633, 6.659, 6.68, 6.723, 6.716, 6.743, 6.756, 6.584, 6.57, 6.527, 6.556],
+      {name:'EFW Global',type:'line',data:[[1970,5.711],[1975,5.322],[1980,5.373],[1985,5.439],[1990,5.779],[1995,6.176],[2000,6.314],[2001,6.332],[2002,6.366],[2003,6.396],[2004,6.462],[2005,6.528],[2006,6.53],[2007,6.576],[2008,6.462],[2009,6.5],[2010,6.542],[2011,6.543],[2012,6.577],[2013,6.633],[2014,6.659],[2015,6.68],[2016,6.723],[2017,6.716],[2018,6.743],[2019,6.756],[2020,6.584],[2021,6.57],[2022,6.527],[2023,6.556]],
         lineStyle:{width:3,color:tc},itemStyle:{color:tc},
         symbol:'circle',symbolSize:5,z:10,
         markArea:{silent:true,label:{show:true,position:'insideBottom',fontSize:9,fontFamily:'Inter',fontWeight:700,padding:[0,0,6,0]},data:[
-          [{name:'Años 70',xAxis:'1970',itemStyle:{color:isDk?'rgba(239,68,68,.18)':'rgba(239,68,68,.12)'},label:{color:isDk?'rgba(239,68,68,.7)':'rgba(220,38,38,.55)',fontSize:8}},{xAxis:'1975'}],
-          [{name:'Reformas\nde mercado',xAxis:'1980',itemStyle:{color:isDk?'rgba(16,185,129,.15)':'rgba(16,185,129,.1)'},label:{color:isDk?'rgba(16,185,129,.65)':'rgba(16,163,127,.5)'}},{xAxis:'1995'}],
-          [{name:'Siglo XXI\nLiberalizacion moderada',xAxis:'2000',itemStyle:{color:isDk?'rgba(59,130,246,.12)':'rgba(59,130,246,.07)'},label:{color:isDk?'rgba(59,130,246,.55)':'rgba(37,99,235,.4)'}},{xAxis:'2019'}],
-          [{name:'COVID-19',xAxis:'2020',itemStyle:{color:isDk?'rgba(239,68,68,.22)':'rgba(239,68,68,.14)'},label:{color:isDk?'rgba(239,68,68,.75)':'rgba(220,38,38,.6)'}},{xAxis:'2023'}]
+          [{name:'Años 70',xAxis:1968,itemStyle:{color:isDk?'rgba(239,68,68,.18)':'rgba(239,68,68,.12)'},label:{color:isDk?'rgba(239,68,68,.7)':'rgba(220,38,38,.55)',fontSize:8}},{xAxis:1979}],
+          [{name:'Reformas\nde mercado',xAxis:1980,itemStyle:{color:isDk?'rgba(16,185,129,.15)':'rgba(16,185,129,.1)'},label:{color:isDk?'rgba(16,185,129,.65)':'rgba(16,163,127,.5)'}},{xAxis:1999}],
+          [{name:'Siglo XXI\nLiberalizacion moderada',xAxis:2000,itemStyle:{color:isDk?'rgba(59,130,246,.12)':'rgba(59,130,246,.07)'},label:{color:isDk?'rgba(59,130,246,.55)':'rgba(37,99,235,.4)'}},{xAxis:2019}],
+          [{name:'COVID-19',xAxis:2020,itemStyle:{color:isDk?'rgba(239,68,68,.22)':'rgba(239,68,68,.14)'},label:{color:isDk?'rgba(239,68,68,.75)':'rgba(220,38,38,.6)'}},{xAxis:2025}]
         ]},
         markLine:{silent:true,symbol:'none',lineStyle:{type:'dashed',width:1.5,color:isDk?'rgba(16,185,129,.25)':'rgba(16,163,127,.3)'},label:{fontSize:8,fontFamily:'Inter',fontWeight:600},data:[
-          {xAxis:'1990',label:{formatter:'Caida del\nsocialismo',position:'insideEndTop',color:isDk?'rgba(16,185,129,.6)':'rgba(16,163,127,.55)'}}
+          {xAxis:1990,label:{formatter:'Caida del\nsocialismo',position:'insideEndTop',color:isDk?'rgba(16,185,129,.6)':'rgba(16,163,127,.55)'}}
         ]}},
-      {name:'Ponderado por Poblacion',type:'line',data:pw,
+      {name:'Ponderado por Poblacion',type:'line',
+        data:[[2000,6.15],[2001,6.13],[2002,6.21],[2003,6.16],[2004,6.18],[2005,6.28],[2006,6.26],[2007,6.29],[2008,6.19],[2009,6.21],[2010,6.26],[2011,6.29],[2012,6.33],[2013,6.36],[2014,6.34],[2015,6.41],[2016,6.48],[2017,6.53],[2018,6.54],[2019,6.55],[2020,6.44],[2021,6.42],[2022,6.37],[2023,6.37]],
         lineStyle:{width:2.5,color:'#F97316',type:'dotted'},itemStyle:{color:'#F97316'},
         symbol:'circle',symbolSize:3,z:8}
     ]
