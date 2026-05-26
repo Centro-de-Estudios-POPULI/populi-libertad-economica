@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Top 10 vs Bottom 10 — Areas EFW - Populi</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300..800&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+  <style>
+    :root {
+      --populi:#8B1A1A; --populi-light:#C00000;
+      --cream:#F5EFE0; --brown-dark:#3D2B1F;
+      --navy:#0D1B2A; --navy-light:#1A2940; --slate:#475569; --slate-light:#64748B;
+      --warm-white:#FAF8F3; --light-gray:#F1EDE5; --border:#E2DDD3; --dark-border:#2A3A50;
+      --bg:var(--warm-white); --card:#FFFFFF; --text:var(--brown-dark); --muted:var(--slate-light);
+      --radius:12px; --accent:#06B6D4;
+    }
+    [data-theme="dark"] {
+      --bg:#080808; --card:#141414; --text:#E2E8F0; --muted:#64748B;
+      --border:#2A3A50; --light-gray:#1A1A1A; --cream:#1A2940;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;-webkit-font-smoothing:antialiased;transition:background .25s,color .25s}
+    .wrap{max-width:1200px;margin:0 auto;padding:20px 16px}
+    .sec-hd{margin-bottom:12px}
+    .sec-title{font-family:'Playfair Display',Georgia,serif;font-size:1.55rem;font-weight:700;color:var(--navy);display:flex;align-items:center;gap:10px;line-height:1.15}
+    [data-theme="dark"] .sec-title{color:#fff}
+    .accent-bar{width:4px;height:26px;border-radius:2px;flex-shrink:0}
+    .sec-sub{font-size:.78rem;color:var(--muted);padding-left:14px;margin-top:2px}
+    [data-theme="dark"] .sec-sub{color:rgba(255,255,255,.4)}
+    .controls{display:flex;align-items:center;gap:8px;padding:0 14px 10px;flex-wrap:wrap}
+    .hz-lbl{font-size:.62rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+    .hz-grp{display:flex;background:var(--light-gray);border-radius:8px;padding:2px;border:1px solid var(--border)}
+    [data-theme="dark"] .hz-grp{background:#1A1A1A;border-color:var(--dark-border)}
+    .hz-btn{padding:5px 14px;border:none;border-radius:6px;font-family:'Inter',sans-serif;font-size:.68rem;font-weight:600;cursor:pointer;background:transparent;color:var(--muted);transition:all .2s}
+    .hz-btn:hover{color:var(--text)}
+    .hz-btn.active{background:var(--accent);color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+    .legend-bar{display:flex;flex-wrap:wrap;gap:4px 14px;padding:2px 14px 10px;align-items:center}
+    .leg-item{display:flex;align-items:center;gap:4px;font-size:.62rem;font-weight:600;color:var(--muted)}
+    .leg-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+    .main-grid{display:grid;grid-template-columns:3fr 2fr;gap:16px}
+    @media(max-width:900px){.main-grid{grid-template-columns:1fr}}
+    @media(max-width:500px){.sec-title{font-size:1.2rem}}
+    .chart-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;height:560px}
+    [data-theme="dark"] .chart-card{background:#141414;border-color:var(--dark-border)}
+    @media(max-width:900px){.chart-card{height:440px}}
+    @media(max-width:500px){.chart-card{height:340px}}
+    #chart{width:100%;height:100%}
+    .panel{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;display:flex;flex-direction:column}
+    [data-theme="dark"] .panel{background:#141414;border-color:var(--dark-border)}
+    .panel-hd{padding:10px 14px;display:flex;align-items:center;justify-content:space-between}
+    .panel-hd-t{font-size:.56rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.8)}
+    .panel-body{padding:14px;flex:1;overflow-y:auto}
+    .pb{margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+    [data-theme="dark"] .pb{border-color:var(--dark-border)}
+    .pb:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+    .pb-lbl{font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px}
+    .pb-desc{font-size:.68rem;line-height:1.5;color:var(--muted)}
+    [data-theme="dark"] .pb-desc{color:rgba(255,255,255,.45)}
+    .pb-desc strong{color:var(--navy)}
+    [data-theme="dark"] .pb-desc strong{color:#E2E8F0}
+    .ctx{background:var(--cream);border-radius:6px;padding:8px 10px;margin-top:6px}
+    [data-theme="dark"] .ctx{background:var(--navy-light)}
+    .ctx p{font-size:.68rem;line-height:1.5;color:var(--muted)}
+    [data-theme="dark"] .ctx p{color:#94A3B8}
+    .source{display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding:0 2px}
+    .source-txt{font-size:.6rem;color:var(--muted)}
+    .source-txt a{color:var(--populi);font-weight:600;text-decoration:none}
+    .source-txt a:hover{text-decoration:underline}
+    .gap-table{width:100%;border-collapse:collapse;margin:6px 0}
+    .gap-table th,.gap-table td{font-size:.62rem;padding:3px 6px;text-align:left}
+    .gap-table th{color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--border)}
+    [data-theme="dark"] .gap-table th{border-color:var(--dark-border)}
+    .gap-table td{font-family:'JetBrains Mono',monospace;font-size:.62rem}
+    .gap-table .min-gap{color:#10B981;font-weight:700}
+    .gap-table .max-gap{color:#EF4444;font-weight:700}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="sec-hd">
+    <div class="sec-title"><span class="accent-bar" style="background:#06B6D4"></span>Top 10 vs Bottom 10: Perfil por Areas</div>
+    <div class="sec-sub">Promedio de las 5 areas del EFW para las 10 jurisdicciones mas y menos libres &middot; Fraser Institute</div>
+  </div>
+  <div class="controls">
+    <span class="hz-lbl">Periodo:</span>
+    <div class="hz-grp">
+      <button class="hz-btn active" id="btn-2023">2023</button>
+      <button class="hz-btn" id="btn-1980">1980</button>
+    </div>
+  </div>
+  <div class="legend-bar">
+    <span class="leg-item"><span class="leg-dot" style="background:#10B981"></span>Top 10 (mas libres)</span>
+    <span class="leg-item"><span class="leg-dot" style="background:#EF4444"></span>Bottom 10 (menos libres)</span>
+  </div>
+  <div class="main-grid">
+    <div class="chart-card"><div id="chart"></div></div>
+    <div class="panel">
+      <div class="panel-hd" style="background:#0E7490"><span class="panel-hd-t">Lectura del grafico</span></div>
+      <div class="panel-body">
+        <div class="pb"><div class="pb-lbl" style="color:#06B6D4">Convergencia en Tamano del Gobierno</div><div class="pb-desc">El area donde <strong>Top 10 y Bottom 10 mas se parecen</strong> es Tamano del Gobierno (brecha de solo <strong>1.28 puntos</strong> en 2023). Los paises ricos del Top 10 tienen estados relativamente grandes (6.89/10), no muy lejos del Bottom 10 (5.60). Esto no es casualidad: <strong>pueden costear amplios estados de bienestar</strong> porque sus altos puntajes en las otras 4 areas generan la riqueza necesaria.</div></div>
+        <div class="pb"><div class="pb-lbl" style="color:#06B6D4">Divergencia en Sistema Legal</div><div class="pb-desc">La mayor diferencia esta en <strong>Sistema Legal y Derechos de Propiedad</strong> (brecha de <strong>5.69 puntos</strong>). Los paises libres tienen instituciones judiciales independientes y derechos de propiedad solidos. Los menos libres carecen de esto fundamentalmente. Esta es el area mas discriminante entre prosperidad y pobreza.</div></div>
+        <div class="pb"><div class="pb-lbl" style="color:#06B6D4">1980 vs 2023</div><div class="pb-desc">Use el toggle para comparar con <strong>1980</strong>. La convergencia en Tamano del Gobierno <strong>ya existia</strong> en 1980 (brecha 1.42), confirmando que no es un fenomeno reciente. Lo que si cambio drasticamente es <strong>Comercio Internacional</strong>: la brecha se redujo de 7.58 a 3.92, reflejando la apertura comercial global de las ultimas decadas.</div></div>
+        <div class="pb"><div class="pb-lbl" style="color:#06B6D4">Brecha por area</div>
+          <table class="gap-table" id="gap-table">
+            <tr><th>Area</th><th>Top 10</th><th>Bot 10</th><th>Brecha</th></tr>
+          </table>
+        </div>
+        <div class="ctx" style="border-left:3px solid #06B6D4"><p><strong>Implicacion:</strong> Imitar el tamano del estado de los paises ricos sin replicar sus fortalezas institucionales (sistema legal, moneda sana, apertura comercial, regulacion eficiente) es una receta para el fracaso. El estado de bienestar es un <em>resultado</em> de la prosperidad, no su causa.</p></div>
+      </div>
+    </div>
+  </div>
+  <div class="source"><span class="source-txt">Fuente: <a href="https://www.fraserinstitute.org/economic-freedom" target="_blank">Fraser Institute</a> · Elaboracion: <a href="https://populi.org.bo" target="_blank">POPULI</a></span></div>
+
+<script>
+var DATA = {
+  '2023': {
+    top:    [6.888, 8.389, 9.384, 8.795, 8.189],
+    bottom: [5.604, 2.697, 4.773, 4.880, 4.203],
+    topLabel: 'Top 10 (2023)',
+    bottomLabel: 'Bottom 10 (2023)',
+    n: '165 jurisdicciones'
+  },
+  '1980': {
+    top:    [6.053, 8.276, 8.859, 8.959, 7.846],
+    bottom: [4.632, 2.820, 4.178, 1.381, 3.426],
+    topLabel: 'Top 10 (1980)',
+    bottomLabel: 'Bottom 10 (1980)',
+    n: '110 jurisdicciones'
+  }
+};
+var AREAS = ['Tamano del\nGobierno','Sistema Legal\ny Derechos','Moneda\nSana','Comercio\nInternacional','Regulacion'];
+var AREAS_SHORT = ['Tam. Gobierno','Sistema Legal','Moneda Sana','Comercio Int.','Regulacion'];
+var currentYear = '2023';
+
+function rebuildChart() { initChart(); }
+
+document.getElementById('btn-2023').addEventListener('click', function(){
+  currentYear='2023'; this.className='hz-btn active';
+  document.getElementById('btn-1980').className='hz-btn';
+  initChart(); updateTable();
+});
+document.getElementById('btn-1980').addEventListener('click', function(){
+  currentYear='1980'; this.className='hz-btn active';
+  document.getElementById('btn-2023').className='hz-btn';
+  initChart(); updateTable();
+});
+
+function updateTable(){
+  var d=DATA[currentYear]; var html='<tr><th>Area</th><th>Top 10</th><th>Bot 10</th><th>Brecha</th></tr>';
+  var gaps=[]; for(var i=0;i<5;i++) gaps.push({i:i,g:Math.round((d.top[i]-d.bottom[i])*100)/100});
+  var minG=gaps.reduce(function(a,b){return a.g<b.g?a:b});
+  var maxG=gaps.reduce(function(a,b){return a.g>b.g?a:b});
+  for(var i=0;i<5;i++){
+    var g=Math.round((d.top[i]-d.bottom[i])*100)/100;
+    var cls=i===minG.i?'min-gap':(i===maxG.i?'max-gap':'');
+    html+='<tr><td>'+AREAS_SHORT[i]+'</td><td>'+d.top[i].toFixed(2)+'</td><td>'+d.bottom[i].toFixed(2)+'</td><td class="'+cls+'">'+g.toFixed(2)+'</td></tr>';
+  }
+  document.getElementById('gap-table').innerHTML=html;
+}
+
+function initChart(){
+  var isDk=document.documentElement.getAttribute('data-theme')==='dark';
+  var d=DATA[currentYear];
+  var el=document.getElementById('chart');
+  if(window._chart) window._chart.dispose();
+  var chart=echarts.init(el);
+  window._chart=chart;
+  chart.setOption({
+    backgroundColor:'transparent',
+    tooltip:{trigger:'item',backgroundColor:isDk?'#1E1E1E':'#fff',borderColor:isDk?'#333':'#E2E8F0',
+      textStyle:{color:isDk?'#E2E8F0':'#1E293B',fontSize:12,fontFamily:'Inter'}},
+    legend:{show:false},
+    radar:{
+      indicator:AREAS.map(function(a){return{name:a,max:10}}),
+      shape:'polygon',
+      radius:'72%',
+      axisName:{color:isDk?'#94A3B8':'#475569',fontSize:10,fontFamily:'Inter',fontWeight:600},
+      splitArea:{areaStyle:{color:isDk?['rgba(255,255,255,.02)','rgba(255,255,255,.04)']:['rgba(0,0,0,.01)','rgba(0,0,0,.03)']}},
+      splitLine:{lineStyle:{color:isDk?'#1E293B':'#E2DDD3'}},
+      axisLine:{lineStyle:{color:isDk?'#1E293B':'#E2DDD3'}}
+    },
+    series:[{
+      type:'radar',
+      data:[
+        {name:d.topLabel,value:d.top,
+          lineStyle:{width:2.5,color:'#10B981'},
+          itemStyle:{color:'#10B981'},
+          areaStyle:{color:isDk?'rgba(16,185,129,.2)':'rgba(16,185,129,.15)'},
+          symbol:'circle',symbolSize:6},
+        {name:d.bottomLabel,value:d.bottom,
+          lineStyle:{width:2.5,color:'#EF4444'},
+          itemStyle:{color:'#EF4444'},
+          areaStyle:{color:isDk?'rgba(239,68,68,.15)':'rgba(239,68,68,.1)'},
+          symbol:'circle',symbolSize:6}
+      ]
+    }]
+  });
+  window.addEventListener('resize',function(){chart.resize()});
+}
+
+updateTable();
+initChart();
+</script>
+</div>
+<script>
+    window.addEventListener('message', function(e) {
+      if (e.data && e.data.theme) {
+        document.documentElement.setAttribute('data-theme', e.data.theme);
+        if (typeof rebuildChart === 'function') rebuildChart();
+      }
+    });
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme:dark)').matches)
+      document.documentElement.setAttribute('data-theme', 'dark');
+</script>
+</body></html>
