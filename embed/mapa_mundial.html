@@ -10,12 +10,12 @@
   <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
   <style>
     :root {
-      --populi:#8B1A1A; --populi-light:#C00000;
+      --populi:#C71E1D; --populi-light:#E8706B;
       --cream:#F5EFE0; --brown-dark:#3D2B1F;
       --navy:#0D1B2A; --navy-light:#1A2940; --slate:#475569; --slate-light:#64748B;
       --warm-white:#FAF8F3; --light-gray:#F1EDE5; --border:#E2DDD3; --dark-border:#2A3A50;
       --bg:var(--warm-white); --card:#FFFFFF; --text:var(--brown-dark); --muted:var(--slate-light);
-      --accent:#10B981;
+      --accent:#0A9396;
       --radius:12px;
     }
     [data-theme="dark"] {
@@ -163,7 +163,7 @@
         document.getElementById('loader').style.display = 'none';
         render();
       } catch(err) {
-        document.getElementById('loader').innerHTML = '<span style="color:#EF4444;font-size:.85rem">Error: '+err.message+'</span>';
+        document.getElementById('loader').innerHTML = '<span style="color:#C71E1D;font-size:.85rem">Error: '+err.message+'</span>';
         console.error('Map init error:', err);
       }
     }
@@ -198,10 +198,10 @@
           <div class="kpi"><div class="kpi-lbl">Bolivia</div><div class="kpi-val">${bol?bol.s.toFixed(2):'N/D'} <span style="font-size:.7rem;color:var(--muted)">#${bolRank||'—'}</span></div></div>
         </div>
         <div class="q-legend">
-          <span class="q-item"><span class="q-dot" style="background:#10B981"></span>Q1 · Mas libre (≥7.5)</span>
-          <span class="q-item"><span class="q-dot" style="background:#3B82F6"></span>Q2 · (6.5–7.5)</span>
-          <span class="q-item"><span class="q-dot" style="background:#F59E0B"></span>Q3 · (5.5–6.5)</span>
-          <span class="q-item"><span class="q-dot" style="background:#EF4444"></span>Q4 · Menos libre (<5.5)</span>
+          <span class="q-item"><span class="q-dot" style="background:#0A9396"></span>Q1 · Mas libre (≥7.5)</span>
+          <span class="q-item"><span class="q-dot" style="background:#005F73"></span>Q2 · (6.5–7.5)</span>
+          <span class="q-item"><span class="q-dot" style="background:#EE9B00"></span>Q3 · (5.5–6.5)</span>
+          <span class="q-item"><span class="q-dot" style="background:#C71E1D"></span>Q4 · Menos libre (<5.5)</span>
           <span class="q-item"><span class="q-dot" style="background:var(--muted);opacity:.3"></span>Sin datos</span>
         </div>
         <div class="main-grid">
@@ -241,10 +241,10 @@
     }
 
     function scoreColor(s){
-      if(s>=7.5) return '#10B981';
-      if(s>=6.5) return '#3B82F6';
-      if(s>=5.5) return '#F59E0B';
-      return '#EF4444';
+      if(s>=7.5) return '#0A9396';
+      if(s>=6.5) return '#005F73';
+      if(s>=5.5) return '#EE9B00';
+      return '#C71E1D';
     }
 
     function buildChart(){
@@ -253,7 +253,7 @@
       const yearData = MAP_DATA[curYear] || {};
       const isDk = dk();
       var RAD = Math.PI / 180;
-      var QC = {1:'#10B981',2:'#3B82F6',3:'#F59E0B',4:'#EF4444'};
+      var QC = {1:'#0A9396',2:'#005F73',3:'#EE9B00',4:'#C71E1D'};
       var QL = {1:'Mas libre',2:'2do cuartil',3:'3er cuartil',4:'Menos libre'};
       function sQ(s){ return s>=7.5?1:s>=6.5?2:s>=5.5?3:4; }
 
@@ -308,10 +308,10 @@
         visualMap: {
           type:'piecewise', show:false,
           pieces:[
-            {min:7.5, max:10, color:'#10B981'},
-            {min:6.5, max:7.499, color:'#3B82F6'},
-            {min:5.5, max:6.499, color:'#F59E0B'},
-            {min:0, max:5.499, color:'#EF4444'}
+            {min:7.5, max:10, color:'#0A9396'},
+            {min:6.5, max:7.499, color:'#005F73'},
+            {min:5.5, max:6.499, color:'#EE9B00'},
+            {min:0, max:5.499, color:'#C71E1D'}
           ]
         },
         series:[{
@@ -343,7 +343,7 @@
           },
           emphasis:{
             label:{show:true,fontSize:10,fontFamily:'Inter',color:'#fff'},
-            itemStyle:{areaColor:'#059669',borderColor:'#fff',borderWidth:1}
+            itemStyle:{areaColor:'#0A9396',borderColor:'#fff',borderWidth:1}
           },
           itemStyle:{
             areaColor:isDk?'#1A1A1A':'#E2E8F0',

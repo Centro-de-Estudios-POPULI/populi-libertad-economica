@@ -9,10 +9,11 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300..800&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
   <style>
-    :root { --accent:#3B82F6; }
+    :root { --accent:#005F73; }
 
     :root {
-      --populi:#8B1A1A; --populi-light:#C00000;
+      /* Paleta oficial POPULI (2026-08-10) — espejo de populi-marca/paleta.css */
+      --populi:#C71E1D; --populi-light:#E8706B; --populi-deep:#8B1A1A; --gold:#EE9B00;
       --cream:#F5EFE0; --brown-dark:#3D2B1F;
       --navy:#0D1B2A; --navy-light:#1A2940; --slate:#475569; --slate-light:#64748B;
       --warm-white:#FAF8F3; --light-gray:#F1EDE5; --border:#E2DDD3; --dark-border:#2A3A50;
@@ -78,26 +79,26 @@
 <div class="wrap">
 
   <div class="sec-hd">
-    <div class="sec-title"><span class="accent-bar" style="background:#3B82F6"></span>Calificacion por Areas del Indice de Libertad Economica</div>
+    <div class="sec-title"><span class="accent-bar" style="background:#005F73"></span>Calificacion por Areas del Indice de Libertad Economica</div>
     <div class="sec-sub">Promedio regional por area, 2023 &middot; Fraser Institute EFW &middot; 165 jurisdicciones</div>
   </div>
   <div class="kpi-row">
-    <div class="kpi"><div class="kpi-label">Region mas libre</div><div class="kpi-val" style="color:#10B981;font-size:.9rem">Norteamerica</div><div class="kpi-delta" style="color:#10B981">8.01/10</div></div>
-    <div class="kpi"><div class="kpi-label">Region menos libre</div><div class="kpi-val" style="color:#EF4444;font-size:.9rem">Africa Subsahariana</div><div class="kpi-delta" style="color:#EF4444">5.9/10</div></div>
-    <div class="kpi"><div class="kpi-label">Am. Latina</div><div class="kpi-val" style="color:#F59E0B;font-size:.9rem">6.57</div><div class="kpi-delta" style="color:var(--muted)">de 10</div></div>
+    <div class="kpi"><div class="kpi-label">Region mas libre</div><div class="kpi-val" style="color:#0A9396;font-size:.9rem">Norteamerica</div><div class="kpi-delta" style="color:#0A9396">8.01/10</div></div>
+    <div class="kpi"><div class="kpi-label">Region menos libre</div><div class="kpi-val" style="color:#C71E1D;font-size:.9rem">Africa Subsahariana</div><div class="kpi-delta" style="color:#C71E1D">5.9/10</div></div>
+    <div class="kpi"><div class="kpi-label">Am. Latina</div><div class="kpi-val" style="color:#EE9B00;font-size:.9rem">6.57</div><div class="kpi-delta" style="color:var(--muted)">de 10</div></div>
   </div>
   <div class="legend-bar">
-    <span class="leg-item"><span class="leg-dot" style="background:#EF4444"></span>Tamano del Gobierno</span><span class="leg-item"><span class="leg-dot" style="background:#3B82F6"></span>Sistema Legal</span><span class="leg-item"><span class="leg-dot" style="background:#10B981"></span>Moneda Sana</span><span class="leg-item"><span class="leg-dot" style="background:#F59E0B"></span>Comercio Internacional</span><span class="leg-item"><span class="leg-dot" style="background:#8B5CF6"></span>Regulacion</span>
+    <span class="leg-item"><span class="leg-dot" style="background:#C71E1D"></span>Tamano del Gobierno</span><span class="leg-item"><span class="leg-dot" style="background:#0A9396"></span>Sistema Legal</span><span class="leg-item"><span class="leg-dot" style="background:#EE9B00"></span>Moneda Sana</span><span class="leg-item"><span class="leg-dot" style="background:#005F73"></span>Comercio Internacional</span><span class="leg-item"><span class="leg-dot" style="background:#DF5D25"></span>Regulacion</span>
   </div>
   <div class="main-grid">
     <div class="chart-card"><div id="chart"></div></div>
     <div class="panel">
       <div class="panel-hd" style="background:#1E40AF"><span class="panel-hd-t">Lectura del grafico</span></div>
       <div class="panel-body">
-        <div class="pb"><div class="pb-lbl" style="color:#3B82F6">Que muestra</div><div class="pb-desc">Cada grupo de barras representa el <strong>promedio regional</strong> en las 5 areas del Indice de Libertad Economica del Fraser Institute. Las areas miden: tamano del gobierno, sistema legal, estabilidad monetaria, apertura comercial y regulacion.</div></div>
-        <div class="pb"><div class="pb-lbl" style="color:#3B82F6">Patrones clave</div><div class="pb-desc"><strong>Norteamerica y Europa</strong> lideran consistentemente, mientras que <strong>Asia del Sur y Africa Subsahariana</strong> muestran los puntajes mas bajos. El area de <strong>Moneda Sana</strong> es donde mas regiones convergen; las mayores brechas estan en <strong>Sistema Legal</strong> y <strong>Regulacion</strong>.</div></div>
-        <div class="pb"><div class="pb-lbl" style="color:#3B82F6">America Latina</div><div class="pb-desc">La region tiene un desempeno <strong>intermedio-bajo</strong>. Su area mas debil es <strong>Sistema Legal</strong> (4.9/10), reflejando debilidades institucionales, seguida de <strong>Regulacion</strong> (6.24/10). Su mejor area es <strong>Moneda Sana</strong> (7.33/10).</div></div>
-        <div class="ctx" style="border-left:3px solid #3B82F6"><p><strong>Fuente:</strong> Fraser Institute, Economic Freedom of the World 2023. 165 jurisdicciones, 5 areas, 45 variables.</p></div>
+        <div class="pb"><div class="pb-lbl" style="color:#005F73">Que muestra</div><div class="pb-desc">Cada grupo de barras representa el <strong>promedio regional</strong> en las 5 areas del Indice de Libertad Economica del Fraser Institute. Las areas miden: tamano del gobierno, sistema legal, estabilidad monetaria, apertura comercial y regulacion.</div></div>
+        <div class="pb"><div class="pb-lbl" style="color:#005F73">Patrones clave</div><div class="pb-desc"><strong>Norteamerica y Europa</strong> lideran consistentemente, mientras que <strong>Asia del Sur y Africa Subsahariana</strong> muestran los puntajes mas bajos. El area de <strong>Moneda Sana</strong> es donde mas regiones convergen; las mayores brechas estan en <strong>Sistema Legal</strong> y <strong>Regulacion</strong>.</div></div>
+        <div class="pb"><div class="pb-lbl" style="color:#005F73">America Latina</div><div class="pb-desc">La region tiene un desempeno <strong>intermedio-bajo</strong>. Su area mas debil es <strong>Sistema Legal</strong> (4.9/10), reflejando debilidades institucionales, seguida de <strong>Regulacion</strong> (6.24/10). Su mejor area es <strong>Moneda Sana</strong> (7.33/10).</div></div>
+        <div class="ctx" style="border-left:3px solid #005F73"><p><strong>Fuente:</strong> Fraser Institute, Economic Freedom of the World 2023. 165 jurisdicciones, 5 areas, 45 variables.</p></div>
       </div>
     </div>
   </div>
@@ -127,7 +128,7 @@ function initChart() {
     yAxis:{type:'value',min:0,max:10,
       axisLabel:{color:lc,fontSize:10,fontFamily:'JetBrains Mono'},
       splitLine:{lineStyle:{color:gc,type:'dashed'}},axisLine:{show:false}},
-    series:[{name:'Tamano del Gobierno',type:'bar',data:[6.82, 6.1, 6.72, 6.21, 7.17, 7.51, 6.95],itemStyle:{color:'#EF4444',borderRadius:[3,3,0,0]},barMaxWidth:18},{name:'Sistema Legal',type:'bar',data:[7.75, 6.66, 5.84, 4.51, 4.9, 5.17, 4.22],itemStyle:{color:'#3B82F6',borderRadius:[3,3,0,0]},barMaxWidth:18},{name:'Moneda Sana',type:'bar',data:[8.93, 8.1, 8.03, 7.23, 7.33, 6.2, 6.49],itemStyle:{color:'#10B981',borderRadius:[3,3,0,0]},barMaxWidth:18},{name:'Comercio Internacional',type:'bar',data:[8.32, 8.26, 7.54, 6.47, 7.2, 6.33, 6.11],itemStyle:{color:'#F59E0B',borderRadius:[3,3,0,0]},barMaxWidth:18},{name:'Regulacion',type:'bar',data:[8.22, 6.76, 6.82, 5.8, 6.24, 6.38, 5.71],itemStyle:{color:'#8B5CF6',borderRadius:[3,3,0,0]},barMaxWidth:18}]
+    series:[{name:'Tamano del Gobierno',type:'bar',data:[6.82, 6.1, 6.72, 6.21, 7.17, 7.51, 6.95],itemStyle:{color:'#C71E1D',borderRadius:[3,3,0,0]},barMaxWidth:18},{name:'Sistema Legal',type:'bar',data:[7.75, 6.66, 5.84, 4.51, 4.9, 5.17, 4.22],itemStyle:{color:'#0A9396',borderRadius:[3,3,0,0]},barMaxWidth:18},{name:'Moneda Sana',type:'bar',data:[8.93, 8.1, 8.03, 7.23, 7.33, 6.2, 6.49],itemStyle:{color:'#EE9B00',borderRadius:[3,3,0,0]},barMaxWidth:18},{name:'Comercio Internacional',type:'bar',data:[8.32, 8.26, 7.54, 6.47, 7.2, 6.33, 6.11],itemStyle:{color:'#005F73',borderRadius:[3,3,0,0]},barMaxWidth:18},{name:'Regulacion',type:'bar',data:[8.22, 6.76, 6.82, 5.8, 6.24, 6.38, 5.71],itemStyle:{color:'#DF5D25',borderRadius:[3,3,0,0]},barMaxWidth:18}]
   });
   window.addEventListener('resize',function(){chart.resize()});
 }

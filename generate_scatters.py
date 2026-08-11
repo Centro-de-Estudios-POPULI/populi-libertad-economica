@@ -14,8 +14,8 @@ scatters = [
         'log_y': True,
         'y_min': 'null', 'y_max': 'null',
         'reg_order': 2,
-        'accent': '#10B981',
-        'panel_hd_bg': '#065F46', 'panel_hd_bg_dark': '#1A3A2A',
+        'accent': '#C71E1D',
+        'panel_hd_bg': '#C71E1D', 'panel_hd_bg_dark': '#2A1211',
         'relation': 'Los países con <strong>mayor libertad económica sostenida</strong> muestran niveles de ingreso per cápita significativamente más altos. El cuartil superior (EFW > 7.5) tiene un PIB per cápita promedio <strong>6 veces mayor</strong> que el cuartil inferior.',
         'theory': 'La libertad económica —derechos de propiedad, moneda sana, libre comercio, regulación eficiente y gobierno limitado— facilita la <strong>acumulación de capital</strong>, la <strong>innovación</strong> y la <strong>asignación eficiente de recursos</strong>, motores fundamentales del crecimiento a largo plazo.',
         'source_detail': 'Fraser Institute EFW 2025, World Bank WDI 2023',
@@ -33,8 +33,8 @@ scatters = [
         'y_min': '0', 'y_max': '95',
         'reg_type': 'exp',
         'reg_order': 2,
-        'accent': '#EF4444',
-        'panel_hd_bg': '#7F1D1D', 'panel_hd_bg_dark': '#3A1515',
+        'accent': '#0A9396',
+        'panel_hd_bg': '#005F73', 'panel_hd_bg_dark': '#0A2429',
         'relation': 'Existe una relación <strong>inversamente proporcional</strong> entre libertad económica y pobreza extrema. Los países del cuartil más libre tienen tasas de pobreza cercanas a cero, mientras que los menos libres concentran las mayores tasas.',
         'theory': 'La apertura comercial, los derechos de propiedad seguros y la estabilidad monetaria generan <strong>empleos formales</strong>, <strong>inversión productiva</strong> y <strong>acceso a bienes importados baratos</strong>, reduciendo la pobreza absoluta a través del crecimiento inclusivo.',
         'source_detail': 'Fraser Institute EFW 2025, World Bank Poverty & Inequality Platform',
@@ -51,8 +51,8 @@ scatters = [
         'log_y': False,
         'y_min': '52', 'y_max': '87',
         'reg_order': 2,
-        'accent': '#8B5CF6',
-        'panel_hd_bg': '#4C1D95', 'panel_hd_bg_dark': '#2D1065',
+        'accent': '#EE9B00',
+        'panel_hd_bg': '#A86E00', 'panel_hd_bg_dark': '#2A1F08',
         'relation': 'Los países económicamente más libres viven en promedio <strong>15 años más</strong> que los menos libres. La relación es particularmente fuerte en el rango bajo de EFW (4-6), donde pequeñas mejoras se asocian a grandes ganancias en salud.',
         'theory': 'Mayor ingreso per cápita permite <strong>mejor nutrición, saneamiento e infraestructura médica</strong>. La libertad de comercio facilita el acceso a medicamentos e insumos. La competencia en servicios de salud mejora la calidad y reduce costos.',
         'source_detail': 'Fraser Institute EFW 2025, World Bank WDI 2023',
@@ -70,8 +70,8 @@ scatters = [
         'y_min': '0', 'y_max': '75',
         'reg_type': 'exp',
         'reg_order': 2,
-        'accent': '#EC4899',
-        'panel_hd_bg': '#831843', 'panel_hd_bg_dark': '#4A0E25',
+        'accent': '#005F73',
+        'panel_hd_bg': '#00323D', 'panel_hd_bg_dark': '#08191E',
         'relation': 'La mortalidad infantil <strong>cae drásticamente</strong> conforme aumenta la libertad económica. El cuartil más libre tiene tasas de mortalidad infantil <strong>7 veces menores</strong> que el cuartil menos libre.',
         'theory': 'El mecanismo opera a través de <strong>mayor ingreso familiar</strong> (mejor nutrición materna), <strong>inversión en salud pública</strong> financiada por crecimiento, y <strong>acceso a tecnología médica</strong> facilitado por la apertura comercial.',
         'source_detail': 'Fraser Institute EFW 2025, World Bank WDI 2023',
@@ -88,8 +88,8 @@ scatters = [
         'log_y': False,
         'y_min': '3', 'y_max': '8',
         'reg_order': 2,
-        'accent': '#F59E0B',
-        'panel_hd_bg': '#78350F', 'panel_hd_bg_dark': '#3D1A08',
+        'accent': '#DF5D25',
+        'panel_hd_bg': '#9B2226', 'panel_hd_bg_dark': '#2A1410',
         'relation': 'Las personas en países económicamente libres reportan <strong>mayor satisfacción vital</strong>. La relación es robusta incluso controlando por ingreso, sugiriendo que la libertad económica contribuye al bienestar subjetivo por vías adicionales al ingreso.',
         'theory': 'La libertad económica aporta bienestar subjetivo a través de: <strong>sentido de autonomía</strong> sobre decisiones económicas propias, <strong>oportunidades de emprendimiento</strong>, <strong>menor corrupción</strong> y <strong>mayor confianza institucional</strong>.',
         'source_detail': 'Fraser Institute EFW 2025, World Happiness Report 2026 (Cantril Ladder)',
@@ -106,8 +106,8 @@ scatters = [
         'log_y': False,
         'y_min': '22', 'y_max': '78',
         'reg_order': 2,
-        'accent': '#059669',
-        'panel_hd_bg': '#064E3B', 'panel_hd_bg_dark': '#022C22',
+        'accent': '#94D2BD',
+        'panel_hd_bg': '#0A9396', 'panel_hd_bg_dark': '#10262B',
         'relation': 'Los países más libres tienen <strong>mejor desempeño ambiental</strong>, contradiciendo la narrativa de que la liberalización económica destruye el medio ambiente. Los países del cuartil superior puntuan en promedio <strong>20 puntos más</strong> en el EPI.',
         'theory': 'La <strong>Curva de Kuznets Ambiental</strong>: mayor ingreso permite invertir en tecnología limpia y regulación ambiental efectiva. Los <strong>derechos de propiedad claros</strong> internalizan externalidades. La <strong>apertura comercial</strong> difunde tecnologías limpias.',
         'source_detail': 'Fraser Institute EFW 2025, Yale Environmental Performance Index 2024',
@@ -124,8 +124,8 @@ scatters = [
         'log_y': False,
         'y_min': '5', 'y_max': '95',
         'reg_order': 2,
-        'accent': '#6366F1',
-        'panel_hd_bg': '#312E81', 'panel_hd_bg_dark': '#1E1B4B',
+        'accent': '#9B2226',
+        'panel_hd_bg': '#6B1A1D', 'panel_hd_bg_dark': '#24100F',
         'relation': 'La correlación entre libertad económica y transparencia es de las <strong>más fuertes del análisis</strong>. Los países del cuartil más libre promedian CPI de <strong>65+</strong>, contra menos de <strong>27</strong> en el cuartil inferior.',
         'theory': 'La libertad económica reduce la corrupción al <strong>limitar el poder discrecional</strong> de funcionarios. Menos regulaciones = menos oportunidades de soborno. <strong>Estado de derecho</strong> y <strong>derechos de propiedad</strong> refuerzan instituciones transparentes.',
         'source_detail': 'Fraser Institute EFW 2025, Transparency International CPI 2024',
@@ -142,7 +142,7 @@ scatters = [
         'log_y': False,
         'y_min': '2', 'y_max': '10',
         'reg_order': 1,
-        'accent': '#0EA5E9',
+        'accent': '#005F73',
         'panel_hd_bg': '#0C4A6E', 'panel_hd_bg_dark': '#082F49',
         'relation': 'Las libertades económica y personal están <strong>positivamente correlacionadas</strong>. Los países que protegen la propiedad privada y el comercio libre tienden a proteger también la libertad de expresión, religión y asociación.',
         'theory': '<strong>Hayek y Friedman</strong> argumentaron que la libertad económica es <strong>condición necesaria</strong> (aunque no suficiente) para la libertad política. La independencia económica del Estado reduce la capacidad del gobierno de reprimir la disidencia.',
@@ -160,7 +160,7 @@ scatters = [
         'log_y': False,
         'y_min': '1300', 'y_max': '2700',
         'reg_order': 1,
-        'accent': '#D946EF',
+        'accent': '#9B2226',
         'panel_hd_bg': '#701A75', 'panel_hd_bg_dark': '#4A044E',
         'relation': 'Los países más libres tienden a trabajar <strong>menos horas</strong> por año. Mayor productividad por hora permite alcanzar el mismo (o mayor) ingreso con menos tiempo de trabajo, liberando tiempo para ocio y familia.',
         'theory': 'La <strong>alta productividad</strong> de economías libres (capital abundante, tecnología, eficiencia institucional) permite la <strong>reducción gradual de jornada</strong> sin sacrificar ingreso — el \\"dividendo de la libertad\\" en forma de tiempo.',
@@ -178,7 +178,7 @@ scatters = [
         'log_y': False,
         'y_min': '0.5', 'y_max': '5',
         'reg_order': 1,
-        'accent': '#14B8A6',
+        'accent': '#0A9396',
         'panel_hd_bg': '#115E59', 'panel_hd_bg_dark': '#0D3D3B',
         'relation': 'La participación del decil más pobre en el ingreso nacional es <strong>similar</strong> independientemente del nivel de libertad económica. Sin embargo, dado que el PIB per cápita es mucho mayor en países libres, el <strong>ingreso absoluto</strong> de los más pobres es muy superior.',
         'theory': 'Los pobres en países libres tienen <strong>mayor ingreso absoluto</strong> (PIB per cápita alto × participación estable). La movilidad social y el acceso a mercados competitivos permiten que los ingresos bajos crezcan con la economía.',
@@ -196,7 +196,7 @@ scatters = [
         'log_y': False,
         'y_min': '0', 'y_max': '1',
         'reg_order': 1,
-        'accent': '#F97316',
+        'accent': '#E57D22',
         'panel_hd_bg': '#7C2D12', 'panel_hd_bg_dark': '#431407',
         'relation': 'La relación es <strong>positiva pero con excepciones notables</strong>: países como Singapur (alta libertad económica, democracia limitada) y otros con democracias formales pero baja libertad económica. La correlación sugiere complementariedad, no causalidad directa.',
         'theory': 'La libertad económica crea una <strong>clase media independiente</strong> que demanda participación política. La <strong>descentralización del poder económico</strong> dificulta la consolidación autocrática. Sin embargo, la causalidad puede operar en ambas direcciones.',
@@ -217,7 +217,7 @@ TEMPLATE = '''<!DOCTYPE html>
   <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
   <style>
     :root {{
-      --populi:#8B1A1A; --populi-light:#C00000;
+      --populi:#C71E1D; --populi-light:#E8706B;
       --cream:#F5EFE0; --brown-dark:#3D2B1F;
       --navy:#0D1B2A; --navy-light:#1A2940; --slate:#475569; --slate-light:#64748B;
       --warm-white:#FAF8F3; --light-gray:#F1EDE5; --border:#E2DDD3; --dark-border:#2A3A50;
@@ -304,12 +304,12 @@ TEMPLATE = '''<!DOCTYPE html>
     const REG_ORDER = {reg_order};
     const REG_TYPE = '{reg_type}';
 
-    const Q_COLORS = {{ 1:'#10B981', 2:'#3B82F6', 3:'#F59E0B', 4:'#EF4444' }};
+    const Q_COLORS = {{ 1:'#C71E1D', 2:'#005F73', 3:'#DF5D25', 4:'#0A9396' }};
     const Q_LABELS = {{ 1:'Cuartil 1 (mas libre)', 2:'Cuartil 2', 3:'Cuartil 3', 4:'Cuartil 4 (menos libre)' }};
     const R_COLORS = {{
-      'East Asia & Pacific':'#3B82F6','Europe & Central Asia':'#8B5CF6',
-      'Latin America & the Caribbean':'#F59E0B','Middle East & North Africa':'#EF4444',
-      'North America':'#10B981','South Asia':'#EC4899','Sub-Saharan Africa':'#6366F1'
+      'East Asia & Pacific':'#005F73','Europe & Central Asia':'#EE9B00',
+      'Latin America & the Caribbean':'#DF5D25','Middle East & North Africa':'#0A9396',
+      'North America':'#C71E1D','South Asia':'#005F73','Sub-Saharan Africa':'#9B2226'
     }};
     const R_SHORT = {{
       'East Asia & Pacific':'Asia Pacifico','Europe & Central Asia':'Europa y Asia Central',

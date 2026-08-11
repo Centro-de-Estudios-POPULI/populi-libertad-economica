@@ -10,12 +10,12 @@
   <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
   <style>
     :root {
-      --populi:#8B1A1A; --populi-light:#C00000;
+      --populi:#C71E1D; --populi-light:#E8706B;
       --cream:#F5EFE0; --brown-dark:#3D2B1F;
       --navy:#0D1B2A; --navy-light:#1A2940; --slate:#475569; --slate-light:#64748B;
       --warm-white:#FAF8F3; --light-gray:#F1EDE5; --border:#E2DDD3; --dark-border:#2A3A50;
       --bg:var(--warm-white); --card:#FFFFFF; --text:var(--brown-dark); --muted:var(--slate-light);
-      --radius:12px; --accent:#06B6D4;
+      --radius:12px; --accent:#94D2BD;
     }
     [data-theme="dark"] {
       --bg:#080808; --card:#141414; --text:#E2E8F0; --muted:#64748B;
@@ -76,14 +76,14 @@
     .gap-table th{color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--border)}
     [data-theme="dark"] .gap-table th{border-color:var(--dark-border)}
     .gap-table td{font-family:'JetBrains Mono',monospace;font-size:.62rem}
-    .gap-table .min-gap{color:#10B981;font-weight:700}
-    .gap-table .max-gap{color:#EF4444;font-weight:700}
+    .gap-table .min-gap{color:#0A9396;font-weight:700}
+    .gap-table .max-gap{color:#C71E1D;font-weight:700}
   </style>
 </head>
 <body>
 <div class="wrap">
   <div class="sec-hd">
-    <div class="sec-title"><span class="accent-bar" style="background:#06B6D4"></span>Top 10 vs Bottom 10: Perfil por Areas</div>
+    <div class="sec-title"><span class="accent-bar" style="background:#94D2BD"></span>Top 10 vs Bottom 10: Perfil por Areas</div>
     <div class="sec-sub">Promedio de las 5 areas del EFW para las 10 jurisdicciones mas y menos libres &middot; Fraser Institute</div>
   </div>
   <div class="controls">
@@ -94,23 +94,23 @@
     </div>
   </div>
   <div class="legend-bar">
-    <span class="leg-item"><span class="leg-dot" style="background:#10B981"></span>Top 10 (mas libres)</span>
-    <span class="leg-item"><span class="leg-dot" style="background:#EF4444"></span>Bottom 10 (menos libres)</span>
+    <span class="leg-item"><span class="leg-dot" style="background:#0A9396"></span>Top 10 (mas libres)</span>
+    <span class="leg-item"><span class="leg-dot" style="background:#C71E1D"></span>Bottom 10 (menos libres)</span>
   </div>
   <div class="main-grid">
     <div class="chart-card"><div id="chart"></div></div>
     <div class="panel">
       <div class="panel-hd" style="background:#0E7490"><span class="panel-hd-t">Lectura del grafico</span></div>
       <div class="panel-body">
-        <div class="pb"><div class="pb-lbl" style="color:#06B6D4">Convergencia en Tamano del Gobierno</div><div class="pb-desc">El area donde <strong>Top 10 y Bottom 10 mas se parecen</strong> es Tamano del Gobierno (brecha de solo <strong>1.28 puntos</strong> en 2023). Los paises ricos del Top 10 tienen estados relativamente grandes (6.89/10), no muy lejos del Bottom 10 (5.60). Esto no es casualidad: <strong>pueden costear amplios estados de bienestar</strong> porque sus altos puntajes en las otras 4 areas generan la riqueza necesaria.</div></div>
-        <div class="pb"><div class="pb-lbl" style="color:#06B6D4">Divergencia en Sistema Legal</div><div class="pb-desc">La mayor diferencia esta en <strong>Sistema Legal y Derechos de Propiedad</strong> (brecha de <strong>5.69 puntos</strong>). Los paises libres tienen instituciones judiciales independientes y derechos de propiedad solidos. Los menos libres carecen de esto fundamentalmente. Esta es el area mas discriminante entre prosperidad y pobreza.</div></div>
-        <div class="pb"><div class="pb-lbl" style="color:#06B6D4">1980 vs 2023</div><div class="pb-desc">Use el toggle para comparar con <strong>1980</strong>. La convergencia en Tamano del Gobierno <strong>ya existia</strong> en 1980 (brecha 1.42), confirmando que no es un fenomeno reciente. Lo que si cambio drasticamente es <strong>Comercio Internacional</strong>: la brecha se redujo de 7.58 a 3.92, reflejando la apertura comercial global de las ultimas decadas.</div></div>
-        <div class="pb"><div class="pb-lbl" style="color:#06B6D4">Brecha por area</div>
+        <div class="pb"><div class="pb-lbl" style="color:#94D2BD">Convergencia en Tamano del Gobierno</div><div class="pb-desc">El area donde <strong>Top 10 y Bottom 10 mas se parecen</strong> es Tamano del Gobierno (brecha de solo <strong>1.28 puntos</strong> en 2023). Los paises ricos del Top 10 tienen estados relativamente grandes (6.89/10), no muy lejos del Bottom 10 (5.60). Esto no es casualidad: <strong>pueden costear amplios estados de bienestar</strong> porque sus altos puntajes en las otras 4 areas generan la riqueza necesaria.</div></div>
+        <div class="pb"><div class="pb-lbl" style="color:#94D2BD">Divergencia en Sistema Legal</div><div class="pb-desc">La mayor diferencia esta en <strong>Sistema Legal y Derechos de Propiedad</strong> (brecha de <strong>5.69 puntos</strong>). Los paises libres tienen instituciones judiciales independientes y derechos de propiedad solidos. Los menos libres carecen de esto fundamentalmente. Esta es el area mas discriminante entre prosperidad y pobreza.</div></div>
+        <div class="pb"><div class="pb-lbl" style="color:#94D2BD">1980 vs 2023</div><div class="pb-desc">Use el toggle para comparar con <strong>1980</strong>. La convergencia en Tamano del Gobierno <strong>ya existia</strong> en 1980 (brecha 1.42), confirmando que no es un fenomeno reciente. Lo que si cambio drasticamente es <strong>Comercio Internacional</strong>: la brecha se redujo de 7.58 a 3.92, reflejando la apertura comercial global de las ultimas decadas.</div></div>
+        <div class="pb"><div class="pb-lbl" style="color:#94D2BD">Brecha por area</div>
           <table class="gap-table" id="gap-table">
             <tr><th>Area</th><th>Top 10</th><th>Bot 10</th><th>Brecha</th></tr>
           </table>
         </div>
-        <div class="ctx" style="border-left:3px solid #06B6D4"><p><strong>Implicacion:</strong> Imitar el tamano del estado de los paises ricos sin replicar sus fortalezas institucionales (sistema legal, moneda sana, apertura comercial, regulacion eficiente) es una receta para el fracaso. El estado de bienestar es un <em>resultado</em> de la prosperidad, no su causa.</p></div>
+        <div class="ctx" style="border-left:3px solid #94D2BD"><p><strong>Implicacion:</strong> Imitar el tamano del estado de los paises ricos sin replicar sus fortalezas institucionales (sistema legal, moneda sana, apertura comercial, regulacion eficiente) es una receta para el fracaso. El estado de bienestar es un <em>resultado</em> de la prosperidad, no su causa.</p></div>
       </div>
     </div>
   </div>
@@ -188,13 +188,13 @@ function initChart(){
       type:'radar',
       data:[
         {name:d.topLabel,value:d.top,
-          lineStyle:{width:2.5,color:'#10B981'},
-          itemStyle:{color:'#10B981'},
+          lineStyle:{width:2.5,color:'#0A9396'},
+          itemStyle:{color:'#0A9396'},
           areaStyle:{color:isDk?'rgba(16,185,129,.2)':'rgba(16,185,129,.15)'},
           symbol:'circle',symbolSize:6},
         {name:d.bottomLabel,value:d.bottom,
-          lineStyle:{width:2.5,color:'#EF4444'},
-          itemStyle:{color:'#EF4444'},
+          lineStyle:{width:2.5,color:'#C71E1D'},
+          itemStyle:{color:'#C71E1D'},
           areaStyle:{color:isDk?'rgba(239,68,68,.15)':'rgba(239,68,68,.1)'},
           symbol:'circle',symbolSize:6}
       ]

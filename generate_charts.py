@@ -19,7 +19,9 @@ OUT = 'embed'
 
 AREA_NAMES = ['Tamano del Gobierno', 'Sistema Legal', 'Moneda Sana',
               'Comercio Internacional', 'Regulacion']
-AREA_COLORS = ['#EF4444', '#3B82F6', '#10B981', '#F59E0B', '#8B5CF6']
+# Paleta oficial POPULI — ver Proyectos/populi-marca/paleta.py (fuente única).
+# Categórica de 5: los 5 primeros de CATEGORICAL_12, ordenados por máxima separación.
+AREA_COLORS = ['#C71E1D', '#0A9396', '#EE9B00', '#005F73', '#DF5D25']
 AREA_NAMES_ES = ['Tamano del Gobierno', 'Sistema Legal y Derechos de Propiedad',
                  'Moneda Sana', 'Libertad para Comerciar Internacionalmente', 'Regulacion']
 
@@ -33,17 +35,24 @@ REGION_SHORT = {
     'Sub-Saharan Africa': 'Africa Subsahariana'
 }
 
-QC = {1:'#10B981', 2:'#3B82F6', 3:'#F59E0B', 4:'#EF4444'}
+# Cuartiles = dato ORDINAL, no categórico: va la escala ORDINAL_4 (frío → cálido
+# = mejor → peor), no cuatro colores sueltos. Así el orden se lee en el color.
+QC = {1:'#0A9396', 2:'#94D2BD', 3:'#EE9B00', 4:'#C71E1D'}
 QL = {1:'Cuartil Superior', 2:'Segundo Cuartil', 3:'Tercer Cuartil', 4:'Cuartil Inferior'}
 
-PALETTE = ['#EF4444','#10B981','#3B82F6','#8B5CF6','#F59E0B','#EC4899',
-           '#06B6D4','#64748B','#F97316','#84CC16','#A855F7','#14B8A6',
-           '#E11D48','#0EA5E9','#D946EF','#FB923C']
+# CATEGORICAL_12 de la paleta oficial + 4 tonos de relleno. Aviso honesto: más de
+# 12 series no se distinguen por color en ningún sistema. Si un gráfico llega a
+# usar los últimos cuatro, la lectura correcta es destacar una serie en #C71E1D y
+# dejar el resto en gris (helper `highlight()` en populi-marca/paleta.py).
+PALETTE = ['#C71E1D','#0A9396','#EE9B00','#005F73','#DF5D25','#94D2BD',
+           '#9B2226','#E9D8A6','#8B1A1A','#E8706B','#A86E00','#E57D22',
+           '#5C6B70','#B9BEC0','#7A3E3C','#3E7A78']
 
 # ── Shared CSS (matches scatter_*.html) ─────────────────────
 BASE_CSS = '''
     :root {
-      --populi:#8B1A1A; --populi-light:#C00000;
+      /* Paleta oficial POPULI (2026-08-10) — espejo de populi-marca/paleta.css */
+      --populi:#C71E1D; --populi-light:#E8706B; --populi-deep:#8B1A1A; --gold:#EE9B00;
       --cream:#F5EFE0; --brown-dark:#3D2B1F;
       --navy:#0D1B2A; --navy-light:#1A2940; --slate:#475569; --slate-light:#64748B;
       --warm-white:#FAF8F3; --light-gray:#F1EDE5; --border:#E2DDD3; --dark-border:#2A3A50;
@@ -109,7 +118,7 @@ SELECTOR_CSS = '''
     .search-box{position:relative;flex:1;min-width:200px;max-width:360px}
     .search-box input{width:100%;padding:8px 12px 8px 32px;border:1px solid var(--border);border-radius:8px;
       font-size:.82rem;font-family:Inter,sans-serif;background:var(--card);color:var(--text);outline:none}
-    .search-box input:focus{border-color:#10B981;box-shadow:0 0 0 2px rgba(16,185,129,.15)}
+    .search-box input:focus{border-color:#0A9396;box-shadow:0 0 0 2px rgba(16,185,129,.15)}
     .search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none}
     .dropdown{position:absolute;top:100%;left:0;right:0;max-height:260px;overflow-y:auto;
       background:var(--card);border:1px solid var(--border);border-radius:10px;margin-top:4px;z-index:50;
@@ -132,7 +141,7 @@ SELECTOR_CSS = '''
     .tag .x{cursor:pointer;opacity:.4;font-size:.85rem;margin-left:1px;transition:opacity .15s}
     .tag .x:hover{opacity:1}
     .tag:hover{border-color:var(--muted)}
-    .tag-bol{border-color:#EF4444;border-width:1.5px}
+    .tag-bol{border-color:#C71E1D;border-width:1.5px}
     .hz-lbl{font-size:.62rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
     .hz-grp{display:flex;flex-wrap:wrap;gap:0;background:var(--light-gray);border-radius:8px;padding:2px;border:1px solid var(--border)}
     [data-theme="dark"] .hz-grp{background:#1A1A1A;border-color:var(--dark-border)}
@@ -214,7 +223,7 @@ def build_country_list():
 # ============================================================
 def gen_areas_regiones():
     year = '2023'
-    accent = '#3B82F6'
+    accent = '#005F73'
     region_data = {}
     for iso, d in panel[year].items():
         if iso not in meta: continue
@@ -277,9 +286,9 @@ def gen_areas_regiones():
     <div class="sec-sub">Promedio regional por area, {year} &middot; Fraser Institute EFW &middot; 165 jurisdicciones</div>
   </div>
   <div class="kpi-row">
-    <div class="kpi"><div class="kpi-label">Region mas libre</div><div class="kpi-val" style="color:#10B981;font-size:.9rem">{REGION_SHORT[best_reg]}</div><div class="kpi-delta" style="color:#10B981">{reg_overall[best_reg]}/10</div></div>
-    <div class="kpi"><div class="kpi-label">Region menos libre</div><div class="kpi-val" style="color:#EF4444;font-size:.9rem">{REGION_SHORT[worst_reg]}</div><div class="kpi-delta" style="color:#EF4444">{reg_overall[worst_reg]}/10</div></div>
-    <div class="kpi"><div class="kpi-label">Am. Latina</div><div class="kpi-val" style="color:#F59E0B;font-size:.9rem">{reg_overall["Latin America & the Caribbean"]}</div><div class="kpi-delta" style="color:var(--muted)">de 10</div></div>
+    <div class="kpi"><div class="kpi-label">Region mas libre</div><div class="kpi-val" style="color:#0A9396;font-size:.9rem">{REGION_SHORT[best_reg]}</div><div class="kpi-delta" style="color:#0A9396">{reg_overall[best_reg]}/10</div></div>
+    <div class="kpi"><div class="kpi-label">Region menos libre</div><div class="kpi-val" style="color:#C71E1D;font-size:.9rem">{REGION_SHORT[worst_reg]}</div><div class="kpi-delta" style="color:#C71E1D">{reg_overall[worst_reg]}/10</div></div>
+    <div class="kpi"><div class="kpi-label">Am. Latina</div><div class="kpi-val" style="color:#EE9B00;font-size:.9rem">{reg_overall["Latin America & the Caribbean"]}</div><div class="kpi-delta" style="color:var(--muted)">de 10</div></div>
   </div>
   <div class="legend-bar">
     {''.join(f'<span class="leg-item"><span class="leg-dot" style="background:{AREA_COLORS[i]}"></span>{AREA_NAMES[i]}</span>' for i in range(5))}
@@ -338,7 +347,7 @@ initChart();
 # 2. EVOLUCION MUNDIAL
 # ============================================================
 def gen_evolucion_mundial():
-    accent = '#8B5CF6'
+    accent = '#9B2226'
     yrs = [y for y in sorted(panel.keys()) if int(y)>=1970]
     yrs_int = [int(y) for y in yrs]
     world_avg = []
@@ -377,8 +386,8 @@ def gen_evolucion_mundial():
   </div>
   <div class="kpi-row">
     <div class="kpi"><div class="kpi-label">EFW Global 2023</div><div class="kpi-val" style="color:{accent}">{latest}</div><div class="kpi-delta" style="color:var(--muted)">de 10</div></div>
-    <div class="kpi"><div class="kpi-label">Maximo historico</div><div class="kpi-val" style="color:#10B981">{peak_val}</div><div class="kpi-delta" style="color:#10B981">{peak_yr}</div></div>
-    <div class="kpi"><div class="kpi-label">Minimo historico</div><div class="kpi-val" style="color:#EF4444">{low_val}</div><div class="kpi-delta" style="color:#EF4444">{low_yr}</div></div>
+    <div class="kpi"><div class="kpi-label">Maximo historico</div><div class="kpi-val" style="color:#0A9396">{peak_val}</div><div class="kpi-delta" style="color:#0A9396">{peak_yr}</div></div>
+    <div class="kpi"><div class="kpi-label">Minimo historico</div><div class="kpi-val" style="color:#C71E1D">{low_val}</div><div class="kpi-delta" style="color:#C71E1D">{low_yr}</div></div>
     <div class="kpi"><div class="kpi-label">Jurisdicciones 2023</div><div class="kpi-val">{counts[-1]}</div></div>
   </div>
   <div class="legend-bar">
@@ -457,7 +466,7 @@ initChart();
 # 3. BOLIVIA EFW
 # ============================================================
 def gen_bolivia_efw():
-    accent = '#EF4444'
+    accent = '#C71E1D'
     yrs = [y for y in sorted(panel.keys()) if int(y)>=1970 and 'BOL' in panel[y]]
     yrs_int = [int(y) for y in yrs]
     bol_s = [panel[y]['BOL'].get('s') for y in yrs]
@@ -499,14 +508,14 @@ def gen_bolivia_efw():
   </div>
   <div class="kpi-row">
     <div class="kpi"><div class="kpi-label">Bolivia 2023</div><div class="kpi-val" style="color:{accent}">{latest}</div><div class="kpi-delta" style="color:var(--muted)">#{bol_rank} de {len(scores_23)}</div></div>
-    <div class="kpi"><div class="kpi-label">Maximo</div><div class="kpi-val" style="color:#10B981">{peak_val}</div><div class="kpi-delta" style="color:#10B981">{peak_yr}</div></div>
-    <div class="kpi"><div class="kpi-label">Minimo</div><div class="kpi-val" style="color:#EF4444">{low_val}</div><div class="kpi-delta" style="color:#EF4444">{low_yr}</div></div>
-    <div class="kpi"><div class="kpi-label">Mejor area</div><div class="kpi-val" style="color:#10B981;font-size:.8rem">{best_a}</div><div class="kpi-delta" style="color:#10B981">{areas_23[best_a]}/10</div></div>
+    <div class="kpi"><div class="kpi-label">Maximo</div><div class="kpi-val" style="color:#0A9396">{peak_val}</div><div class="kpi-delta" style="color:#0A9396">{peak_yr}</div></div>
+    <div class="kpi"><div class="kpi-label">Minimo</div><div class="kpi-val" style="color:#C71E1D">{low_val}</div><div class="kpi-delta" style="color:#C71E1D">{low_yr}</div></div>
+    <div class="kpi"><div class="kpi-label">Mejor area</div><div class="kpi-val" style="color:#0A9396;font-size:.8rem">{best_a}</div><div class="kpi-delta" style="color:#0A9396">{areas_23[best_a]}/10</div></div>
   </div>
   <div class="legend-bar">
-    <span class="leg-item"><span class="leg-line" style="border-top:3px solid #EF4444"></span>Bolivia</span>
+    <span class="leg-item"><span class="leg-line" style="border-top:3px solid #C71E1D"></span>Bolivia</span>
     <span class="leg-item"><span class="leg-line" style="border-top:2px dashed #64748B"></span>Promedio Mundial</span>
-    <span class="leg-item"><span class="leg-line" style="border-top:2px dotted #F59E0B"></span>Promedio LAC</span>
+    <span class="leg-item"><span class="leg-line" style="border-top:2px dotted #EE9B00"></span>Promedio LAC</span>
     {''.join(f'<span class="leg-item"><span class="leg-line" style="border-top:1.5px solid {AREA_COLORS[i]}"></span>{AREA_NAMES[i]}</span>' for i in range(5))}
   </div>
   <div class="main-grid">
@@ -555,13 +564,13 @@ function initChart() {{
       splitLine:{{lineStyle:{{color:gc,type:'dashed'}}}},axisLine:{{show:false}}}},
     series:[
       {{name:'Bolivia (EFW)',type:'line',data:{json.dumps(bol_s)},
-        lineStyle:{{width:3,color:'#EF4444'}},itemStyle:{{color:'#EF4444'}},
+        lineStyle:{{width:3,color:'#C71E1D'}},itemStyle:{{color:'#C71E1D'}},
         symbol:'circle',symbolSize:6,z:10}},
       {{name:'Promedio Mundial',type:'line',data:{json.dumps(w_avg)},
         lineStyle:{{width:2,color:'#64748B',type:'dashed'}},itemStyle:{{color:'#64748B'}},
         symbol:'none',z:5}},
       {{name:'Promedio LAC',type:'line',data:{json.dumps(lac)},
-        lineStyle:{{width:2,color:'#F59E0B',type:'dotted'}},itemStyle:{{color:'#F59E0B'}},
+        lineStyle:{{width:2,color:'#EE9B00',type:'dotted'}},itemStyle:{{color:'#EE9B00'}},
         symbol:'none',z:5}},
       {','.join(area_js)}
     ]
@@ -580,7 +589,7 @@ initChart();
 # 4. COMPARATIVA PAISES EFW (Interactive)
 # ============================================================
 def gen_comparativa_paises():
-    accent = '#06B6D4'
+    accent = '#94D2BD'
     yrs = [y for y in sorted(panel.keys()) if int(y)>=1970]
     yrs_int = [int(y) for y in yrs]
     countries = build_country_list()
@@ -614,7 +623,7 @@ def gen_comparativa_paises():
     <div class="panel">
       <div class="panel-hd" style="background:#0E7490"><span class="panel-hd-t">Lectura del grafico</span></div>
       <div class="panel-body">
-        <div class="pb"><div class="pb-lbl" style="color:{accent}">Como usar</div><div class="pb-desc">Use el buscador para <strong>agregar paises</strong> a la comparativa. Cada etiqueta muestra el <strong>puntaje EFW 2023</strong> con un badge de color segun su cuartil: <span style="color:#10B981">&#9679; Q1 (mas libre)</span>, <span style="color:#3B82F6">&#9679; Q2</span>, <span style="color:#F59E0B">&#9679; Q3</span>, <span style="color:#EF4444">&#9679; Q4 (menos libre)</span>. Haga clic en &times; para remover.</div></div>
+        <div class="pb"><div class="pb-lbl" style="color:{accent}">Como usar</div><div class="pb-desc">Use el buscador para <strong>agregar paises</strong> a la comparativa. Cada etiqueta muestra el <strong>puntaje EFW 2023</strong> con un badge de color segun su cuartil: <span style="color:#0A9396">&#9679; Q1 (mas libre)</span>, <span style="color:#005F73">&#9679; Q2</span>, <span style="color:#EE9B00">&#9679; Q3</span>, <span style="color:#C71E1D">&#9679; Q4 (menos libre)</span>. Haga clic en &times; para remover.</div></div>
         <div class="pb"><div class="pb-lbl" style="color:{accent}">Divergencia historica</div><div class="pb-desc">Paises que partieron de niveles similares de libertad economica en los 70 tomaron <strong>caminos radicalmente distintos</strong>. Compare Bolivia y Chile, o Argentina y Singapur, para ver como las <strong>decisiones institucionales</strong> generan trayectorias divergentes a lo largo de decadas.</div></div>
         <div class="pb"><div class="pb-lbl" style="color:{accent}">Bolivia en contexto</div><div class="pb-desc">Bolivia (linea gruesa roja) se mantiene consistentemente en la <strong>mitad inferior</strong> del ranking mundial. Su breve periodo de reformas (1985-2000) es visible como una mejora parcial que no logro consolidarse.</div></div>
         <div class="ctx" style="border-left:3px solid {accent}"><p><strong>Fuente:</strong> Fraser Institute, EFW 2024. El badge de cuartil refleja la posicion en 2023. Las series comienzan segun disponibilidad de datos por pais.</p></div>
@@ -626,7 +635,7 @@ def gen_comparativa_paises():
 var YEARS = {json.dumps(yrs_int)};
 var COUNTRIES = {json.dumps(countries)};
 var ALL_DATA = {json.dumps(all_data)};
-var QC = {{1:'#10B981',2:'#3B82F6',3:'#F59E0B',4:'#EF4444'}};
+var QC = {{1:'#0A9396',2:'#005F73',3:'#EE9B00',4:'#C71E1D'}};
 var QL = {{1:'Cuartil Superior',2:'Segundo Cuartil',3:'Tercer Cuartil',4:'Cuartil Inferior'}};
 var PALETTE = {json.dumps(PALETTE)};
 var selected = {json.dumps(defaults)};
@@ -747,7 +756,7 @@ initChart();
 # 5. COMPARATIVA PIB PER CAPITA (Interactive)
 # ============================================================
 def gen_comparativa_pib():
-    accent = '#F59E0B'
+    accent = '#EE9B00'
     yrs = list(range(1950, 2023))
     countries = build_country_list()
 
@@ -787,7 +796,7 @@ def gen_comparativa_pib():
     <div class="panel">
       <div class="panel-hd" style="background:#B45309"><span class="panel-hd-t">Lectura del grafico</span></div>
       <div class="panel-body">
-        <div class="pb"><div class="pb-lbl" style="color:{accent}">Como usar</div><div class="pb-desc">Use el buscador para <strong>agregar paises</strong>. El badge de color indica el <strong>cuartil de libertad economica</strong> (EFW 2023): <span style="color:#10B981">&#9679; mas libre</span> a <span style="color:#EF4444">&#9679; menos libre</span>. Use el toggle <strong>Logaritmica/Natural</strong> para cambiar la escala del eje Y.</div></div>
+        <div class="pb"><div class="pb-lbl" style="color:{accent}">Como usar</div><div class="pb-desc">Use el buscador para <strong>agregar paises</strong>. El badge de color indica el <strong>cuartil de libertad economica</strong> (EFW 2023): <span style="color:#0A9396">&#9679; mas libre</span> a <span style="color:#C71E1D">&#9679; menos libre</span>. Use el toggle <strong>Logaritmica/Natural</strong> para cambiar la escala del eje Y.</div></div>
         <div class="pb"><div class="pb-lbl" style="color:{accent}">Divergencia de ingresos</div><div class="pb-desc">En 1950, la <strong>brecha de ingresos entre paises era mucho menor</strong>. Las trayectorias divergieron dramaticamente segun las instituciones adoptadas. Compare Corea del Sur (libre) con Bolivia, o Irlanda con Argentina, para ver el impacto acumulado de decadas de <strong>politicas mas o menos libres</strong>.</div></div>
         <div class="pb"><div class="pb-lbl" style="color:{accent}">Bolivia</div><div class="pb-desc">Bolivia (linea gruesa roja) muestra un <strong>crecimiento lento y volatil</strong>. En 1950 tenia un PIB per capita similar al de Corea del Sur; hoy es <strong>6 veces menor</strong>. El estancamiento refleja decadas de instituciones debiles y baja libertad economica.</div></div>
         <div class="ctx" style="border-left:3px solid {accent}"><p><strong>Fuente:</strong> Maddison Project Database 2023 (Bolt & van Zanden). PIB per capita en dolares internacionales de 2011 (PPP). Alterne entre escala logaritmica y natural.</p></div>
@@ -799,7 +808,7 @@ def gen_comparativa_pib():
 var YEARS = {json.dumps(yrs)};
 var COUNTRIES = {json.dumps(countries_gdp)};
 var ALL_DATA = {json.dumps(gdp_all)};
-var QC = {{1:'#10B981',2:'#3B82F6',3:'#F59E0B',4:'#EF4444'}};
+var QC = {{1:'#0A9396',2:'#005F73',3:'#EE9B00',4:'#C71E1D'}};
 var QL = {{1:'Cuartil Superior',2:'Segundo Cuartil',3:'Tercer Cuartil',4:'Cuartil Inferior'}};
 var PALETTE = {json.dumps(PALETTE)};
 var selected = {json.dumps(defaults)};

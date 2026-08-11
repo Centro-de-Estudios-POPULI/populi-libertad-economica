@@ -10,12 +10,12 @@
   <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
   <style>
     :root {
-      --populi:#8B1A1A; --populi-light:#C00000;
+      --populi:#C71E1D; --populi-light:#E8706B;
       --cream:#F5EFE0; --brown-dark:#3D2B1F;
       --navy:#0D1B2A; --navy-light:#1A2940; --slate:#475569; --slate-light:#64748B;
       --warm-white:#FAF8F3; --light-gray:#F1EDE5; --border:#E2DDD3; --dark-border:#2A3A50;
       --bg:var(--warm-white); --card:#FFFFFF; --text:var(--brown-dark); --muted:var(--slate-light);
-      --accent:#F59E0B;
+      --accent:#DF5D25;
       --radius:12px;
     }
     [data-theme="dark"] {
@@ -37,7 +37,7 @@
     [data-theme="dark"] .hz-grp{background:#1A1A1A;border-color:var(--dark-border)}
     .hz-btn{padding:5px 14px;border:none;border-radius:6px;font-family:'Inter',sans-serif;font-size:.68rem;font-weight:600;cursor:pointer;background:transparent;color:var(--muted);transition:all .2s}
     .hz-btn:hover{color:var(--text)}
-    .hz-btn.active{background:var(--accent);color:#fff;box-shadow:0 2px 8px #F59E0B40}
+    .hz-btn.active{background:var(--accent);color:#fff;box-shadow:0 2px 8px #DF5D2540}
     .legend-bar{display:flex;flex-wrap:wrap;gap:4px 10px;padding:2px 14px 10px;align-items:center}
     .leg-item{display:flex;align-items:center;gap:3px;font-size:.58rem;font-weight:600;color:var(--muted);white-space:nowrap}
     .leg-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
@@ -53,8 +53,8 @@
     #chart{width:100%;height:100%}
     .panel{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;display:flex;flex-direction:column}
     [data-theme="dark"] .panel{background:#141414;border-color:var(--dark-border)}
-    .panel-hd{background:#78350F;padding:10px 14px;display:flex;align-items:center;justify-content:space-between}
-    [data-theme="dark"] .panel-hd{background:#3D1A08}
+    .panel-hd{background:#9B2226;padding:10px 14px;display:flex;align-items:center;justify-content:space-between}
+    [data-theme="dark"] .panel-hd{background:#2A1410}
     .panel-hd-t{font-size:.56rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.8)}
     .panel-body{padding:14px;flex:1;overflow-y:auto}
     .pb{margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)}
@@ -93,16 +93,16 @@
     const LOG_Y = false;
     const Y_MIN = 3;
     const Y_MAX = 8;
-    const ACCENT = '#F59E0B';
+    const ACCENT = '#DF5D25';
     const REG_ORDER = 2;
     const REG_TYPE = 'poly';
 
-    const Q_COLORS = { 1:'#10B981', 2:'#3B82F6', 3:'#F59E0B', 4:'#EF4444' };
+    const Q_COLORS = { 1:'#C71E1D', 2:'#005F73', 3:'#DF5D25', 4:'#0A9396' };
     const Q_LABELS = { 1:'Cuartil 1 (mas libre)', 2:'Cuartil 2', 3:'Cuartil 3', 4:'Cuartil 4 (menos libre)' };
     const R_COLORS = {
-      'East Asia & Pacific':'#3B82F6','Europe & Central Asia':'#8B5CF6',
-      'Latin America & the Caribbean':'#F59E0B','Middle East & North Africa':'#EF4444',
-      'North America':'#10B981','South Asia':'#EC4899','Sub-Saharan Africa':'#6366F1'
+      'East Asia & Pacific':'#005F73','Europe & Central Asia':'#EE9B00',
+      'Latin America & the Caribbean':'#DF5D25','Middle East & North Africa':'#0A9396',
+      'North America':'#C71E1D','South Asia':'#005F73','Sub-Saharan Africa':'#9B2226'
     };
     const R_SHORT = {
       'East Asia & Pacific':'Asia Pacifico','Europe & Central Asia':'Europa y Asia Central',

@@ -6,9 +6,9 @@ with open('data/_tmp_countries.json', 'r', encoding='utf-8') as f:
 with open('data/_tmp_alldata.json', 'r') as f:
     data_json = f.read()
 
-CSS = r'''    :root { --accent:#F59E0B; }
+CSS = r'''    :root { --accent:#EE9B00; }
     :root {
-      --populi:#8B1A1A; --populi-light:#C00000;
+      --populi:#C71E1D; --populi-light:#E8706B;
       --cream:#F5EFE0; --brown-dark:#3D2B1F;
       --navy:#0D1B2A; --navy-light:#1A2940; --slate:#475569; --slate-light:#64748B;
       --warm-white:#FAF8F3; --light-gray:#F1EDE5; --border:#E2DDD3; --dark-border:#2A3A50;
@@ -63,7 +63,7 @@ CSS = r'''    :root { --accent:#F59E0B; }
     .search-box{position:relative;flex:1;min-width:200px;max-width:360px}
     .search-box input{width:100%;padding:8px 12px 8px 32px;border:1px solid var(--border);border-radius:8px;
       font-size:.82rem;font-family:Inter,sans-serif;background:var(--card);color:var(--text);outline:none}
-    .search-box input:focus{border-color:#10B981;box-shadow:0 0 0 2px rgba(16,185,129,.15)}
+    .search-box input:focus{border-color:#0A9396;box-shadow:0 0 0 2px rgba(16,185,129,.15)}
     .search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none}
     .dropdown{position:absolute;top:100%;left:0;right:0;max-height:260px;overflow-y:auto;
       background:var(--card);border:1px solid var(--border);border-radius:10px;margin-top:4px;z-index:50;
@@ -86,7 +86,7 @@ CSS = r'''    :root { --accent:#F59E0B; }
     .tag .x{cursor:pointer;opacity:.4;font-size:.85rem;margin-left:1px;transition:opacity .15s}
     .tag .x:hover{opacity:1}
     .tag:hover{border-color:var(--muted)}
-    .tag-bol{border-color:#EF4444;border-width:1.5px}
+    .tag-bol{border-color:#C71E1D;border-width:1.5px}
     .hz-lbl{font-size:.62rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
     .hz-grp{display:flex;flex-wrap:wrap;gap:0;background:var(--light-gray);border-radius:8px;padding:2px;border:1px solid var(--border)}
     [data-theme="dark"] .hz-grp{background:#1A1A1A;border-color:var(--dark-border)}
@@ -94,9 +94,9 @@ CSS = r'''    :root { --accent:#F59E0B; }
     .hz-btn:hover{color:var(--text)}
     .hz-btn.active{background:var(--accent);color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.15)}'''
 
-JS = r'''var QC = {1:'#10B981',2:'#3B82F6',3:'#F59E0B',4:'#EF4444'};
+JS = r'''var QC = {1:'#0A9396',2:'#005F73',3:'#EE9B00',4:'#C71E1D'};
 var QL = {1:'Cuartil Superior',2:'Segundo Cuartil',3:'Tercer Cuartil',4:'Cuartil Inferior'};
-var PALETTE = ["#EF4444", "#10B981", "#3B82F6", "#8B5CF6", "#F59E0B", "#EC4899", "#06B6D4", "#64748B", "#F97316", "#84CC16", "#A855F7", "#14B8A6", "#E11D48", "#0EA5E9", "#D946EF", "#FB923C"];
+var PALETTE = ["#C71E1D", "#0A9396", "#005F73", "#9B2226", "#EE9B00", "#DF5D25", "#94D2BD", "#64748B", "#A86E00", "#A86E00", "#8B1A1A", "#0A9396", "#C71E1D", "#94D2BD", "#9B2226", "#E8706B"];
 var selected = ["BOL", "CHL", "ARG", "VEN", "IRL", "SGP", "KOR", "USA"];
 var colorMap = {};
 var colorIdx = 0;
@@ -242,7 +242,7 @@ initChart();'''
 
 BODY = '''
   <div class="sec-hd">
-    <div class="sec-title"><span class="accent-bar" style="background:#F59E0B"></span>Evolucion del PIB per Capita</div>
+    <div class="sec-title"><span class="accent-bar" style="background:#EE9B00"></span>Evolucion del PIB per Capita</div>
     <div class="sec-sub">Selecciona paises para comparar &middot; Dolares internacionales de 2011, 1820-2022 &middot; Maddison Project Database 2023 &middot; 169 paises</div>
   </div>
   <div class="controls-row">
@@ -263,11 +263,11 @@ BODY = '''
     <div class="panel">
       <div class="panel-hd" style="background:#B45309"><span class="panel-hd-t">Lectura del grafico</span></div>
       <div class="panel-body">
-        <div class="pb"><div class="pb-lbl" style="color:#F59E0B">Como usar</div><div class="pb-desc">Use el buscador para <strong>agregar paises</strong> (169 disponibles). El badge de color indica el <strong>cuartil de libertad economica</strong> (EFW 2023): <span style="color:#10B981">&#9679; mas libre</span> a <span style="color:#EF4444">&#9679; menos libre</span>. Paises sin dato EFW aparecen en gris. Use el toggle <strong>Logaritmica/Natural</strong> para cambiar la escala.</div></div>
-        <div class="pb"><div class="pb-lbl" style="color:#F59E0B">Dos siglos de divergencia</div><div class="pb-desc">En 1820, la <strong>brecha de ingresos entre paises era minima</strong>. Las trayectorias divergieron dramaticamente segun las instituciones adoptadas. La Revolucion Industrial beneficio primero a quienes adoptaron mercados libres y estado de derecho. Compare las trayectorias de <strong>Reino Unido, Estados Unidos</strong> (despegue temprano) contra <strong>Bolivia o Argentina</strong> (estancamiento relativo).</div></div>
-        <div class="pb"><div class="pb-lbl" style="color:#F59E0B">Bolivia</div><div class="pb-desc">Bolivia (linea gruesa roja) tiene datos desde <strong>1846</strong> ($1,184). En 1950 tenia un PIB per capita similar al de Corea del Sur; hoy es <strong>6 veces menor</strong>. Su PIB per capita de 2022 ($6,481) es apenas <strong>5.5 veces</strong> lo que era hace 176 anos. Compare con Corea del Sur: de $854 en 1820 a $41,321 en 2022 (<strong>48 veces</strong>).</div></div>
-        <div class="pb"><div class="pb-lbl" style="color:#F59E0B">El milagro asiatico</div><div class="pb-desc">Singapur, Corea del Sur, Hong Kong y Japon partieron de niveles similares o inferiores a America Latina. Sus reformas de <strong>apertura comercial, moneda sana y estado de derecho</strong> generaron el crecimiento mas rapido de la historia. En escala logaritmica se aprecia mejor la <strong>aceleracion exponencial</strong>.</div></div>
-        <div class="ctx" style="border-left:3px solid #F59E0B"><p><strong>Fuente:</strong> Maddison Project Database 2023 (Bolt &amp; van Zanden). PIB per capita en dolares internacionales de 2011 (PPP). Los datos historicos previos a 1950 son estimaciones academicas con mayor incertidumbre.</p></div>
+        <div class="pb"><div class="pb-lbl" style="color:#EE9B00">Como usar</div><div class="pb-desc">Use el buscador para <strong>agregar paises</strong> (169 disponibles). El badge de color indica el <strong>cuartil de libertad economica</strong> (EFW 2023): <span style="color:#0A9396">&#9679; mas libre</span> a <span style="color:#C71E1D">&#9679; menos libre</span>. Paises sin dato EFW aparecen en gris. Use el toggle <strong>Logaritmica/Natural</strong> para cambiar la escala.</div></div>
+        <div class="pb"><div class="pb-lbl" style="color:#EE9B00">Dos siglos de divergencia</div><div class="pb-desc">En 1820, la <strong>brecha de ingresos entre paises era minima</strong>. Las trayectorias divergieron dramaticamente segun las instituciones adoptadas. La Revolucion Industrial beneficio primero a quienes adoptaron mercados libres y estado de derecho. Compare las trayectorias de <strong>Reino Unido, Estados Unidos</strong> (despegue temprano) contra <strong>Bolivia o Argentina</strong> (estancamiento relativo).</div></div>
+        <div class="pb"><div class="pb-lbl" style="color:#EE9B00">Bolivia</div><div class="pb-desc">Bolivia (linea gruesa roja) tiene datos desde <strong>1846</strong> ($1,184). En 1950 tenia un PIB per capita similar al de Corea del Sur; hoy es <strong>6 veces menor</strong>. Su PIB per capita de 2022 ($6,481) es apenas <strong>5.5 veces</strong> lo que era hace 176 anos. Compare con Corea del Sur: de $854 en 1820 a $41,321 en 2022 (<strong>48 veces</strong>).</div></div>
+        <div class="pb"><div class="pb-lbl" style="color:#EE9B00">El milagro asiatico</div><div class="pb-desc">Singapur, Corea del Sur, Hong Kong y Japon partieron de niveles similares o inferiores a America Latina. Sus reformas de <strong>apertura comercial, moneda sana y estado de derecho</strong> generaron el crecimiento mas rapido de la historia. En escala logaritmica se aprecia mejor la <strong>aceleracion exponencial</strong>.</div></div>
+        <div class="ctx" style="border-left:3px solid #EE9B00"><p><strong>Fuente:</strong> Maddison Project Database 2023 (Bolt &amp; van Zanden). PIB per capita en dolares internacionales de 2011 (PPP). Los datos historicos previos a 1950 son estimaciones academicas con mayor incertidumbre.</p></div>
       </div>
     </div>
   </div>
