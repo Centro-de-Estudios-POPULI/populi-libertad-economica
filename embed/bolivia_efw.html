@@ -61,7 +61,7 @@
     .ctx{background:var(--cream);border-radius:6px;padding:8px 10px;margin-top:6px}
     [data-theme="dark"] .ctx{background:var(--navy-light)}
     .ctx p{font-size:.68rem;line-height:1.5;color:var(--muted)}
-    [data-theme="dark"] .ctx p{color:#94A3B8}
+    [data-theme="dark"] .ctx p{color:#64748B}
     .source{display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding:0 2px}
     .source-txt{font-size:.6rem;color:var(--muted)}
     .source-txt a{color:var(--populi);font-weight:600;text-decoration:none}
@@ -97,7 +97,7 @@
   <div class="main-grid">
     <div class="chart-card"><div id="chart"></div></div>
     <div class="panel">
-      <div class="panel-hd" style="background:#991B1B"><span class="panel-hd-t">Lectura del grafico</span></div>
+      <div class="panel-hd" style="background:#8B1A1A"><span class="panel-hd-t">Lectura del grafico</span></div>
       <div class="panel-body">
         <div class="pb"><div class="pb-lbl" style="color:#C71E1D">Trayectoria historica</div><div class="pb-desc">Bolivia mostro un <strong>deterioro constante hasta 1985</strong>, coincidiendo con dictaduras militares y la hiperinflacion. El <strong>Plan de Estabilizacion de 1985</strong> (DS 21060) marco un punto de inflexion con medidas de liberalizacion que impulsaron el puntaje hasta su maximo en <strong>2000 (6.71)</strong>.</div></div>
         <div class="pb"><div class="pb-lbl" style="color:#C71E1D">Periodo reciente</div><div class="pb-desc">A partir de 2006, el modelo de mayor intervencion estatal revirtio parcialmente los avances. Las areas mas debiles son <strong>Sistema Legal</strong> (4.13/10) y el sistema legal, mientras que <strong>Moneda Sana</strong> (9.29/10) se mantiene relativamente alta gracias a la estabilidad de precios.</div></div>
@@ -111,19 +111,19 @@
 function rebuildChart() { initChart(); }
 function initChart() {
   var isDk = document.documentElement.getAttribute('data-theme')==='dark';
-  var gc = isDk?'#1E293B':'#F0EDE6';
-  var ac = isDk?'#334155':'#D5CFC5';
-  var lc = isDk?'#64748B':'#94A3B8';
-  var nc = isDk?'#94A3B8':'#64748B';
+  var gc = isDk?'#1A2940':'#F1EDE5';
+  var ac = isDk?'#2A3A50':'#E2DDD3';
+  var lc = isDk?'#64748B':'#64748B';
+  var nc = isDk?'#64748B':'#64748B';
   var el = document.getElementById('chart');
   if(window._chart) window._chart.dispose();
   var chart = echarts.init(el);
   window._chart = chart;
   chart.setOption({
     backgroundColor:'transparent',
-    tooltip:{trigger:'axis',backgroundColor:isDk?'#1E1E1E':'#fff',
+    tooltip:{trigger:'axis',backgroundColor:isDk?'#141414':'#fff',
       borderColor:isDk?'#333':'#E2E8F0',
-      textStyle:{color:isDk?'#E2E8F0':'#1E293B',fontSize:12,fontFamily:'Inter'}},
+      textStyle:{color:isDk?'#E2E8F0':'#1A2940',fontSize:12,fontFamily:'Inter'}},
     legend:{
       data:['Bolivia (EFW)','Promedio Mundial','Promedio LAC','Tamano del Gobierno','Sistema Legal','Moneda Sana','Comercio Internacional','Regulacion'],
       bottom:0,textStyle:{color:lc,fontSize:10},itemWidth:16,itemHeight:8,itemGap:8,

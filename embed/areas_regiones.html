@@ -61,7 +61,7 @@
     .ctx{background:var(--cream);border-radius:6px;padding:8px 10px;margin-top:6px}
     [data-theme="dark"] .ctx{background:var(--navy-light)}
     .ctx p{font-size:.68rem;line-height:1.5;color:var(--muted)}
-    [data-theme="dark"] .ctx p{color:#94A3B8}
+    [data-theme="dark"] .ctx p{color:#64748B}
     .source{display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding:0 2px}
     .source-txt{font-size:.6rem;color:var(--muted)}
     .source-txt a{color:var(--populi);font-weight:600;text-decoration:none}
@@ -107,10 +107,10 @@
 function rebuildChart() { initChart(); }
 function initChart() {
   var isDk = document.documentElement.getAttribute('data-theme')==='dark';
-  var tc = isDk?'#E2E8F0':'#1E293B';
-  var gc = isDk?'#1E293B':'#F0EDE6';
-  var ac = isDk?'#334155':'#D5CFC5';
-  var lc = isDk?'#64748B':'#94A3B8';
+  var tc = isDk?'#E2E8F0':'#1A2940';
+  var gc = isDk?'#1A2940':'#F1EDE5';
+  var ac = isDk?'#2A3A50':'#E2DDD3';
+  var lc = isDk?'#64748B':'#64748B';
   var el = document.getElementById('chart');
   if(window._chart) window._chart.dispose();
   var chart = echarts.init(el);
@@ -118,7 +118,7 @@ function initChart() {
   chart.setOption({
     backgroundColor:'transparent',
     tooltip:{trigger:'axis',axisPointer:{type:'shadow'},
-      backgroundColor:isDk?'#1E1E1E':'#fff',borderColor:isDk?'#333':'#E2E8F0',
+      backgroundColor:isDk?'#141414':'#fff',borderColor:isDk?'#333':'#E2E8F0',
       textStyle:{color:tc,fontSize:12,fontFamily:'Inter'}},
     legend:{show:false},
     grid:{left:55,right:20,bottom:70,top:16,containLabel:false},

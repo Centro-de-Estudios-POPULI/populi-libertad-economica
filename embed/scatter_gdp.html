@@ -68,7 +68,7 @@
     .ctx{background:var(--cream);border-radius:6px;padding:8px 10px;border-left:3px solid var(--accent);margin-top:6px}
     [data-theme="dark"] .ctx{background:var(--navy-light)}
     .ctx p{font-size:.68rem;line-height:1.5;color:var(--muted)}
-    [data-theme="dark"] .ctx p{color:#94A3B8}
+    [data-theme="dark"] .ctx p{color:#64748B}
     .source{display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding:0 2px}
     .source-txt{font-size:.6rem;color:var(--muted)}
     .source-txt a{color:var(--populi);font-weight:600;text-decoration:none}
@@ -97,7 +97,10 @@
     const REG_ORDER = 2;
     const REG_TYPE = 'poly';
 
-    const Q_COLORS = { 1:'#C71E1D', 2:'#005F73', 3:'#DF5D25', 4:'#0A9396' };
+    // ORDINAL, no categórico: turquesa = más libre, rojo = menos libre.
+    // Coincide con el mapa mundial y con QC de generate_charts.py. Estaba
+    // INVERTIDO (cuartil 1 en rojo), que contradecía al mapa y al sombreado.
+    const Q_COLORS = { 1:'#0A9396', 2:'#94D2BD', 3:'#EE9B00', 4:'#C71E1D' };
     const Q_LABELS = { 1:'Cuartil 1 (mas libre)', 2:'Cuartil 2', 3:'Cuartil 3', 4:'Cuartil 4 (menos libre)' };
     const R_COLORS = {
       'East Asia & Pacific':'#005F73','Europe & Central Asia':'#EE9B00',
@@ -244,7 +247,7 @@
         label: d.iso === 'BOL' ? {
           show:true, formatter:'BOL', position:'top', distance:4,
           fontSize:9, fontWeight:700, fontFamily:'JetBrains Mono',
-          color:isDk?'#fff':'#1E293B',
+          color:isDk?'#fff':'#1A2940',
           textBorderColor:isDk?'rgba(0,0,0,.6)':'rgba(255,255,255,.8)', textBorderWidth:2
         } : {show:false}
       }));
@@ -266,17 +269,21 @@
         return [x, LOG_Y ? Math.pow(10, yFit) : Math.max(0, yFit)];
       });
 
-      const gridColor = isDk ? '#1E293B' : '#F0EDE6';
-      const axisColor = isDk ? '#334155' : '#D5CFC5';
-      const labelColor = isDk ? '#64748B' : '#94A3B8';
-      const nameColor = isDk ? '#94A3B8' : '#64748B';
-      const mc = isDk ? '#94A3B8' : '#64748B';
+      const gridColor = isDk ? '#1A2940' : '#F1EDE5';
+      const axisColor = isDk ? '#2A3A50' : '#E2DDD3';
+      const labelColor = isDk ? '#64748B' : '#64748B';
+      const nameColor = isDk ? '#64748B' : '#64748B';
+      const mc = isDk ? '#64748B' : '#64748B';
 
+      // Sombreado de fondo por tramo de libertad. MISMA escala que las burbujas y
+      // que el mapa: rojo abajo, turquesa arriba. Estaba en rgba() de Tailwind, que
+      // el barrido por hexadecimales no alcanzó.
+      //   #C71E1D=199,30,29 · #EE9B00=238,155,0 · #94D2BD=148,210,189 · #0A9396=10,147,150
       const qBands = [
-        [{xAxis:3.5},{xAxis:5.5, itemStyle:{color:isDk?'rgba(239,68,68,.06)':'rgba(239,68,68,.04)'}}],
-        [{xAxis:5.5},{xAxis:6.5, itemStyle:{color:isDk?'rgba(245,158,11,.06)':'rgba(245,158,11,.04)'}}],
-        [{xAxis:6.5},{xAxis:7.5, itemStyle:{color:isDk?'rgba(59,130,246,.06)':'rgba(59,130,246,.04)'}}],
-        [{xAxis:7.5},{xAxis:9.2, itemStyle:{color:isDk?'rgba(16,185,129,.06)':'rgba(16,185,129,.04)'}}]
+        [{xAxis:3.5},{xAxis:5.5, itemStyle:{color:isDk?'rgba(199,30,29,.07)':'rgba(199,30,29,.05)'}}],
+        [{xAxis:5.5},{xAxis:6.5, itemStyle:{color:isDk?'rgba(238,155,0,.07)':'rgba(238,155,0,.05)'}}],
+        [{xAxis:6.5},{xAxis:7.5, itemStyle:{color:isDk?'rgba(148,210,189,.09)':'rgba(148,210,189,.07)'}}],
+        [{xAxis:7.5},{xAxis:9.2, itemStyle:{color:isDk?'rgba(10,147,150,.07)':'rgba(10,147,150,.05)'}}]
       ];
 
       chart.setOption({
@@ -302,10 +309,10 @@
         },
         tooltip:{
           trigger:'item', confine:true,
-          backgroundColor:isDk?'#1E293B':'#fff',
-          borderColor:isDk?'#334155':'#E2E8F0',
+          backgroundColor:isDk?'#1A2940':'#fff',
+          borderColor:isDk?'#2A3A50':'#E2E8F0',
           borderRadius:10, padding:[12,14],
-          textStyle:{ color:isDk?'#E2E8F0':'#1E293B', fontSize:12, fontFamily:'Inter' },
+          textStyle:{ color:isDk?'#E2E8F0':'#1A2940', fontSize:12, fontFamily:'Inter' },
           formatter: p => {
             if(p.seriesIndex!==0) return '';
             const [efw,yv,pop,name,iso,q,reg] = p.value;
@@ -318,7 +325,7 @@
               +`<span style="font-size:10px;color:${mc}">${ql}</span></div>`
               +`<div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:11px;color:${mc}">${Y_LABEL}</span><span style="font-size:11px;font-weight:700">${Y_FORMAT(yv)}</span></div>`
               +`<div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:11px;color:${mc}">Poblacion</span><span style="font-size:11px;font-weight:700">${pop>1e6?(pop/1e6).toFixed(1)+'M':(pop/1e3).toFixed(0)+'k'}</span></div>`
-              +`<div style="font-size:10px;color:${mc};margin-top:4px;border-top:1px solid ${isDk?'#334155':'#E2E8F0'};padding-top:4px">${R_SHORT[reg]||reg}</div></div>`;
+              +`<div style="font-size:10px;color:${mc};margin-top:4px;border-top:1px solid ${isDk?'#2A3A50':'#E2E8F0'};padding-top:4px">${R_SHORT[reg]||reg}</div></div>`;
           }
         },
         series:[

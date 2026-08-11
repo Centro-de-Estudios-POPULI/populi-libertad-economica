@@ -54,7 +54,7 @@ CSS = r'''    :root { --accent:#EE9B00; }
     .ctx{background:var(--cream);border-radius:6px;padding:8px 10px;margin-top:6px}
     [data-theme="dark"] .ctx{background:var(--navy-light)}
     .ctx p{font-size:.68rem;line-height:1.5;color:var(--muted)}
-    [data-theme="dark"] .ctx p{color:#94A3B8}
+    [data-theme="dark"] .ctx p{color:#64748B}
     .source{display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding:0 2px}
     .source-txt{font-size:.6rem;color:var(--muted)}
     .source-txt a{color:var(--populi);font-weight:600;text-decoration:none}
@@ -63,7 +63,7 @@ CSS = r'''    :root { --accent:#EE9B00; }
     .search-box{position:relative;flex:1;min-width:200px;max-width:360px}
     .search-box input{width:100%;padding:8px 12px 8px 32px;border:1px solid var(--border);border-radius:8px;
       font-size:.82rem;font-family:Inter,sans-serif;background:var(--card);color:var(--text);outline:none}
-    .search-box input:focus{border-color:#0A9396;box-shadow:0 0 0 2px rgba(16,185,129,.15)}
+    .search-box input:focus{border-color:#0A9396;box-shadow:0 0 0 2px rgba(10,147,150,.15)}
     .search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none}
     .dropdown{position:absolute;top:100%;left:0;right:0;max-height:260px;overflow-y:auto;
       background:var(--card);border:1px solid var(--border);border-radius:10px;margin-top:4px;z-index:50;
@@ -71,7 +71,7 @@ CSS = r'''    :root { --accent:#EE9B00; }
     .dropdown.open{display:block}
     .dd-item{display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;
       font-size:.8rem;transition:background .15s}
-    .dd-item:hover{background:rgba(16,185,129,.08)}
+    .dd-item:hover{background:rgba(10,147,150,.08)}
     .dd-item .q-badge{font-size:.6rem;font-weight:700;color:#fff;padding:2px 6px;border-radius:4px;
       font-family:'JetBrains Mono',monospace;min-width:36px;text-align:center}
     .dd-item .cname{flex:1;color:var(--text)}
@@ -121,10 +121,10 @@ document.getElementById('btn-nat').addEventListener('click', function(){ setScal
 
 function initChart() {
   var isDk = document.documentElement.getAttribute('data-theme')==='dark';
-  var gc = isDk?'#1E293B':'#F0EDE6';
-  var ac = isDk?'#334155':'#D5CFC5';
-  var lc = isDk?'#64748B':'#94A3B8';
-  var nc = isDk?'#94A3B8':'#64748B';
+  var gc = isDk?'#1A2940':'#F1EDE5';
+  var ac = isDk?'#2A3A50':'#E2DDD3';
+  var lc = isDk?'#64748B':'#64748B';
+  var nc = isDk?'#64748B':'#64748B';
   var el = document.getElementById('chart');
   if(window._chart) window._chart.dispose();
   var chart = echarts.init(el);
@@ -158,9 +158,9 @@ function initChart() {
   }
   chart.setOption({
     backgroundColor:'transparent',
-    tooltip: {trigger:'axis',backgroundColor:isDk?'#1E1E1E':'#fff',
+    tooltip: {trigger:'axis',backgroundColor:isDk?'#141414':'#fff',
       borderColor:isDk?'#333':'#E2E8F0',
-      textStyle:{color:isDk?'#E2E8F0':'#1E293B',fontSize:12,fontFamily:'Inter'},
+      textStyle:{color:isDk?'#E2E8F0':'#1A2940',fontSize:12,fontFamily:'Inter'},
       order:'valueDesc',
       formatter:function(params){
         var yr = params[0].value[0];
@@ -261,7 +261,7 @@ BODY = '''
   <div class="main-grid">
     <div class="chart-card"><div id="chart"></div></div>
     <div class="panel">
-      <div class="panel-hd" style="background:#B45309"><span class="panel-hd-t">Lectura del grafico</span></div>
+      <div class="panel-hd" style="background:#A86E00"><span class="panel-hd-t">Lectura del grafico</span></div>
       <div class="panel-body">
         <div class="pb"><div class="pb-lbl" style="color:#EE9B00">Como usar</div><div class="pb-desc">Use el buscador para <strong>agregar paises</strong> (169 disponibles). El badge de color indica el <strong>cuartil de libertad economica</strong> (EFW 2023): <span style="color:#0A9396">&#9679; mas libre</span> a <span style="color:#C71E1D">&#9679; menos libre</span>. Paises sin dato EFW aparecen en gris. Use el toggle <strong>Logaritmica/Natural</strong> para cambiar la escala.</div></div>
         <div class="pb"><div class="pb-lbl" style="color:#EE9B00">Dos siglos de divergencia</div><div class="pb-desc">En 1820, la <strong>brecha de ingresos entre paises era minima</strong>. Las trayectorias divergieron dramaticamente segun las instituciones adoptadas. La Revolucion Industrial beneficio primero a quienes adoptaron mercados libres y estado de derecho. Compare las trayectorias de <strong>Reino Unido, Estados Unidos</strong> (despegue temprano) contra <strong>Bolivia o Argentina</strong> (estancamiento relativo).</div></div>

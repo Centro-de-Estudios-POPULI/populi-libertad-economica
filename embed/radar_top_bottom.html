@@ -66,7 +66,7 @@
     .ctx{background:var(--cream);border-radius:6px;padding:8px 10px;margin-top:6px}
     [data-theme="dark"] .ctx{background:var(--navy-light)}
     .ctx p{font-size:.68rem;line-height:1.5;color:var(--muted)}
-    [data-theme="dark"] .ctx p{color:#94A3B8}
+    [data-theme="dark"] .ctx p{color:#64748B}
     .source{display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding:0 2px}
     .source-txt{font-size:.6rem;color:var(--muted)}
     .source-txt a{color:var(--populi);font-weight:600;text-decoration:none}
@@ -100,7 +100,7 @@
   <div class="main-grid">
     <div class="chart-card"><div id="chart"></div></div>
     <div class="panel">
-      <div class="panel-hd" style="background:#0E7490"><span class="panel-hd-t">Lectura del grafico</span></div>
+      <div class="panel-hd" style="background:#005F73"><span class="panel-hd-t">Lectura del grafico</span></div>
       <div class="panel-body">
         <div class="pb"><div class="pb-lbl" style="color:#94D2BD">Convergencia en Tamano del Gobierno</div><div class="pb-desc">El area donde <strong>Top 10 y Bottom 10 mas se parecen</strong> es Tamano del Gobierno (brecha de solo <strong>1.28 puntos</strong> en 2023). Los paises ricos del Top 10 tienen estados relativamente grandes (6.89/10), no muy lejos del Bottom 10 (5.60). Esto no es casualidad: <strong>pueden costear amplios estados de bienestar</strong> porque sus altos puntajes en las otras 4 areas generan la riqueza necesaria.</div></div>
         <div class="pb"><div class="pb-lbl" style="color:#94D2BD">Divergencia en Sistema Legal</div><div class="pb-desc">La mayor diferencia esta en <strong>Sistema Legal y Derechos de Propiedad</strong> (brecha de <strong>5.69 puntos</strong>). Los paises libres tienen instituciones judiciales independientes y derechos de propiedad solidos. Los menos libres carecen de esto fundamentalmente. Esta es el area mas discriminante entre prosperidad y pobreza.</div></div>
@@ -172,17 +172,17 @@ function initChart(){
   window._chart=chart;
   chart.setOption({
     backgroundColor:'transparent',
-    tooltip:{trigger:'item',backgroundColor:isDk?'#1E1E1E':'#fff',borderColor:isDk?'#333':'#E2E8F0',
-      textStyle:{color:isDk?'#E2E8F0':'#1E293B',fontSize:12,fontFamily:'Inter'}},
+    tooltip:{trigger:'item',backgroundColor:isDk?'#141414':'#fff',borderColor:isDk?'#333':'#E2E8F0',
+      textStyle:{color:isDk?'#E2E8F0':'#1A2940',fontSize:12,fontFamily:'Inter'}},
     legend:{show:false},
     radar:{
       indicator:AREAS.map(function(a){return{name:a,max:10}}),
       shape:'polygon',
       radius:'72%',
-      axisName:{color:isDk?'#94A3B8':'#475569',fontSize:10,fontFamily:'Inter',fontWeight:600},
+      axisName:{color:isDk?'#64748B':'#475569',fontSize:10,fontFamily:'Inter',fontWeight:600},
       splitArea:{areaStyle:{color:isDk?['rgba(255,255,255,.02)','rgba(255,255,255,.04)']:['rgba(0,0,0,.01)','rgba(0,0,0,.03)']}},
-      splitLine:{lineStyle:{color:isDk?'#1E293B':'#E2DDD3'}},
-      axisLine:{lineStyle:{color:isDk?'#1E293B':'#E2DDD3'}}
+      splitLine:{lineStyle:{color:isDk?'#1A2940':'#E2DDD3'}},
+      axisLine:{lineStyle:{color:isDk?'#1A2940':'#E2DDD3'}}
     },
     series:[{
       type:'radar',
@@ -190,12 +190,12 @@ function initChart(){
         {name:d.topLabel,value:d.top,
           lineStyle:{width:2.5,color:'#0A9396'},
           itemStyle:{color:'#0A9396'},
-          areaStyle:{color:isDk?'rgba(16,185,129,.2)':'rgba(16,185,129,.15)'},
+          areaStyle:{color:isDk?'rgba(10,147,150,.2)':'rgba(10,147,150,.15)'},
           symbol:'circle',symbolSize:6},
         {name:d.bottomLabel,value:d.bottom,
           lineStyle:{width:2.5,color:'#C71E1D'},
           itemStyle:{color:'#C71E1D'},
-          areaStyle:{color:isDk?'rgba(239,68,68,.15)':'rgba(239,68,68,.1)'},
+          areaStyle:{color:isDk?'rgba(199,30,29,.15)':'rgba(199,30,29,.1)'},
           symbol:'circle',symbolSize:6}
       ]
     }]

@@ -100,7 +100,7 @@ BASE_CSS = '''
     .ctx{background:var(--cream);border-radius:6px;padding:8px 10px;margin-top:6px}
     [data-theme="dark"] .ctx{background:var(--navy-light)}
     .ctx p{font-size:.68rem;line-height:1.5;color:var(--muted)}
-    [data-theme="dark"] .ctx p{color:#94A3B8}
+    [data-theme="dark"] .ctx p{color:#64748B}
     .source{display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding:0 2px}
     .source-txt{font-size:.6rem;color:var(--muted)}
     .source-txt a{color:var(--populi);font-weight:600;text-decoration:none}
@@ -118,7 +118,7 @@ SELECTOR_CSS = '''
     .search-box{position:relative;flex:1;min-width:200px;max-width:360px}
     .search-box input{width:100%;padding:8px 12px 8px 32px;border:1px solid var(--border);border-radius:8px;
       font-size:.82rem;font-family:Inter,sans-serif;background:var(--card);color:var(--text);outline:none}
-    .search-box input:focus{border-color:#0A9396;box-shadow:0 0 0 2px rgba(16,185,129,.15)}
+    .search-box input:focus{border-color:#0A9396;box-shadow:0 0 0 2px rgba(10,147,150,.15)}
     .search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none}
     .dropdown{position:absolute;top:100%;left:0;right:0;max-height:260px;overflow-y:auto;
       background:var(--card);border:1px solid var(--border);border-radius:10px;margin-top:4px;z-index:50;
@@ -126,7 +126,7 @@ SELECTOR_CSS = '''
     .dropdown.open{display:block}
     .dd-item{display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;
       font-size:.8rem;transition:background .15s}
-    .dd-item:hover{background:rgba(16,185,129,.08)}
+    .dd-item:hover{background:rgba(10,147,150,.08)}
     .dd-item .q-badge{font-size:.6rem;font-weight:700;color:#fff;padding:2px 6px;border-radius:4px;
       font-family:'JetBrains Mono',monospace;min-width:36px;text-align:center}
     .dd-item .cname{flex:1;color:var(--text)}
@@ -310,10 +310,10 @@ def gen_areas_regiones():
 function rebuildChart() {{ initChart(); }}
 function initChart() {{
   var isDk = document.documentElement.getAttribute('data-theme')==='dark';
-  var tc = isDk?'#E2E8F0':'#1E293B';
-  var gc = isDk?'#1E293B':'#F0EDE6';
-  var ac = isDk?'#334155':'#D5CFC5';
-  var lc = isDk?'#64748B':'#94A3B8';
+  var tc = isDk?'#E2E8F0':'#1A2940';
+  var gc = isDk?'#1A2940':'#F1EDE5';
+  var ac = isDk?'#2A3A50':'#E2DDD3';
+  var lc = isDk?'#64748B':'#64748B';
   var el = document.getElementById('chart');
   if(window._chart) window._chart.dispose();
   var chart = echarts.init(el);
@@ -321,7 +321,7 @@ function initChart() {{
   chart.setOption({{
     backgroundColor:'transparent',
     tooltip:{{trigger:'axis',axisPointer:{{type:'shadow'}},
-      backgroundColor:isDk?'#1E1E1E':'#fff',borderColor:isDk?'#333':'#E2E8F0',
+      backgroundColor:isDk?'#141414':'#fff',borderColor:isDk?'#333':'#E2E8F0',
       textStyle:{{color:tc,fontSize:12,fontFamily:'Inter'}}}},
     legend:{{show:false}},
     grid:{{left:55,right:20,bottom:70,top:16,containLabel:false}},
@@ -411,19 +411,19 @@ def gen_evolucion_mundial():
 function rebuildChart() {{ initChart(); }}
 function initChart() {{
   var isDk = document.documentElement.getAttribute('data-theme')==='dark';
-  var tc = isDk?'#F8FAFC':'#1E293B';
-  var gc = isDk?'#1E293B':'#F0EDE6';
-  var ac = isDk?'#334155':'#D5CFC5';
-  var lc = isDk?'#64748B':'#94A3B8';
-  var nc = isDk?'#94A3B8':'#64748B';
+  var tc = isDk?'#FAF8F3':'#1A2940';
+  var gc = isDk?'#1A2940':'#F1EDE5';
+  var ac = isDk?'#2A3A50':'#E2DDD3';
+  var lc = isDk?'#64748B':'#64748B';
+  var nc = isDk?'#64748B':'#64748B';
   var el = document.getElementById('chart');
   if(window._chart) window._chart.dispose();
   var chart = echarts.init(el);
   window._chart = chart;
   chart.setOption({{
     backgroundColor:'transparent',
-    tooltip:{{trigger:'axis',backgroundColor:isDk?'#1E1E1E':'#fff',
-      borderColor:isDk?'#333':'#E2E8F0',textStyle:{{color:isDk?'#E2E8F0':'#1E293B',fontSize:12,fontFamily:'Inter'}}}},
+    tooltip:{{trigger:'axis',backgroundColor:isDk?'#141414':'#fff',
+      borderColor:isDk?'#333':'#E2E8F0',textStyle:{{color:isDk?'#E2E8F0':'#1A2940',fontSize:12,fontFamily:'Inter'}}}},
     legend:{{
       data:['EFW Global',{','.join(["'"+n+"'" for n in AREA_NAMES])}],
       bottom:0,textStyle:{{color:lc,fontSize:10}},itemWidth:16,itemHeight:8,itemGap:10,
@@ -446,7 +446,7 @@ function initChart() {{
         lineStyle:{{width:3,color:tc}},itemStyle:{{color:tc}},
         symbol:'circle',symbolSize:5,z:10,
         areaStyle:{{color:new echarts.graphic.LinearGradient(0,0,0,1,[
-          {{offset:0,color:isDk?'rgba(139,92,246,.15)':'rgba(139,92,246,.1)'}},
+          {{offset:0,color:isDk?'rgba(155,34,38,.15)':'rgba(155,34,38,.1)'}},
           {{offset:1,color:'transparent'}}
         ])}}}},
       {','.join(area_series_js)}
@@ -521,7 +521,7 @@ def gen_bolivia_efw():
   <div class="main-grid">
     <div class="chart-card"><div id="chart"></div></div>
     <div class="panel">
-      <div class="panel-hd" style="background:#991B1B"><span class="panel-hd-t">Lectura del grafico</span></div>
+      <div class="panel-hd" style="background:#8B1A1A"><span class="panel-hd-t">Lectura del grafico</span></div>
       <div class="panel-body">
         <div class="pb"><div class="pb-lbl" style="color:{accent}">Trayectoria historica</div><div class="pb-desc">Bolivia mostro un <strong>deterioro constante hasta 1985</strong>, coincidiendo con dictaduras militares y la hiperinflacion. El <strong>Plan de Estabilizacion de 1985</strong> (DS 21060) marco un punto de inflexion con medidas de liberalizacion que impulsaron el puntaje hasta su maximo en <strong>{peak_yr} ({peak_val})</strong>.</div></div>
         <div class="pb"><div class="pb-lbl" style="color:{accent}">Periodo reciente</div><div class="pb-desc">A partir de 2006, el modelo de mayor intervencion estatal revirtio parcialmente los avances. Las areas mas debiles son <strong>{worst_a}</strong> ({areas_23[worst_a]}/10) y el sistema legal, mientras que <strong>{best_a}</strong> ({areas_23[best_a]}/10) se mantiene relativamente alta gracias a la estabilidad de precios.</div></div>
@@ -535,19 +535,19 @@ def gen_bolivia_efw():
 function rebuildChart() {{ initChart(); }}
 function initChart() {{
   var isDk = document.documentElement.getAttribute('data-theme')==='dark';
-  var gc = isDk?'#1E293B':'#F0EDE6';
-  var ac = isDk?'#334155':'#D5CFC5';
-  var lc = isDk?'#64748B':'#94A3B8';
-  var nc = isDk?'#94A3B8':'#64748B';
+  var gc = isDk?'#1A2940':'#F1EDE5';
+  var ac = isDk?'#2A3A50':'#E2DDD3';
+  var lc = isDk?'#64748B':'#64748B';
+  var nc = isDk?'#64748B':'#64748B';
   var el = document.getElementById('chart');
   if(window._chart) window._chart.dispose();
   var chart = echarts.init(el);
   window._chart = chart;
   chart.setOption({{
     backgroundColor:'transparent',
-    tooltip:{{trigger:'axis',backgroundColor:isDk?'#1E1E1E':'#fff',
+    tooltip:{{trigger:'axis',backgroundColor:isDk?'#141414':'#fff',
       borderColor:isDk?'#333':'#E2E8F0',
-      textStyle:{{color:isDk?'#E2E8F0':'#1E293B',fontSize:12,fontFamily:'Inter'}}}},
+      textStyle:{{color:isDk?'#E2E8F0':'#1A2940',fontSize:12,fontFamily:'Inter'}}}},
     legend:{{
       data:['Bolivia (EFW)','Promedio Mundial','Promedio LAC',{','.join(["'"+n+"'" for n in AREA_NAMES])}],
       bottom:0,textStyle:{{color:lc,fontSize:10}},itemWidth:16,itemHeight:8,itemGap:8,
@@ -621,7 +621,7 @@ def gen_comparativa_paises():
   <div class="main-grid">
     <div class="chart-card"><div id="chart"></div></div>
     <div class="panel">
-      <div class="panel-hd" style="background:#0E7490"><span class="panel-hd-t">Lectura del grafico</span></div>
+      <div class="panel-hd" style="background:#005F73"><span class="panel-hd-t">Lectura del grafico</span></div>
       <div class="panel-body">
         <div class="pb"><div class="pb-lbl" style="color:{accent}">Como usar</div><div class="pb-desc">Use el buscador para <strong>agregar paises</strong> a la comparativa. Cada etiqueta muestra el <strong>puntaje EFW 2023</strong> con un badge de color segun su cuartil: <span style="color:#0A9396">&#9679; Q1 (mas libre)</span>, <span style="color:#005F73">&#9679; Q2</span>, <span style="color:#EE9B00">&#9679; Q3</span>, <span style="color:#C71E1D">&#9679; Q4 (menos libre)</span>. Haga clic en &times; para remover.</div></div>
         <div class="pb"><div class="pb-lbl" style="color:{accent}">Divergencia historica</div><div class="pb-desc">Paises que partieron de niveles similares de libertad economica en los 70 tomaron <strong>caminos radicalmente distintos</strong>. Compare Bolivia y Chile, o Argentina y Singapur, para ver como las <strong>decisiones institucionales</strong> generan trayectorias divergentes a lo largo de decadas.</div></div>
@@ -651,10 +651,10 @@ function rebuildChart() {{ initChart(); }}
 
 function initChart() {{
   var isDk = document.documentElement.getAttribute('data-theme')==='dark';
-  var gc = isDk?'#1E293B':'#F0EDE6';
-  var ac = isDk?'#334155':'#D5CFC5';
-  var lc = isDk?'#64748B':'#94A3B8';
-  var nc = isDk?'#94A3B8':'#64748B';
+  var gc = isDk?'#1A2940':'#F1EDE5';
+  var ac = isDk?'#2A3A50':'#E2DDD3';
+  var lc = isDk?'#64748B':'#64748B';
+  var nc = isDk?'#64748B':'#64748B';
   var el = document.getElementById('chart');
   if(window._chart) window._chart.dispose();
   var chart = echarts.init(el);
@@ -675,9 +675,9 @@ function initChart() {{
   var yMax = allVals.length ? Math.min(10, Math.ceil(Math.max.apply(null,allVals)+0.3)) : 10;
   chart.setOption({{
     backgroundColor:'transparent',
-    tooltip: {{trigger:'axis',backgroundColor:isDk?'#1E1E1E':'#fff',
+    tooltip: {{trigger:'axis',backgroundColor:isDk?'#141414':'#fff',
       borderColor:isDk?'#333':'#E2E8F0',
-      textStyle:{{color:isDk?'#E2E8F0':'#1E293B',fontSize:12,fontFamily:'Inter'}},
+      textStyle:{{color:isDk?'#E2E8F0':'#1A2940',fontSize:12,fontFamily:'Inter'}},
       order:'valueDesc'}},
     legend: {{show:false}},
     grid: {{left:55,right:20,bottom:32,top:16,containLabel:false}},
@@ -794,7 +794,7 @@ def gen_comparativa_pib():
   <div class="main-grid">
     <div class="chart-card"><div id="chart"></div></div>
     <div class="panel">
-      <div class="panel-hd" style="background:#B45309"><span class="panel-hd-t">Lectura del grafico</span></div>
+      <div class="panel-hd" style="background:#A86E00"><span class="panel-hd-t">Lectura del grafico</span></div>
       <div class="panel-body">
         <div class="pb"><div class="pb-lbl" style="color:{accent}">Como usar</div><div class="pb-desc">Use el buscador para <strong>agregar paises</strong>. El badge de color indica el <strong>cuartil de libertad economica</strong> (EFW 2023): <span style="color:#0A9396">&#9679; mas libre</span> a <span style="color:#C71E1D">&#9679; menos libre</span>. Use el toggle <strong>Logaritmica/Natural</strong> para cambiar la escala del eje Y.</div></div>
         <div class="pb"><div class="pb-lbl" style="color:{accent}">Divergencia de ingresos</div><div class="pb-desc">En 1950, la <strong>brecha de ingresos entre paises era mucho menor</strong>. Las trayectorias divergieron dramaticamente segun las instituciones adoptadas. Compare Corea del Sur (libre) con Bolivia, o Irlanda con Argentina, para ver el impacto acumulado de decadas de <strong>politicas mas o menos libres</strong>.</div></div>
@@ -835,10 +835,10 @@ document.getElementById('btn-nat').addEventListener('click', function(){{ setSca
 
 function initChart() {{
   var isDk = document.documentElement.getAttribute('data-theme')==='dark';
-  var gc = isDk?'#1E293B':'#F0EDE6';
-  var ac = isDk?'#334155':'#D5CFC5';
-  var lc = isDk?'#64748B':'#94A3B8';
-  var nc = isDk?'#94A3B8':'#64748B';
+  var gc = isDk?'#1A2940':'#F1EDE5';
+  var ac = isDk?'#2A3A50':'#E2DDD3';
+  var lc = isDk?'#64748B':'#64748B';
+  var nc = isDk?'#64748B':'#64748B';
   var el = document.getElementById('chart');
   if(window._chart) window._chart.dispose();
   var chart = echarts.init(el);
@@ -872,9 +872,9 @@ function initChart() {{
   }}
   chart.setOption({{
     backgroundColor:'transparent',
-    tooltip: {{trigger:'axis',backgroundColor:isDk?'#1E1E1E':'#fff',
+    tooltip: {{trigger:'axis',backgroundColor:isDk?'#141414':'#fff',
       borderColor:isDk?'#333':'#E2E8F0',
-      textStyle:{{color:isDk?'#E2E8F0':'#1E293B',fontSize:12,fontFamily:'Inter'}},
+      textStyle:{{color:isDk?'#E2E8F0':'#1A2940',fontSize:12,fontFamily:'Inter'}},
       order:'valueDesc',
       valueFormatter:function(v){{return v?'$'+Math.round(v).toLocaleString():'Sin datos';}}}},
     legend: {{show:false}},
