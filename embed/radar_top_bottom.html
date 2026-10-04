@@ -1,220 +1,293 @@
 <!DOCTYPE html>
-<html lang="es" data-theme="light">
+<html lang="es" data-theme="light" style="--acento:#0A9396">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Top 10 vs Bottom 10 — Areas EFW - Populi</title>
+  <title>Top 10 vs Bottom 10: Perfil por Áreas · Populi</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300..800&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,400&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="comun/monitor.css" />
   <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+  <script src="comun/monitor.js"></script>
   <style>
-    :root {
-      --populi:#C71E1D; --populi-light:#E8706B;
-      --cream:#F5EFE0; --brown-dark:#3D2B1F;
-      --navy:#0D1B2A; --navy-light:#1A2940; --slate:#475569; --slate-light:#64748B;
-      --warm-white:#FAF8F3; --light-gray:#F1EDE5; --border:#E2DDD3; --dark-border:#2A3A50;
-      --bg:var(--warm-white); --card:#FFFFFF; --text:var(--brown-dark); --muted:var(--slate-light);
-      --radius:12px; --accent:#94D2BD;
-    }
-    [data-theme="dark"] {
-      --bg:#080808; --card:#141414; --text:#E2E8F0; --muted:#64748B;
-      --border:#2A3A50; --light-gray:#1A1A1A; --cream:#1A2940;
-    }
-    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;-webkit-font-smoothing:antialiased;transition:background .25s,color .25s}
-    .wrap{max-width:1200px;margin:0 auto;padding:20px 16px}
-    .sec-hd{margin-bottom:12px}
-    .sec-title{font-family:'Playfair Display',Georgia,serif;font-size:1.55rem;font-weight:700;color:var(--navy);display:flex;align-items:center;gap:10px;line-height:1.15}
-    [data-theme="dark"] .sec-title{color:#fff}
-    .accent-bar{width:4px;height:26px;border-radius:2px;flex-shrink:0}
-    .sec-sub{font-size:.78rem;color:var(--muted);padding-left:14px;margin-top:2px}
-    [data-theme="dark"] .sec-sub{color:rgba(255,255,255,.4)}
-    .controls{display:flex;align-items:center;gap:8px;padding:0 14px 10px;flex-wrap:wrap}
-    .hz-lbl{font-size:.62rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
-    .hz-grp{display:flex;background:var(--light-gray);border-radius:8px;padding:2px;border:1px solid var(--border)}
-    [data-theme="dark"] .hz-grp{background:#1A1A1A;border-color:var(--dark-border)}
-    .hz-btn{padding:5px 14px;border:none;border-radius:6px;font-family:'Inter',sans-serif;font-size:.68rem;font-weight:600;cursor:pointer;background:transparent;color:var(--muted);transition:all .2s}
-    .hz-btn:hover{color:var(--text)}
-    .hz-btn.active{background:var(--accent);color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.15)}
-    .legend-bar{display:flex;flex-wrap:wrap;gap:4px 14px;padding:2px 14px 10px;align-items:center}
-    .leg-item{display:flex;align-items:center;gap:4px;font-size:.62rem;font-weight:600;color:var(--muted)}
-    .leg-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
-    .main-grid{display:grid;grid-template-columns:3fr 2fr;gap:16px}
-    @media(max-width:900px){.main-grid{grid-template-columns:1fr}}
-    @media(max-width:500px){.sec-title{font-size:1.2rem}}
-    .chart-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;height:560px}
-    [data-theme="dark"] .chart-card{background:#141414;border-color:var(--dark-border)}
-    @media(max-width:900px){.chart-card{height:440px}}
-    @media(max-width:500px){.chart-card{height:340px}}
-    #chart{width:100%;height:100%}
-    .panel{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;display:flex;flex-direction:column;height:560px}
-    @media(max-width:900px){.panel{height:440px}}
-    @media(max-width:500px){.panel{height:340px}}
-    [data-theme="dark"] .panel{background:#141414;border-color:var(--dark-border)}
-    .panel-hd{padding:10px 14px;display:flex;align-items:center;justify-content:space-between}
-    .panel-hd-t{font-size:.56rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.8)}
-    .panel-body{padding:14px;flex:1;overflow-y:auto}
-    .pb{margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)}
-    [data-theme="dark"] .pb{border-color:var(--dark-border)}
-    .pb:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
-    .pb-lbl{font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px}
-    .pb-desc{font-size:.68rem;line-height:1.5;color:var(--muted)}
-    [data-theme="dark"] .pb-desc{color:rgba(255,255,255,.45)}
-    .pb-desc strong{color:var(--navy)}
-    [data-theme="dark"] .pb-desc strong{color:#E2E8F0}
-    .ctx{background:var(--cream);border-radius:6px;padding:8px 10px;margin-top:6px}
-    [data-theme="dark"] .ctx{background:var(--navy-light)}
-    .ctx p{font-size:.68rem;line-height:1.5;color:var(--muted)}
-    [data-theme="dark"] .ctx p{color:#64748B}
-    .source{display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding:0 2px}
-    .source-txt{font-size:.6rem;color:var(--muted)}
-    .source-txt a{color:var(--populi);font-weight:600;text-decoration:none}
-    .source-txt a:hover{text-decoration:underline}
-    .gap-table{width:100%;border-collapse:collapse;margin:6px 0}
-    .gap-table th,.gap-table td{font-size:.62rem;padding:3px 6px;text-align:left}
-    .gap-table th{color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--border)}
-    [data-theme="dark"] .gap-table th{border-color:var(--dark-border)}
-    .gap-table td{font-family:'JetBrains Mono',monospace;font-size:.62rem}
-    .gap-table .min-gap{color:#0A9396;font-weight:700}
-    .gap-table .max-gap{color:#C71E1D;font-weight:700}
+    .ley .lp.area { --pc: var(--k); }
+    /* ── Tabla de brechas del panel ── */
+    .br { width: 100%; border-collapse: collapse; margin-top: 6px; }
+    .br th { font: 700 .54rem/1.25 'Inter', sans-serif; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); text-align: right; padding: 3px 0 5px 8px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+    .br td { font: 600 .66rem/1.3 'JetBrains Mono', monospace; color: var(--tinta); text-align: right; padding: 5px 0 5px 8px; border-bottom: 1px solid var(--border); vertical-align: baseline; white-space: nowrap; }
+    .br th:first-child, .br td:first-child { text-align: left; padding-left: 0; }
+    .br td:first-child { font: 500 .68rem/1.35 'Inter', sans-serif; color: var(--text); white-space: normal; }
+    .br tr:last-child td { border-bottom: 0; }
+    .br-nota { font-size: .6rem; line-height: 1.45; color: var(--muted); margin-top: 6px; }
+    .quien { font-size: .7rem; line-height: 1.5; color: var(--muted); margin-top: 4px; }
+    .quien strong { color: var(--tinta); }
+    .quien i { display: inline-block; width: 8px; height: 8px; margin-right: 5px; vertical-align: baseline; }
+    /* en el teléfono el radar se limita por el ancho: el lienzo baja para no dejar una franja vacía abajo */
+    @media (max-width: 640px) { :root { --alto-graf: clamp(272px, 80vw, 340px); } }
   </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="sec-hd">
-    <div class="sec-title"><span class="accent-bar" style="background:#94D2BD"></span>Top 10 vs Bottom 10: Perfil por Areas</div>
-    <div class="sec-sub">Promedio de las 5 areas del EFW para las 10 jurisdicciones mas y menos libres &middot; Fraser Institute</div>
-  </div>
-  <div class="controls">
-    <span class="hz-lbl">Periodo:</span>
-    <div class="hz-grp">
-      <button class="hz-btn active" id="btn-2023">2023</button>
-      <button class="hz-btn" id="btn-1980">1980</button>
+  <div class="wrap">
+    <div class="sec-hd">
+      <div class="sec-title"><span class="accent-bar"></span>Top 10 vs Bottom 10: Perfil por Áreas</div>
+      <div class="sec-sub" id="bajada">Puntaje promedio en cada área del índice EFW (0 a 10) de las 10 jurisdicciones más libres y las 10 menos libres</div>
     </div>
-  </div>
-  <div class="legend-bar">
-    <span class="leg-item"><span class="leg-dot" style="background:#0A9396"></span>Top 10 (mas libres)</span>
-    <span class="leg-item"><span class="leg-dot" style="background:#C71E1D"></span>Bottom 10 (menos libres)</span>
-  </div>
-  <div class="main-grid">
-    <div class="chart-card"><div id="chart"></div></div>
-    <div class="panel">
-      <div class="panel-hd" style="background:#005F73"><span class="panel-hd-t">Lectura del grafico</span></div>
-      <div class="panel-body">
-        <div class="pb"><div class="pb-lbl" style="color:#94D2BD">Convergencia en Tamano del Gobierno</div><div class="pb-desc">El area donde <strong>Top 10 y Bottom 10 mas se parecen</strong> es Tamano del Gobierno (brecha de solo <strong>1.28 puntos</strong> en 2023). Los paises ricos del Top 10 tienen estados relativamente grandes (6.89/10), no muy lejos del Bottom 10 (5.60). Esto no es casualidad: <strong>pueden costear amplios estados de bienestar</strong> porque sus altos puntajes en las otras 4 areas generan la riqueza necesaria.</div></div>
-        <div class="pb"><div class="pb-lbl" style="color:#94D2BD">Divergencia en Sistema Legal</div><div class="pb-desc">La mayor diferencia esta en <strong>Sistema Legal y Derechos de Propiedad</strong> (brecha de <strong>5.69 puntos</strong>). Los paises libres tienen instituciones judiciales independientes y derechos de propiedad solidos. Los menos libres carecen de esto fundamentalmente. Esta es el area mas discriminante entre prosperidad y pobreza.</div></div>
-        <div class="pb"><div class="pb-lbl" style="color:#94D2BD">1980 vs 2023</div><div class="pb-desc">Use el toggle para comparar con <strong>1980</strong>. La convergencia en Tamano del Gobierno <strong>ya existia</strong> en 1980 (brecha 1.42), confirmando que no es un fenomeno reciente. Lo que si cambio drasticamente es <strong>Comercio Internacional</strong>: la brecha se redujo de 7.58 a 3.92, reflejando la apertura comercial global de las ultimas decadas.</div></div>
-        <div class="pb"><div class="pb-lbl" style="color:#94D2BD">Brecha por area</div>
-          <table class="gap-table" id="gap-table">
-            <tr><th>Area</th><th>Top 10</th><th>Bot 10</th><th>Brecha</th></tr>
-          </table>
-        </div>
-        <div class="ctx" style="border-left:3px solid #94D2BD"><p><strong>Implicacion:</strong> Imitar el tamano del estado de los paises ricos sin replicar sus fortalezas institucionales (sistema legal, moneda sana, apertura comercial, regulacion eficiente) es una receta para el fracaso. El estado de bienestar es un <em>resultado</em> de la prosperidad, no su causa.</p></div>
+
+    <div class="hz-bar">
+      <div class="hz-item"><span class="hz-lbl">Año</span><div class="hz-grp" id="b-anio"></div></div>
+    </div>
+
+    <div class="kpi-grid" id="kpis"></div>
+
+    <div class="main-grid">
+      <div class="chart-card">
+        <div class="chart-ctrl"><div class="ley" id="leyenda"></div></div>
+        <div class="grafico" id="chart"><div class="loading"><div class="spinner"></div><span>Cargando datos…</span></div></div>
+      </div>
+      <div class="panel">
+        <div class="panel-hd"><span class="panel-hd-t">Lectura del gráfico</span><span class="panel-hd-d" id="panel-fecha"></span></div>
+        <div class="panel-body" id="panel"></div>
       </div>
     </div>
+
+    <div class="edu-grid" id="preguntas"></div>
+    <div class="source"><span class="source-txt" id="fuente"></span></div>
   </div>
-  <div class="source"><span class="source-txt">Fuente: <a href="https://www.fraserinstitute.org/economic-freedom" target="_blank">Fraser Institute</a> · Elaboracion: <a href="https://populi.org.bo" target="_blank">POPULI</a></span></div>
 
-<script>
-var DATA = {
-  '2023': {
-    top:    [6.888, 8.389, 9.384, 8.795, 8.189],
-    bottom: [5.604, 2.697, 4.773, 4.880, 4.203],
-    topLabel: 'Top 10 (2023)',
-    bottomLabel: 'Bottom 10 (2023)',
-    n: '165 jurisdicciones'
-  },
-  '1980': {
-    top:    [6.053, 8.276, 8.859, 8.959, 7.846],
-    bottom: [4.632, 2.820, 4.178, 1.381, 3.426],
-    topLabel: 'Top 10 (1980)',
-    bottomLabel: 'Bottom 10 (1980)',
-    n: '110 jurisdicciones'
-  }
-};
-var AREAS = ['Tamano del\nGobierno','Sistema Legal\ny Derechos','Moneda\nSana','Comercio\nInternacional','Regulacion'];
-var AREAS_SHORT = ['Tam. Gobierno','Sistema Legal','Moneda Sana','Comercio Int.','Regulacion'];
-var currentYear = '2023';
+  <script>
+  (function () {
+    var C = PM.C, TOP = C.turquesa, BOT = C.rojo, BASE = 1980;
+    // Nombres oficiales de las cinco áreas; en el teléfono el rótulo del eje parte en más líneas
+    var AREAS = [
+      { nombre: 'Tamaño del gobierno', corto: 'Tamaño del gobierno', eje: ['Tamaño del gobierno'], ejeT: ['Tamaño del', 'gobierno'],
+        resta: 'el gasto de consumo del gobierno, las transferencias y subsidios, las empresas estatales y las tasas de impuesto altas' },
+      { nombre: 'Sistema legal y derechos de propiedad', corto: 'Sistema legal y propiedad', eje: ['Sistema legal y', 'derechos de propiedad'], ejeT: ['Sistema legal', 'y derechos de', 'propiedad'],
+        resta: 'los tribunales sin independencia, los derechos de propiedad débiles y los contratos que no se cumplen' },
+      { nombre: 'Moneda sana', corto: 'Moneda sana', eje: ['Moneda sana'], ejeT: ['Moneda', 'sana'],
+        resta: 'la inflación alta y volátil, la emisión excesiva y las trabas para tener moneda extranjera' },
+      { nombre: 'Libertad para comerciar internacionalmente', corto: 'Comercio internacional', eje: ['Libertad para comerciar', 'internacionalmente'], ejeT: ['Libertad para', 'comerciar', 'internacionalmente'],
+        resta: 'los aranceles, las barreras al comercio, el mercado paralelo de divisas y los controles de capital' },
+      { nombre: 'Regulación', corto: 'Regulación', eje: ['Regulación'], ejeT: ['Regulación'],
+        resta: 'las regulaciones pesadas sobre el crédito, el trabajo y las empresas' }
+    ];
+    var PANEL, ES, ANIOS, ULT, estado = { anio: null }, grafico, cache = {};
+    var media = function (a) { return a.length ? a.reduce(function (s, v) { return s + v; }, 0) / a.length : null; };
+    // Promedios a dos decimales, redondeando la mitad hacia arriba sobre el decimal exacto (6,035 → 6,04: en binario
+    // 6,035 es 6,03499…). Las brechas son la resta de los promedios ya redondeados: la tabla cierra a mano.
+    var r2 = function (v) { return v == null ? null : Math.round(v * 100 + 1e-7) / 100; };
+    var nombre = function (iso) { return ES[iso] || iso; };
+    var lista = function (fs) { return fs.map(function (f) { return nombre(f.iso); }).join(', '); };
 
-function rebuildChart() { initChart(); }
+    // ── Grupos de un año: las 10 con el índice general más alto y las 10 con el más bajo ───────
+    function grupo(a) {
+      if (cache[a]) return cache[a];
+      var d = PANEL[a] || {}, filas = Object.keys(d).filter(function (iso) { return d[iso] && d[iso].s != null; }).map(function (iso) {
+        var v = d[iso]; return { iso: iso, s: v.s, ar: [v.a1, v.a2, v.a3, v.a4, v.a5] };
+      });
+      filas.sort(function (x, y) { return y.s - x.s || (x.iso < y.iso ? -1 : 1); });
+      var n = filas.length, top = filas.slice(0, 10), bot = filas.slice(-10);
+      // promedio simple de cada área entre las que tienen dato (y cuántas lo tienen)
+      var prom = function (g, k) {
+        var v = g.filter(function (f) { return f.ar[k] != null; });
+        return { m: r2(media(v.map(function (f) { return f.ar[k]; }))), n: v.length, faltan: g.filter(function (f) { return f.ar[k] == null; }) };
+      };
+      var T = AREAS.map(function (x, k) { return prom(top, k); }), B = AREAS.map(function (x, k) { return prom(bot, k); });
+      var gap = T.map(function (t, k) { return t.m != null && B[k].m != null ? r2(t.m - B[k].m) : null; });
+      var orden = gap.map(function (g, k) { return k; }).filter(function (k) { return gap[k] != null; }).sort(function (x, y) { return gap[y] - gap[x]; });
+      return (cache[a] = { a: a, n: n, top: top, bot: bot, T: T, B: B, gap: gap, orden: orden,
+        sT: r2(media(top.map(function (f) { return f.s; }))), sB: r2(media(bot.map(function (f) { return f.s; }))),
+        empate: n > 10 && (filas[9].s === filas[10].s || filas[n - 10].s === filas[n - 11].s) });
+    }
 
-document.getElementById('btn-2023').addEventListener('click', function(){
-  currentYear='2023'; this.className='hz-btn active';
-  document.getElementById('btn-1980').className='hz-btn';
-  initChart(); updateTable();
-});
-document.getElementById('btn-1980').addEventListener('click', function(){
-  currentYear='1980'; this.className='hz-btn active';
-  document.getElementById('btn-2023').className='hz-btn';
-  initChart(); updateTable();
-});
+    PM.cargar(['efw_panel_map.json', 'paises_es.json']).then(function (r) {
+      PANEL = r[0]; ES = r[1].iso;
+      ANIOS = Object.keys(PANEL).map(Number).sort(function (a, b) { return a - b; });
+      ULT = ANIOS[ANIOS.length - 1]; estado.anio = ULT;
+      PM.botonera(document.getElementById('b-anio'), [[String(ULT), String(ULT)], [String(BASE), String(BASE)]], String(ULT), function (v) {
+        estado.anio = +v; textos(); grafico.redibujar();
+      });
+      textos();
+      var el = document.getElementById('chart');
+      el.innerHTML = '';
+      grafico = PM.montar(el, opciones);
+      PM.alCambiarTema(textos);
+      PM.preguntas(document.getElementById('preguntas'), preguntas());
+      document.getElementById('fuente').innerHTML = 'Fuente: <a href="https://www.fraserinstitute.org/economic-freedom" target="_blank" rel="noopener">Fraser Institute</a>, Economic Freedom of the World 2025 · Elaboración: Centro de Estudios POPULI';
+    }).catch(function (e) { console.error(e); PM.error(document.getElementById('chart')); });
 
-function updateTable(){
-  var d=DATA[currentYear]; var html='<tr><th>Area</th><th>Top 10</th><th>Bot 10</th><th>Brecha</th></tr>';
-  var gaps=[]; for(var i=0;i<5;i++) gaps.push({i:i,g:Math.round((d.top[i]-d.bottom[i])*100)/100});
-  var minG=gaps.reduce(function(a,b){return a.g<b.g?a:b});
-  var maxG=gaps.reduce(function(a,b){return a.g>b.g?a:b});
-  for(var i=0;i<5;i++){
-    var g=Math.round((d.top[i]-d.bottom[i])*100)/100;
-    var cls=i===minG.i?'min-gap':(i===maxG.i?'max-gap':'');
-    html+='<tr><td>'+AREAS_SHORT[i]+'</td><td>'+d.top[i].toFixed(2)+'</td><td>'+d.bottom[i].toFixed(2)+'</td><td class="'+cls+'">'+g.toFixed(2)+'</td></tr>';
-  }
-  document.getElementById('gap-table').innerHTML=html;
-}
+    function textos() {
+      var G = grupo(estado.anio);
+      document.getElementById('panel-fecha').textContent = estado.anio;
+      document.getElementById('bajada').textContent = 'Puntaje promedio en cada área del índice EFW (0 a 10) de las 10 jurisdicciones más libres y las 10 menos libres de ' +
+        estado.anio + ', entre ' + G.n + ' medidas';
+      document.getElementById('leyenda').innerHTML = [[TOP, 'Top 10 · las más libres'], [BOT, 'Bottom 10 · las menos libres']].map(function (x) {
+        return '<span class="ley-i"><span class="lp area" style="--k:' + PM.col(x[0]) + '"></span>' + x[1] + '</span>';
+      }).join('');
+      cifras(G); panel(G);
+    }
 
-function initChart(){
-  var isDk=document.documentElement.getAttribute('data-theme')==='dark';
-  var d=DATA[currentYear];
-  var el=document.getElementById('chart');
-  if(window._chart) window._chart.dispose();
-  var chart=echarts.init(el);
-  window._chart=chart;
-  chart.setOption({
-    backgroundColor:'transparent',
-    tooltip:{trigger:'item',backgroundColor:isDk?'#141414':'#fff',borderColor:isDk?'#333':'#E2E8F0',
-      textStyle:{color:isDk?'#E2E8F0':'#1A2940',fontSize:12,fontFamily:'Inter'}},
-    legend:{show:false},
-    radar:{
-      indicator:AREAS.map(function(a){return{name:a,max:10}}),
-      shape:'polygon',
-      radius:'72%',
-      axisName:{color:isDk?'#64748B':'#475569',fontSize:10,fontFamily:'Inter',fontWeight:600},
-      splitArea:{areaStyle:{color:isDk?['rgba(255,255,255,.02)','rgba(255,255,255,.04)']:['rgba(0,0,0,.01)','rgba(0,0,0,.03)']}},
-      splitLine:{lineStyle:{color:isDk?'#1A2940':'#E2DDD3'}},
-      axisLine:{lineStyle:{color:isDk?'#1A2940':'#E2DDD3'}}
-    },
-    series:[{
-      type:'radar',
-      data:[
-        {name:d.topLabel,value:d.top,
-          lineStyle:{width:2.5,color:'#0A9396'},
-          itemStyle:{color:'#0A9396'},
-          areaStyle:{color:isDk?'rgba(10,147,150,.2)':'rgba(10,147,150,.15)'},
-          symbol:'circle',symbolSize:6},
-        {name:d.bottomLabel,value:d.bottom,
-          lineStyle:{width:2.5,color:'#C71E1D'},
-          itemStyle:{color:'#C71E1D'},
-          areaStyle:{color:isDk?'rgba(199,30,29,.15)':'rgba(199,30,29,.1)'},
-          symbol:'circle',symbolSize:6}
-      ]
-    }]
-  });
-  window.addEventListener('resize',function(){chart.resize()});
-}
+    function cifras(G) {
+      var hasta = ANIOS.filter(function (a) { return a <= estado.anio; }), kMax = G.orden[0], kMin = G.orden[G.orden.length - 1];
+      document.getElementById('kpis').innerHTML =
+        PM.kpi({ color: TOP, rotulo: 'Top 10 · más libres', valor: PM.num(G.sT, 2), delta: 'índice general medio', tono: 'neutro',
+          serie: hasta.map(function (a) { return grupo(a).sT; }) }) +
+        PM.kpi({ color: BOT, rotulo: 'Bottom 10 · menos libres', valor: PM.num(G.sB, 2), delta: 'índice general medio', tono: 'neutro',
+          serie: hasta.map(function (a) { return grupo(a).sB; }) }) +
+        PM.kpi({ color: C.pizarra, rotulo: 'Mayor brecha', valor: PM.num(G.gap[kMax], 2), delta: AREAS[kMax].nombre, tono: 'neutro' }) +
+        PM.kpi({ color: C.pizarra, rotulo: 'Menor brecha', valor: PM.num(G.gap[kMin], 2), delta: AREAS[kMin].nombre, tono: 'neutro' });
+    }
 
-updateTable();
-initChart();
-</script>
-</div>
-<script>
-    window.addEventListener('message', function(e) {
-      if (e.data && e.data.theme) {
-        document.documentElement.setAttribute('data-theme', e.data.theme);
-        if (typeof rebuildChart === 'function') rebuildChart();
+    // ── Panel: cada cifra del texto sale del dato del año elegido ──────────────────────────────
+    function panel(G) {
+      var a = estado.anio, kMax = G.orden[0], k2 = G.orden[1], kMin = G.orden[G.orden.length - 1];
+      var bajoTop = G.T.map(function (t, k) { return k; }).filter(function (k) { return G.T[k].m != null; }).sort(function (x, y) { return G.T[x].m - G.T[y].m; })[0];
+      var conv = 'El área donde el Top 10 y el Bottom 10 <strong>más se parecen</strong> es <strong>' + AREAS[kMin].nombre + '</strong>: brecha de solo <strong>' +
+        PM.num(G.gap[kMin], 2) + ' puntos</strong> en ' + a + ' (Top 10: ' + PM.num(G.T[kMin].m, 2) + '; Bottom 10: ' + PM.num(G.B[kMin].m, 2) + ').';
+      if (kMin === 0 && bajoTop === 0) conv += ' Es también el área donde el Top 10 puntúa más bajo, y en este índice un puntaje menor significa un Estado más grande. ' +
+        'No es casualidad: los países ricos del Top 10 <strong>pueden costear amplios Estados de bienestar</strong> porque sus altos puntajes en las otras cuatro áreas generan la riqueza necesaria.';
+      // los tres puntajes más bajos del Bottom 10 en el área de mayor brecha
+      var peores = G.bot.filter(function (f) { return f.ar[kMax] != null; }).sort(function (x, y) { return x.ar[kMax] - y.ar[kMax]; }).slice(0, 3)
+        .map(function (f) { return nombre(f.iso) + ' (' + PM.num(f.ar[kMax], 2) + ')'; });
+      var div = 'La mayor diferencia está en <strong>' + AREAS[kMax].nombre + '</strong>: brecha de <strong>' + PM.num(G.gap[kMax], 2) + ' puntos</strong>' +
+        (k2 != null ? ', seguida de ' + AREAS[k2].nombre + ' (' + PM.num(G.gap[k2], 2) + ')' : '') + '. En esta área restan puntaje ' + AREAS[kMax].resta +
+        (peores.length ? '; los puntajes más bajos del Bottom 10 son los de ' + peores.slice(0, -1).join(', ') + (peores.length > 1 ? ' y ' : '') + peores[peores.length - 1] : '') + '.';
+      // 1980 contra el último año: qué ya existía y qué cambió más
+      var A = grupo(BASE), Z = grupo(ULT), kA = A.orden[A.orden.length - 1], kZ = Z.orden[Z.orden.length - 1];
+      var cambio = Z.gap.map(function (g, k) { return g != null && A.gap[k] != null ? g - A.gap[k] : 0; });
+      var kc = cambio.map(function (c, k) { return k; }).sort(function (x, y) { return Math.abs(cambio[y]) - Math.abs(cambio[x]); })[0];
+      var hist = (kA === kZ
+        ? 'La convergencia en <strong>' + AREAS[kZ].nombre + '</strong> <strong>ya existía</strong> en ' + BASE + ' (brecha de ' + PM.num(A.gap[kA], 2) + '): no es un fenómeno reciente. '
+        : 'En ' + BASE + ' el área más pareja era <strong>' + AREAS[kA].nombre + '</strong> (brecha de ' + PM.num(A.gap[kA], 2) + '); en ' + ULT + ' es ' + AREAS[kZ].nombre + ' (' + PM.num(Z.gap[kZ], 2) + '). ') +
+        'Lo que más cambió es <strong>' + AREAS[kc].nombre + '</strong>: la brecha se ' + (cambio[kc] < 0 ? 'redujo' : 'amplió') + ' de <strong>' + PM.num(A.gap[kc], 2) +
+        '</strong> a <strong>' + PM.num(Z.gap[kc], 2) + '</strong> puntos' + (kc === 3 && cambio[kc] < 0 ? ', reflejo de la apertura comercial de las últimas décadas' : '') + '.';
+      if (a === BASE) hist += ' Use el botón ' + ULT + ' para ver el perfil actual.';
+      else hist += ' Use el botón ' + BASE + ' para comparar.';
+      // tabla: la brecha mínima y la máxima, marcadas
+      var filas = AREAS.map(function (ar, k) {
+        var g = G.gap[k], celda = g == null ? '—' : k === kMin ? PM.dt(TOP, PM.num(g, 2)) : k === kMax ? PM.dt(BOT, PM.num(g, 2)) : PM.num(g, 2);
+        return '<tr><td>' + ar.nombre + '</td><td>' + PM.num(G.T[k].m, 2) + '</td><td>' + PM.num(G.B[k].m, 2) + '</td><td>' + celda + '</td></tr>';
+      }).join('');
+      var notas = [];
+      AREAS.forEach(function (ar, k) {
+        [['Top 10', G.T[k]], ['Bottom 10', G.B[k]]].forEach(function (x) {
+          if (x[1].faltan.length) notas.push('En ' + ar.nombre + ', el promedio del ' + x[0] + ' cubre ' + x[1].n + ' de las 10 (sin dato: ' + lista(x[1].faltan) + ')');
+        });
+      });
+      var tabla = '<table class="br"><thead><tr><th>Área</th><th>Top 10</th><th>Bottom 10</th><th>Brecha</th></tr></thead><tbody>' + filas + '</tbody></table>' +
+        (notas.length ? '<p class="br-nota">' + notas.join('. ') + '.</p>' : '');
+      var quien = '<p class="quien"><i style="background:' + PM.col(TOP) + '"></i><strong>Top 10:</strong> ' + lista(G.top) + '.</p>' +
+        '<p class="quien"><i style="background:' + PM.col(BOT) + '"></i><strong>Bottom 10:</strong> ' + lista(G.bot.slice().reverse()) + '.</p>' +
+        (G.empate ? '<p class="br-nota">Hay un empate en el corte del puesto 10: el grupo incluye al primero por código de país.</p>' : '');
+      document.getElementById('panel').innerHTML =
+        PM.pb(TOP, 'Convergencia en ' + AREAS[kMin].nombre, null, conv) +
+        PM.pb(BOT, 'Divergencia en ' + AREAS[kMax].nombre, null, div) +
+        PM.pb(C.pizarra, BASE + ' vs ' + ULT, null, hist) +
+        PM.pb(C.pizarra, 'Brecha por área · ' + a, null, null).replace(/<\/div>$/, tabla + '</div>') +
+        PM.pb(C.pizarra, 'Quiénes son · ' + a, null, null).replace(/<\/div>$/, quien + '</div>') +
+        PM.ctx('<strong>Implicación:</strong> imitar el tamaño del Estado de los países ricos sin replicar sus fortalezas institucionales (sistema legal, moneda sana, apertura comercial, regulación eficiente) es una receta para el fracaso. El Estado de bienestar es un <em>resultado</em> de la prosperidad, no su causa.');
+    }
+
+    // ── Radar: el radio y el centro se calculan para que ningún rótulo se corte ────────────────
+    var medidor = document.createElement('canvas').getContext('2d');
+    function medir(lineas, fs) {
+      medidor.font = '600 ' + fs + 'px ' + PM.inter();
+      return Math.max.apply(null, lineas.map(function (l) { return medidor.measureText(l).width; }));
+    }
+    // Rótulo i en el ángulo 90° + 72°·i (antihorario, como lo ubica ECharts), anclado a radio + separación:
+    // el de arriba va centrado sobre el vértice; los demás, centrados en vertical y hacia afuera.
+    function geometria(W, H, med, sep, pad) {
+      var mejor = { r: 0, cx: W / 2, cy: H / 2 };
+      for (var cx = W * 0.3; cx <= W * 0.7; cx += 2) {
+        for (var cy = H * 0.3; cy <= H * 0.75; cy += 2) {
+          var r = Infinity;
+          med.forEach(function (m, i) {
+            var t = (90 + 72 * i) * Math.PI / 180, c = Math.cos(t), s = Math.sin(t);
+            if (Math.abs(c) < 1e-6) {
+              r = Math.min(r, cy - pad - m.h - sep);
+              if (m.w / 2 > Math.min(cx, W - cx) - pad) r = -1;
+            } else {
+              r = Math.min(r, c > 0 ? (W - pad - m.w - cx) / c - sep : (cx - pad - m.w) / -c - sep);
+              r = Math.min(r, s > 0 ? (cy - pad - m.h / 2) / s - sep : (H - pad - m.h / 2 - cy) / -s - sep);
+            }
+          });
+          if (r > mejor.r) mejor = { r: r, cx: cx, cy: cy };
+        }
       }
-    });
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme:dark)').matches)
-      document.documentElement.setAttribute('data-theme', 'dark');
-</script>
-</body></html>
+      return mejor;
+    }
+    function tip(p) {
+      var G = grupo(estado.anio), esTop = p.seriesIndex === 0, V = esTop ? G.T : G.B, col = esTop ? TOP : BOT, chico = PM.pequeno();
+      var h = PM.ttTitulo(esTop ? 'Top 10 · las más libres' : 'Bottom 10 · las menos libres', estado.anio + ' · promedio de las 10, de 0 a 10') +
+        PM.ttFila(col, 'Índice general', PM.num(esTop ? G.sT : G.sB, 2), 'area');
+      AREAS.forEach(function (ar, k) { h += PM.ttFila(null, chico ? ar.corto : ar.nombre, PM.num(V[k].m, 2)); });
+      return chico ? h : h + PM.ttPie(lista(esTop ? G.top : G.bot.slice().reverse()));
+    }
+    function opciones() {
+      var G = grupo(estado.anio), dk = PM.dk(), el = document.getElementById('chart'), card = PM.var('--card') || '#fff';
+      var W = el.clientWidth || 600, H = el.clientHeight || 440, angosto = W < 520, fs = angosto ? 10 : 10.5, lh = fs + 3, sep = angosto ? 8 : 12;
+      var lineas = AREAS.map(function (a) { return angosto ? a.ejeT : a.eje; });
+      var med = lineas.map(function (ls) { return { w: medir(ls, fs), h: ls.length * lh }; });
+      var g = geometria(W, H, med, sep, 4), r = Math.max(40, Math.floor(g.r)), grilla = dk ? '#2A3A50' : '#E2DDD3';
+      var serie = function (nombre, val, col, z) {
+        return {
+          name: nombre, type: 'radar', z: z, data: [val.map(function (x) { return x.m == null ? 0 : x.m; })],
+          symbol: 'circle', symbolSize: angosto ? 5 : 6, lineStyle: { color: PM.col(col), width: 2 },
+          itemStyle: { color: PM.col(col), borderColor: card, borderWidth: 1.5 },
+          areaStyle: { color: PM.rgba(col, dk ? 0.22 : 0.15) },
+          emphasis: { lineStyle: { width: 2.75 }, areaStyle: { color: PM.rgba(col, dk ? 0.32 : 0.24) } }
+        };
+      };
+      // escala: 2, 4, 6 y 8 junto al eje de arriba, del lado izquierdo (los vértices quedan sobre el eje)
+      var anillos = [2, 4, 6, 8].map(function (v) {
+        return { type: 'text', silent: true, x: g.cx - 6, y: g.cy - r * v / 10, z: 1,
+          style: { text: String(v), fill: dk ? '#8A9699' : '#5C6B70', opacity: 0.85, font: '500 9px ' + PM.mono(), textAlign: 'right', textVerticalAlign: 'middle' } };
+      });
+      return {
+        radar: {
+          center: [g.cx, g.cy], radius: r, startAngle: 90, splitNumber: 5, shape: 'polygon',
+          indicator: lineas.map(function (ls) { return { name: ls.join('\n'), min: 0, max: 10 }; }),
+          axisName: { color: dk ? '#E2E8F0' : '#001219', fontFamily: PM.inter(), fontSize: fs, fontWeight: 600, lineHeight: lh },
+          axisNameGap: sep,
+          splitLine: { lineStyle: { color: grilla, opacity: dk ? 0.8 : 1 } },
+          splitArea: { areaStyle: { color: dk ? ['rgba(255,255,255,.012)', 'rgba(255,255,255,.03)'] : ['rgba(0,18,25,.008)', 'rgba(0,18,25,.024)'] } },
+          axisLine: { lineStyle: { color: grilla } }
+        },
+        graphic: anillos,
+        tooltip: PM.tooltip(tip, { trigger: 'item' }),
+        series: [serie('Top 10 · las más libres', G.T, TOP, 2), serie('Bottom 10 · las menos libres', G.B, BOT, 3)]
+      };
+    }
+
+    // ── Descargas ────────────────────────────────────────────────────────────────────────────
+    PM.leyendaImagen = function () {
+      return [{ name: 'Top 10 · las más libres (' + estado.anio + ')', color: PM.col(TOP), forma: 'area' },
+        { name: 'Bottom 10 · las menos libres (' + estado.anio + ')', color: PM.col(BOT), forma: 'area' }];
+    };
+    PM.tablaDatos = function () {
+      var G = grupo(estado.anio), a = estado.anio;
+      return {
+        cols: ['Área', 'Top 10 ' + a, 'Bottom 10 ' + a, 'Brecha ' + a],
+        filas: AREAS.map(function (ar, k) { return [ar.nombre, G.T[k].m, G.B[k].m, G.gap[k]]; })
+          .concat([['Índice general', G.sT, G.sB, r2(G.sT - G.sB)], ['Top 10: ' + lista(G.top)], ['Bottom 10: ' + lista(G.bot.slice().reverse())]])
+      };
+    };
+
+    function preguntas() {
+      var Z = grupo(ULT), A = grupo(BASE);
+      var siguen = function (x, y) { var s = {}; x.forEach(function (f) { s[f.iso] = 1; }); return y.filter(function (f) { return s[f.iso]; }); };
+      var sT = siguen(A.top, Z.top), sB = siguen(A.bot, Z.bot);
+      return [
+        ['¿Qué mide cada área?', '<p><strong>Tamaño del gobierno:</strong> gasto y transferencias del gobierno, empresas estatales y tasas de impuesto. <strong>Sistema legal y derechos de propiedad:</strong> independencia judicial, protección de la propiedad y cumplimiento de contratos. ' +
+          '<strong>Moneda sana:</strong> inflación, crecimiento del dinero y libertad para tener moneda extranjera.</p><p><strong>Libertad para comerciar internacionalmente:</strong> aranceles, barreras al comercio, tipo de cambio paralelo y controles de capital. <strong>Regulación:</strong> reglas sobre el crédito, el trabajo y las empresas. Cada área va de 0 a 10 y el índice general es su promedio.</p>'],
+        ['¿Por qué un puntaje alto en tamaño del gobierno significa un Estado más chico?', 'El índice mide <strong>libertad</strong>, no tamaño: en esta área puntúa más alto quien tiene menos gasto de consumo del gobierno, menos transferencias y subsidios, menos empresas estatales y tasas marginales de impuesto más bajas. ' +
+          'Por eso el ' + PM.num(Z.T[0].m, 2) + ' del Top 10 en ' + ULT + ', frente a su promedio de ' + PM.num(media(Z.T.slice(1).map(function (x) { return x.m; })), 2) + ' en las otras cuatro áreas, describe Estados relativamente grandes.'],
+        ['¿Cómo se arman el Top 10 y el Bottom 10?', 'Son las 10 jurisdicciones con el índice general más alto y las 10 con el más bajo de cada año: entre <strong>' + Z.n + '</strong> medidas en ' + ULT + ' y <strong>' + A.n + '</strong> en ' + BASE +
+          '. Cada vértice del radar es el promedio simple de las 10 en esa área. Los grupos cambian: de las 10 más libres de ' + BASE + ', <strong>' + sT.length + '</strong> siguen en el Top 10 de ' + ULT + (sT.length ? ' (' + lista(sT) + ')' : '') +
+          '; del Bottom 10 repite' + (sB.length === 1 ? '' : 'n') + ' <strong>' + sB.length + '</strong>' + (sB.length ? ' (' + lista(sB) + ')' : '') + '.']
+      ];
+    }
+  })();
+  </script>
+</body>
+</html>

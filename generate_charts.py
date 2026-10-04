@@ -1,957 +1,1278 @@
 """
-Generate 5 additional ECharts embeds matching the premium scatter-plot design:
-1. areas_regiones.html  — Grouped bar: EFW areas by world region (2023)
-2. evolucion_mundial.html — Line: global EFW average 1970-2023
-3. bolivia_efw.html — Line: Bolivia EFW score + 5 areas 1970-2023
-4. comparativa_paises.html — Interactive multi-line EFW, country selector + quartile badges
-5. comparativa_pib.html — Interactive multi-line GDP pc, country selector + quartile badges
+generate_charts.py — los cinco gráficos complementarios del Monitor de Libertad Económica, sobre el
+molde de monitores (embed/comun/, fuente única en populi-marca/monitor):
+
+  1. areas_regiones.html     — puntos: las cinco áreas del índice por región, 2023
+  2. evolucion_mundial.html  — líneas: promedio mundial del índice y de sus áreas, 1970–2023
+  3. bolivia_efw.html        — líneas: Bolivia frente al mundo y a América Latina, y sus áreas
+  4. comparativa_paises.html — buscador: índice EFW 1970–2023 de hasta seis países, con su cuartil
+  5. comparativa_pib.html    — buscador: PIB per cápita (Maddison) 1820–2022 de hasta seis países
+
+Cada página lleva incrustado lo que dibuja, calculado acá desde data/. Ninguna cifra de los textos
+se escribe a mano, y las frases del panel se verifican contra el dato al generar: si el dato deja
+de sostener una, el generador se detiene y dice cuál (sin dato no se publica).
+
+    python generate_charts.py
 """
 import json
+import math
+from decimal import Decimal, ROUND_HALF_UP
+from pathlib import Path
 
-with open('data/efw_panel_map.json') as f:
-    panel = json.load(f)
-with open('data/efw_country_meta.json') as f:
-    meta = json.load(f)
-with open('data/gdp_pc_maddison.json') as f:
-    gdp_raw = json.load(f)
+RAIZ = Path(__file__).resolve().parent
+OUT = RAIZ / 'embed'
 
-OUT = 'embed'
 
-AREA_NAMES = ['Tamano del Gobierno', 'Sistema Legal', 'Moneda Sana',
-              'Comercio Internacional', 'Regulacion']
-# Paleta oficial POPULI — ver Proyectos/populi-marca/paleta.py (fuente única).
-# Categórica de 5: los 5 primeros de CATEGORICAL_12, ordenados por máxima separación.
-AREA_COLORS = ['#C71E1D', '#0A9396', '#EE9B00', '#005F73', '#DF5D25']
-AREA_NAMES_ES = ['Tamano del Gobierno', 'Sistema Legal y Derechos de Propiedad',
-                 'Moneda Sana', 'Libertad para Comerciar Internacionalmente', 'Regulacion']
+def cargar(nombre):
+    return json.loads((RAIZ / 'data' / nombre).read_text(encoding='utf-8'))
 
-REGION_SHORT = {
-    'East Asia & Pacific': 'Asia Oriental y Pacifico',
-    'Europe & Central Asia': 'Europa y Asia Central',
-    'Latin America & the Caribbean': 'America Latina y el Caribe',
-    'Middle East & North Africa': 'Medio Oriente y N. de Africa',
-    'North America': 'Norteamerica',
-    'South Asia': 'Asia del Sur',
-    'Sub-Saharan Africa': 'Africa Subsahariana'
+
+panel = cargar('efw_panel_map.json')          # {año: {iso: {s, a1..a5}}}
+meta = cargar('efw_country_meta.json')        # {iso: {name, region}} de las 165 jurisdicciones
+gdp = cargar('gdp_pc_maddison.json')          # {iso: {año: PIB per cápita}}
+pob = cargar('poblacion_maddison.json')       # {iso: {año: población en miles}}, 2000–2022 (maddison_poblacion.py)
+cons = cargar('consolidated.json')            # población actual (WDI): peso de las jurisdicciones sin dato en Maddison
+_es = cargar('paises_es.json')
+NOMBRE = _es['iso']                           # ISO3 → nombre en español (incluye CSK/SUN/YUG)
+
+# ── Índice y áreas ─────────────────────────────────────────────────────────────────────────────
+# Nombres oficiales de las áreas; «corto» solo donde el largo no entra (pastillas en el teléfono, cifras).
+AREAS = [
+    {'k': 'a1', 'nombre': 'Tamaño del gobierno', 'corto': 'Tamaño del gobierno'},
+    {'k': 'a2', 'nombre': 'Sistema legal y derechos de propiedad', 'corto': 'Sistema legal'},
+    {'k': 'a3', 'nombre': 'Moneda sana', 'corto': 'Moneda sana'},
+    {'k': 'a4', 'nombre': 'Libertad para comerciar internacionalmente', 'corto': 'Comercio internacional'},
+    {'k': 'a5', 'nombre': 'Regulación', 'corto': 'Regulación'},
+]
+# Rampa categórica oficial de cinco (populi-marca/paleta.py → RAMPA_POR_N[5]), del rojo a la tinta en el
+# orden de las áreas. La misma en los tres gráficos que muestran áreas; en oscuro la tinta se invierte sola.
+RAMPA5 = ['#C71E1D', '#EE9B00', '#0A9396', '#005F73', '#001219']
+for _a, _c in zip(AREAS, RAMPA5):
+    _a['color'] = _c
+PIZARRA = {'claro': '#5C6B70', 'oscuro': '#8A9699'}   # series de referencia: en oscuro, el gris que se lee
+# Protagonista de la evolución mundial: granate (el acento) en claro; en oscuro el granate no llega a 3:1 sobre la
+# tarjeta y sube al rojo de la misma familia (validate_palette: con el gris, ΔE 25 normal y 16 en daltonismo)
+GRANATE = {'claro': '#9B2226', 'oscuro': '#C71E1D'}
+
+REGION = {   # regiones del Banco Mundial, con los mismos nombres que las dispersiones
+    'North America': 'Norteamérica', 'Europe & Central Asia': 'Europa y Asia Central',
+    'East Asia & Pacific': 'Asia Oriental y Pacífico', 'Latin America & the Caribbean': 'América Latina y el Caribe',
+    'South Asia': 'Asia del Sur', 'Middle East & North Africa': 'Medio Oriente y Norte de África',
+    'Sub-Saharan Africa': 'África Subsahariana',
 }
+LAC = 'Latin America & the Caribbean'
+# Países del Maddison que no están en el índice: región para el buscador (los tres históricos son el
+# agregado de sus sucesores, que Maddison sigue hasta 2022)
+REGION_EXTRA = {
+    'AFG': 'Asia del Sur', 'CUB': 'América Latina y el Caribe', 'DMA': 'América Latina y el Caribe',
+    'GNQ': 'África Subsahariana', 'LCA': 'América Latina y el Caribe', 'PRI': 'América Latina y el Caribe',
+    'PRK': 'Asia Oriental y Pacífico', 'PSE': 'Medio Oriente y Norte de África', 'STP': 'África Subsahariana',
+    'TKM': 'Europa y Asia Central', 'UZB': 'Europa y Asia Central',
+    'CSK': 'Europa · agregado histórico', 'SUN': 'Europa y Asia · agregado histórico', 'YUG': 'Europa · agregado histórico',
+}
+# Antigua órbita socialista (declarado, no inferido): para contar quiénes entraron al índice después de 1970
+EX_SOCIALISTAS = {'ALB', 'ARM', 'AZE', 'BGR', 'BIH', 'BLR', 'CZE', 'EST', 'GEO', 'HRV', 'HUN', 'KAZ', 'KGZ', 'LTU', 'LVA',
+                  'MDA', 'MKD', 'MNE', 'MNG', 'POL', 'ROU', 'RUS', 'SRB', 'SVK', 'SVN', 'TJK', 'UKR', 'UZB', 'TKM'}
 
-# Cuartiles = dato ORDINAL, no categórico: va la escala ORDINAL_4 (frío → cálido
-# = mejor → peor), no cuatro colores sueltos. Así el orden se lee en el color.
-QC = {1:'#0A9396', 2:'#94D2BD', 3:'#EE9B00', 4:'#C71E1D'}
-QL = {1:'Cuartil Superior', 2:'Segundo Cuartil', 3:'Tercer Cuartil', 4:'Cuartil Inferior'}
+ANIOS = [y for y in sorted(panel, key=int) if int(y) >= 1970]   # quinquenal hasta 1995, anual desde 2000
+ULTIMO = ANIOS[-1]
+ANUALES = [y for y in ANIOS if int(y) >= 2000]                   # minilíneas de las cifras: tramo anual
 
-# CATEGORICAL_12 de la paleta oficial + 4 tonos de relleno. Aviso honesto: más de
-# 12 series no se distinguen por color en ningún sistema. Si un gráfico llega a
-# usar los últimos cuatro, la lectura correcta es destacar una serie en #C71E1D y
-# dejar el resto en gris (helper `highlight()` en populi-marca/paleta.py).
-PALETTE = ['#C71E1D','#0A9396','#EE9B00','#005F73','#DF5D25','#94D2BD',
-           '#9B2226','#E9D8A6','#8B1A1A','#E8706B','#A86E00','#E57D22',
-           '#5C6B70','#B9BEC0','#7A3E3C','#3E7A78']
-
-# ── Shared CSS (matches scatter_*.html) ─────────────────────
-BASE_CSS = '''
-    :root {
-      /* Paleta oficial POPULI (2026-08-10) — espejo de populi-marca/paleta.css */
-      --populi:#C71E1D; --populi-light:#E8706B; --populi-deep:#8B1A1A; --gold:#EE9B00;
-      --cream:#F5EFE0; --brown-dark:#3D2B1F;
-      --navy:#0D1B2A; --navy-light:#1A2940; --slate:#475569; --slate-light:#64748B;
-      --warm-white:#FAF8F3; --light-gray:#F1EDE5; --border:#E2DDD3; --dark-border:#2A3A50;
-      --bg:var(--warm-white); --card:#FFFFFF; --text:var(--brown-dark); --muted:var(--slate-light);
-      --radius:12px;
-    }
-    [data-theme="dark"] {
-      --bg:#080808; --card:#141414; --text:#E2E8F0; --muted:#64748B;
-      --border:#2A3A50; --light-gray:#1A1A1A; --cream:#1A2940;
-    }
-    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;-webkit-font-smoothing:antialiased;transition:background .25s,color .25s}
-    .wrap{max-width:1200px;margin:0 auto;padding:20px 16px}
-    .sec-hd{margin-bottom:12px}
-    .sec-title{font-family:'Playfair Display',Georgia,serif;font-size:1.55rem;font-weight:700;color:var(--navy);display:flex;align-items:center;gap:10px;line-height:1.15}
-    [data-theme="dark"] .sec-title{color:#fff}
-    .accent-bar{width:4px;height:26px;border-radius:2px;flex-shrink:0}
-    .sec-sub{font-size:.78rem;color:var(--muted);padding-left:14px;margin-top:2px}
-    [data-theme="dark"] .sec-sub{color:rgba(255,255,255,.4)}
-    .legend-bar{display:flex;flex-wrap:wrap;gap:4px 10px;padding:2px 14px 10px;align-items:center}
-    .leg-item{display:flex;align-items:center;gap:3px;font-size:.58rem;font-weight:600;color:var(--muted);white-space:nowrap}
-    .leg-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
-    .leg-line{width:16px;height:0;flex-shrink:0}
-    .main-grid{display:grid;grid-template-columns:3fr 2fr;gap:16px}
-    @media(max-width:900px){.main-grid{grid-template-columns:1fr}}
-    @media(max-width:500px){.sec-title{font-size:1.2rem}}
-    .chart-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;height:560px}
-    [data-theme="dark"] .chart-card{background:#141414;border-color:var(--dark-border)}
-    @media(max-width:900px){.chart-card{height:440px}}
-    @media(max-width:500px){.chart-card{height:340px}}
-    #chart{width:100%;height:100%}
-    .panel{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;display:flex;flex-direction:column}
-    [data-theme="dark"] .panel{background:#141414;border-color:var(--dark-border)}
-    .panel-hd{padding:10px 14px;display:flex;align-items:center;justify-content:space-between}
-    .panel-hd-t{font-size:.56rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.8)}
-    .panel-body{padding:14px;flex:1;overflow-y:auto}
-    .pb{margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)}
-    [data-theme="dark"] .pb{border-color:var(--dark-border)}
-    .pb:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
-    .pb-lbl{font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px}
-    .pb-desc{font-size:.68rem;line-height:1.5;color:var(--muted)}
-    [data-theme="dark"] .pb-desc{color:rgba(255,255,255,.45)}
-    .pb-desc strong{color:var(--navy)}
-    [data-theme="dark"] .pb-desc strong{color:#E2E8F0}
-    .ctx{background:var(--cream);border-radius:6px;padding:8px 10px;margin-top:6px}
-    [data-theme="dark"] .ctx{background:var(--navy-light)}
-    .ctx p{font-size:.68rem;line-height:1.5;color:var(--muted)}
-    [data-theme="dark"] .ctx p{color:#64748B}
-    .source{display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding:0 2px}
-    .source-txt{font-size:.6rem;color:var(--muted)}
-    .source-txt a{color:var(--populi);font-weight:600;text-decoration:none}
-    .source-txt a:hover{text-decoration:underline}
-    .kpi-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;padding-left:14px}
-    .kpi{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 14px;min-width:110px}
-    [data-theme="dark"] .kpi{background:#141414;border-color:var(--dark-border)}
-    .kpi-label{font-size:.52rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:2px}
-    .kpi-val{font-family:'JetBrains Mono',monospace;font-size:1.1rem;font-weight:700}
-    .kpi-delta{font-size:.6rem;font-family:'JetBrains Mono',monospace}
-'''
-
-SELECTOR_CSS = '''
-    .controls-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;padding-left:14px;flex-wrap:wrap}
-    .search-box{position:relative;flex:1;min-width:200px;max-width:360px}
-    .search-box input{width:100%;padding:8px 12px 8px 32px;border:1px solid var(--border);border-radius:8px;
-      font-size:.82rem;font-family:Inter,sans-serif;background:var(--card);color:var(--text);outline:none}
-    .search-box input:focus{border-color:#0A9396;box-shadow:0 0 0 2px rgba(10,147,150,.15)}
-    .search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none}
-    .dropdown{position:absolute;top:100%;left:0;right:0;max-height:260px;overflow-y:auto;
-      background:var(--card);border:1px solid var(--border);border-radius:10px;margin-top:4px;z-index:50;
-      box-shadow:0 8px 24px rgba(0,0,0,.1);display:none}
-    .dropdown.open{display:block}
-    .dd-item{display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;
-      font-size:.8rem;transition:background .15s}
-    .dd-item:hover{background:rgba(10,147,150,.08)}
-    .dd-item .q-badge{font-size:.6rem;font-weight:700;color:#fff;padding:2px 6px;border-radius:4px;
-      font-family:'JetBrains Mono',monospace;min-width:36px;text-align:center}
-    .dd-item .cname{flex:1;color:var(--text)}
-    .dd-item .region{font-size:.65rem;color:var(--muted)}
-    .tags{display:flex;flex-wrap:wrap;gap:6px;padding:0 14px 12px;min-height:28px}
-    .tag{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;
-      font-size:.72rem;font-weight:600;cursor:default;border:1px solid var(--border);
-      background:var(--card);color:var(--text);transition:all .15s}
-    [data-theme="dark"] .tag{border-color:var(--dark-border)}
-    .tag .q-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-    .tag .q-score{font-family:'JetBrains Mono',monospace;font-size:.62rem;font-weight:700;opacity:.7}
-    .tag .x{cursor:pointer;opacity:.4;font-size:.85rem;margin-left:1px;transition:opacity .15s}
-    .tag .x:hover{opacity:1}
-    .tag:hover{border-color:var(--muted)}
-    .tag-bol{border-color:#C71E1D;border-width:1.5px}
-    .hz-lbl{font-size:.62rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
-    .hz-grp{display:flex;flex-wrap:wrap;gap:0;background:var(--light-gray);border-radius:8px;padding:2px;border:1px solid var(--border)}
-    [data-theme="dark"] .hz-grp{background:#1A1A1A;border-color:var(--dark-border)}
-    .hz-btn{padding:5px 14px;border:none;border-radius:6px;font-family:'Inter',sans-serif;font-size:.68rem;font-weight:600;cursor:pointer;background:transparent;color:var(--muted);transition:all .2s}
-    .hz-btn:hover{color:var(--text)}
-    .hz-btn.active{background:var(--accent);color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.15)}
-'''
-
-THEME_SYNC_JS = '''
-    window.addEventListener('message', function(e) {
-      if (e.data && e.data.theme) {
-        document.documentElement.setAttribute('data-theme', e.data.theme);
-        if (typeof rebuildChart === 'function') rebuildChart();
-      }
-    });
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme:dark)').matches)
-      document.documentElement.setAttribute('data-theme', 'dark');
-'''
+FRASER = ('Fuente: <a href="https://www.fraserinstitute.org/economic-freedom" target="_blank" rel="noopener">Fraser Institute</a>, '
+          'Economic Freedom of the World: 2025 Annual Report · Elaboración: '
+          '<a href="https://populi.org.bo" target="_blank" rel="noopener">Centro de Estudios POPULI</a>')
+MADDISON = ('Fuente: <a href="https://www.rug.nl/ggdc/historicaldevelopment/maddison/" target="_blank" rel="noopener">Maddison Project Database 2023</a> '
+            '(Bolt y van Zanden, 2024); cuartil: Fraser Institute, EFW 2025 · Elaboración: '
+            '<a href="https://populi.org.bo" target="_blank" rel="noopener">Centro de Estudios POPULI</a>')
+EFW_QUE = ('El índice <strong>Economic Freedom of the World</strong> (EFW) del Fraser Institute califica de 0 a 10 a {n} '
+           'jurisdicciones con 45 componentes agrupados en cinco áreas: tamaño del gobierno, sistema legal y derechos de '
+           'propiedad, moneda sana, libertad para comerciar internacionalmente y regulación. Más puntaje es más libertad.')
 
 
-def html_start(title, accent, extra_css=''):
-    return f'''<!DOCTYPE html>
-<html lang="es" data-theme="light">
+# ── Utilidades ─────────────────────────────────────────────────────────────────────────────────
+def num(x, dec=2):
+    """Cifra es-BO para los textos: «6,05» · «41.321» · «−0,20» (menos tipográfico, sin «−0,00»).
+    Redondea como PM.num en la página (mitad hacia afuera sobre el decimal más corto, la regla de Intl) y
+    sobre el mismo valor que viaja en los datos (fino): el texto y la cifra del gráfico nunca difieren."""
+    d = Decimal(repr(fino(x))).quantize(Decimal(1).scaleb(-dec), rounding=ROUND_HALF_UP)
+    s = f'{abs(d):,.{dec}f}'.translate(str.maketrans(',.', '.,'))
+    return '−' + s if d < 0 and s.strip('0.,') else s
+
+
+def usd(x):
+    return '$' + num(x, 0)
+
+
+def verificar(cierto, frase):
+    if not cierto:
+        raise SystemExit(f'✗ El dato ya no sostiene esta frase del panel: «{frase}». Revisar el texto antes de publicar.')
+
+
+def media(v):
+    v = [x for x in v if x is not None]
+    return sum(v) / len(v) if v else None
+
+
+def fino(x):
+    """Lo que viaja a la página: seis decimales (la página redondea al mostrar, nunca dos veces)."""
+    return None if x is None else round(x, 6)
+
+
+def valores(anio, k='s', region=None):
+    return [d[k] for iso, d in panel[anio].items()
+            if d.get(k) is not None and (region is None or (iso in meta and meta[iso]['region'] == region))]
+
+
+def puesto(anio, iso):
+    """Puesto de competencia (1 + cuántos puntúan más) y total de jurisdicciones con dato ese año."""
+    s = panel[anio][iso]['s']
+    todos = valores(anio)
+    return 1 + sum(1 for v in todos if v > s), len(todos)
+
+
+def cuartil(p, n):
+    """Cuartil por puesto, con cortes en ⌈n/4⌉, ⌈n/2⌉ y ⌈3n/4⌉: 42, 41, 41 y 41 con 165 (el sobrante va arriba).
+    Con el puntaje a dos decimales los empates comparten puesto y un empate en el corte queda entero arriba:
+    puede diferir del ranking oficial, que desempata con más decimales."""
+    return 1 if p <= math.ceil(n / 4) else 2 if p <= math.ceil(n / 2) else 3 if p <= math.ceil(3 * n / 4) else 4
+
+
+def alias(iso):
+    """Nombres en inglés con que también se puede buscar un país (el de la fuente y los de la tabla)."""
+    nom = NOMBRE.get(iso)
+    a = {meta[iso]['name']} if iso in meta else set()
+    a |= {en for en, es in _es['en'].items() if es == nom}
+    return ' '.join(sorted(x for x in a if x.lower() != (nom or '').lower()))
+
+
+def js(x):
+    return json.dumps(x, ensure_ascii=False, separators=(',', ':'))
+
+
+ORDINAL = {1: 'primera', 2: 'segunda', 3: 'tercera', 4: 'cuarta', 5: 'quinta', 6: 'sexta', 7: 'séptima'}
+CARDINAL = {2: 'dos', 3: 'tres', 4: 'cuatro', 5: 'cinco', 6: 'seis', 7: 'siete', 8: 'ocho', 9: 'nueve', 10: 'diez'}
+# El acento va de fondo del botón activo: sostiene texto blanco (menta → turquesa, oro → su paso oscuro)
+ACENTO = {'areas': '#005F73', 'evolucion': '#9B2226', 'bolivia': '#C71E1D', 'paises': '#0A9396', 'pib': '#A86E00'}
+
+
+# ── Piezas comunes de las páginas ──────────────────────────────────────────────────────────────
+CABEZA = r'''<!DOCTYPE html>
+<html lang="es" data-theme="light" style="--acento:@@ACENTO@@">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>{title} - Populi</title>
+  <title>@@TITULO@@ · Populi</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300..800&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,400&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="comun/monitor.css" />
   <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+  <script src="comun/monitor.js"></script>
   <style>
-    :root {{ --accent:{accent}; }}
-{BASE_CSS}{extra_css}
+    /* Pastillas con nombre largo (escritorio) y corto (teléfono) */
+    .nc { display: none; }
+    @media (max-width: 640px) { .nl { display: none; } .nc { display: inline; } }@@ESTILO@@
   </style>
 </head>
 <body>
-<div class="wrap">
+  <div class="wrap">
+    <div class="sec-hd">
+      <h2 class="sec-title"><span class="accent-bar"></span>@@TITULO@@</h2>
+      <p class="sec-sub">@@BAJADA@@</p>
+    </div>
 '''
 
-HTML_FOOT = f'''</div>
-<script>{THEME_SYNC_JS}</script>
-</body></html>'''
+PIE = r'''
+    <div class="edu-grid" id="preguntas"></div>
+    <div class="source"><span class="source-txt" id="fuente">@@FUENTE@@</span></div>
+  </div>
+
+  <script>
+  (function () {
+    var C = PM.C, D = @@DATOS@@;
+@@COMUN@@
+@@JS@@
+  })();
+  </script>
+</body>
+</html>
+'''
+
+# JavaScript que comparten las cuatro páginas de series de tiempo
+JS_COMUN = r'''
+    // ── Eje de años PROPORCIONAL (de valor, no de categorías) ─────────────────────────────────
+    // El tramo quinquenal (1970, 1975… 2000) ocupa el ancho que le toca. Rótulos derechos cada 5, 10,
+    // 20… años según el ancho real del lienzo (el mismo aire mínimo que PM.ejeTiempo), marcas menores
+    // por año o por lustro cuando entran, y el último año sin rótulo si no cae en el paso.
+    function ejeAnios(a0, a1, el, extra) {
+      var chico = PM.pequeno(), dk = PM.dk(), fs = chico ? 10 : 10.5, car = fs * 0.6 + 0.15;
+      var px = Math.max(140, (el.clientWidth || 600) - 64) / Math.max(1, a1 - a0);
+      var aire = Math.max(chico ? 48 : 56, 4 * car + 12);
+      var paso = [5, 10, 20, 40, 50, 100].filter(function (k) {
+        return (a0 % k === 0 || (k % 10 === 0 && a0 % 10 === 0)) && k * px >= aire;
+      })[0] || 100;
+      var menor = [1, 5, 10].filter(function (m) { return paso % m === 0 && m < paso && m * px >= 9; })[0];
+      var linea = dk ? '#3A4549' : '#C9CDCE';
+      return PM.mezclar({
+        type: 'value', min: a0, max: a1, interval: paso,
+        axisLine: { show: true, onZero: false, lineStyle: { color: linea } },
+        axisTick: { show: true, length: 4, lineStyle: { color: linea } },
+        minorTick: { show: !!menor, splitNumber: menor ? paso / menor : 1, length: 2, lineStyle: { color: linea } },
+        splitLine: { show: false }, axisPointer: { snap: true },
+        axisLabel: {
+          margin: 9, hideOverlap: true,
+          formatter: function (v) { var a = Math.round(v); return (a - a0) % paso === 0 ? '{a|' + a + '}' : ''; },
+          rich: { a: { fontFamily: PM.mono(), fontSize: fs, lineHeight: fs + 4, fontWeight: 600,
+            color: dk ? 'rgba(226,232,240,.9)' : 'rgba(0,18,25,.8)' } }
+        }
+      }, extra);
+    }
+    // Eje Y en pasos de 0,5, 1 o 2 (los que dejen 4 a 6 cortes), con base y techo en el paso
+    function rangoY(vals, piso, techo) {
+      var lo = Math.min.apply(null, vals), hi = Math.max.apply(null, vals), paso = 2;
+      [0.5, 1, 2].some(function (p) { if ((Math.ceil(hi / p) - Math.floor(lo / p)) <= 6) { paso = p; return true; } });
+      return { min: Math.max(piso, Math.floor(lo / paso) * paso), max: Math.min(techo, Math.ceil(hi / paso) * paso), interval: paso };
+    }
+    // Serie anual sobre el eje de años: pares [año, valor]; protagonista con relleno y punto final con halo
+    function serieAnual(s, anios, vals) {
+      var data = anios.map(function (a, i) { return [a, vals[i] == null ? null : vals[i]]; }), n = -1;
+      data.forEach(function (d, i) { if (d[1] != null) n = i; });
+      var o = PM.linea(s.color, { ancho: s.ancho, punteada: s.punteada, extra: {
+        name: s.nombre, data: data, connectNulls: true, z: s.area ? 4 : 3,
+        markPoint: n >= 0 ? PM.puntoFinal(s.color, data[n][0], data[n][1]) : undefined
+      } });
+      if (s.area) o.areaStyle = { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+        { offset: 0, color: PM.rgba(s.color, PM.dk() ? 0.16 : 0.10) }, { offset: 1, color: PM.rgba(s.color, 0) }]) };
+      return o;
+    }
+    // Hitos: raya punteada de umbral (1,25 px pizarra) y rótulo derecho ARRIBA del trazado
+    function hitos(lista, chico) {
+      var pz = PM.dk() ? '#8A9699' : '#5C6B70';
+      return { silent: true, symbol: 'none', animation: false,
+        lineStyle: { color: pz, width: 1.25, type: [4, 3] },
+        label: { show: true, position: 'end', distance: 7, color: pz, fontFamily: PM.inter(), fontSize: chico ? 10 : 10.5, fontWeight: 600 },
+        data: lista.map(function (h) { return { xAxis: h.anio, label: { formatter: chico ? h.corto : h.largo, align: h.alinear } }; }) };
+    }
+    // Clave de color en el tooltip, que es de vidrio oscuro en los dos temas: la tinta se invierte como en oscuro
+    function clave(c) { return String(PM.col(c)).toUpperCase() === '#001219' ? '#E2E8F0' : c; }
+    // Nombre de pastilla: largo en escritorio, corto en el teléfono
+    function rotulo(largo, corto) { return !corto || largo === corto ? largo : '<span class="nl">' + largo + '</span><span class="nc">' + corto + '</span>'; }
+'''
 
 
-def source_footer(sources):
-    return f'<div class="source"><span class="source-txt">Fuente: {sources} · Elaboracion: <a href="https://populi.org.bo" target="_blank">POPULI</a></span></div>'
+def pagina(nombre, titulo, bajada, acento, cuerpo, datos, js_pagina, fuente=FRASER, estilo='', comun=JS_COMUN):
+    html = CABEZA + cuerpo + PIE
+    for k, v in {'@@JS@@': js_pagina, '@@COMUN@@': comun, '@@ACENTO@@': acento, '@@TITULO@@': titulo,
+                 '@@BAJADA@@': bajada, '@@ESTILO@@': estilo, '@@FUENTE@@': fuente, '@@DATOS@@': js(datos)}.items():
+        html = html.replace(k, v)
+    assert '@@' not in html, nombre
+    (OUT / nombre).write_text(html, encoding='utf-8')
+    print(f'  OK {nombre}  ({len(html.encode("utf-8")) / 1024:.0f} KB)')
 
 
-# Helpers
-def compute_world_avg(year):
-    ss = [d['s'] for d in panel[year].values() if d.get('s') is not None]
-    return round(sum(ss)/len(ss), 2) if ss else None
-
-def compute_region_avg(year, region):
-    ss = [panel[year][iso]['s'] for iso in panel[year]
-          if iso in meta and meta[iso]['region']==region and panel[year][iso].get('s') is not None]
-    return round(sum(ss)/len(ss), 2) if ss else None
-
-def build_country_list():
-    year = '2023'
-    scored = []
-    for iso, d in panel[year].items():
-        if iso not in meta or d.get('s') is None: continue
-        scored.append((iso, meta[iso]['name'], meta[iso]['region'], d['s']))
-    scored.sort(key=lambda x: -x[3])
-    n = len(scored)
-    result = []
-    for i, (iso, name, region, score) in enumerate(scored):
-        rank = i + 1
-        q = 1 if rank <= n/4 else (2 if rank <= n/2 else (3 if rank <= 3*n/4 else 4))
-        result.append({'iso':iso, 'name':name, 'region':REGION_SHORT.get(region,region),
-                       'score':round(score,2), 'q':q, 'rank':rank})
-    return result
+# Panel de lectura: bloques [rótulo, texto] o ['ctx', nota de fuente], escritos por el generador
+JS_PANEL = r'''
+    function panel() {
+      document.getElementById('panel').innerHTML = D.panel.map(function (b) {
+        return b[0] === 'ctx' ? PM.ctx(b[1]) : PM.pb(PM.var('--acento'), b[0], null, b[1]);
+      }).join('');
+    }
+'''
 
 
-# ============================================================
-# 1. AREAS POR REGION
-# ============================================================
+# ════════════════════════════════════════════════════════════════════════════════════════════════
+# 1. ÁREAS POR REGIÓN — gráfico de puntos
+# ════════════════════════════════════════════════════════════════════════════════════════════════
+CUERPO_AREAS = r'''
+    <div class="kpi-grid" id="kpis"></div>
+
+    <div class="main-grid">
+      <div class="chart-card">
+        <div class="chart-ctrl">
+          <div class="tog-grp" id="pastillas"></div>
+          <span class="ref"><span class="raya"></span>Índice general</span>
+        </div>
+        <div class="grafico" id="chart"><div class="loading"><div class="spinner"></div><span>Cargando datos…</span></div></div>
+      </div>
+      <div class="panel">
+        <div class="panel-hd"><span class="panel-hd-t">Lectura del gráfico</span><span class="panel-hd-d" id="panel-fecha"></span></div>
+        <div class="panel-body" id="panel"></div>
+      </div>
+    </div>
+'''
+ESTILO_AREAS = r'''
+    /* el punto de cada área en su pastilla; la raya del índice general, vertical como en el gráfico */
+    #pastillas .lp.area { border-radius: 50%; }
+    .ref .raya { width: 3px; height: 13px; background: var(--tinta); flex: none; }'''
+
+JS_AREAS = r'''
+    var AREAS = D.areas, FILAS = D.regiones, activas = new Set(AREAS.map(function (a) { return a.k; })), grafico;
+
+    document.getElementById('panel-fecha').textContent = D.anio;
+    PM.pastillas(document.getElementById('pastillas'), AREAS.map(function (a) {
+      return { k: a.k, nombre: rotulo(a.nombre, a.corto), color: a.color, forma: 'area' };
+    }), activas, function () { grafico.redibujar(); });
+    cifras(); panel();
+    var el = document.getElementById('chart');
+    el.innerHTML = '';
+    grafico = PM.montar(el, opciones);
+    PM.alCambiarTema(function () { cifras(); panel(); });
+    PM.preguntas(document.getElementById('preguntas'), D.preguntas);
+
+    // imagen y CSV: el gráfico no tiene eje de categorías en X ni una serie por fila
+    PM.leyendaImagen = function () {
+      return AREAS.filter(function (a) { return activas.has(a.k); })
+        .map(function (a) { return { name: a.nombre, color: PM.col(a.color), forma: 'punto' }; })
+        .concat([{ name: 'Índice general', color: PM.col(C.tinta), forma: 'area' }]);
+    };
+    PM.tablaDatos = function () {
+      return { cols: ['Región', 'Países', 'Índice general'].concat(AREAS.map(function (a) { return a.nombre; })),
+        filas: FILAS.map(function (f) { return [f.nombre, f.n, f.s].concat(f.a); }) };
+    };
+
+    function cifras() {
+      var b = FILAS[0], w = FILAS[FILAS.length - 1], l = FILAS[D.lac];
+      document.getElementById('kpis').innerHTML =
+        PM.kpi({ color: C.turquesa, rotulo: 'Región más libre', valor: PM.num(b.s, 2), delta: b.nombre, serie: b.serie }) +
+        PM.kpi({ color: C.rojo, rotulo: 'Región menos libre', valor: PM.num(w.s, 2), delta: w.nombre, serie: w.serie }) +
+        PM.kpi({ color: C.oro, rotulo: 'América Latina y el Caribe', valor: PM.num(l.s, 2), delta: 'puesto ' + (D.lac + 1) + ' de ' + FILAS.length, serie: l.serie }) +
+        PM.kpi({ color: C.petroleo, rotulo: 'Mayor brecha entre regiones', valor: PM.num(D.brecha.v, 2), delta: D.brecha.area });
+    }
+@@PANEL@@
+    function opciones() {
+      var dk = PM.dk(), chico = PM.pequeno(), card = PM.var('--card') || '#fff', tinta = PM.col(C.tinta);
+      var act = AREAS.filter(function (a) { return activas.has(a.k); }), vals = [];
+      FILAS.forEach(function (f) { vals.push(f.s); act.forEach(function (a) { vals.push(f.a[a.i]); }); });
+      var x0 = Math.floor(Math.min.apply(null, vals)), x1 = Math.ceil(Math.max.apply(null, vals)), linea = dk ? '#3A4549' : '#C9CDCE';
+      var extremos = function (f) { var v = act.map(function (a) { return f.a[a.i]; }).concat([f.s]); return [Math.min.apply(null, v), Math.max.apply(null, v)]; };
+      var series = [
+        // la línea gris une el área más baja con la más alta de cada región
+        { name: '_rango', type: 'custom', silent: true, z: 1, tooltip: { show: false },
+          renderItem: function (p, api) {
+            var e = extremos(FILAS[p.dataIndex]), a = api.coord([e[0], p.dataIndex]), b = api.coord([e[1], p.dataIndex]);
+            return { type: 'line', shape: { x1: a[0], y1: a[1], x2: b[0], y2: b[1] }, style: { stroke: linea, lineWidth: 2 } };
+          },
+          data: FILAS.map(function (f, i) { return [f.s, i]; }) },
+        // el índice general: raya vertical de tinta, debajo de los puntos
+        { name: 'Índice general', type: 'scatter', z: 2, symbol: 'rect', symbolSize: [3, chico ? 17 : 21],
+          itemStyle: { color: tinta }, emphasis: { disabled: true }, data: FILAS.map(function (f, i) { return [f.s, i]; }) }
+      ];
+      act.forEach(function (a) {
+        series.push({ name: a.nombre, type: 'scatter', z: 3, symbolSize: chico ? 10 : 12,
+          itemStyle: { color: PM.col(a.color), borderColor: card, borderWidth: 1.5 }, emphasis: { scale: 1.3 },
+          data: FILAS.map(function (f, i) { return [f.a[a.i], i]; }) });
+      });
+      return {
+        grid: PM.grid({ top: 6, bottom: 2 }),
+        xAxis: PM.ejeY({ extra: { type: 'value', min: x0, max: x1, interval: 1,
+          axisLine: { show: true, lineStyle: { color: linea } } } }),
+        // el nombre de la región va ARRIBA de su fila, dentro del trazado: todo el ancho es para los puntos
+        yAxis: { type: 'category', inverse: true, data: FILAS.map(function (f) { return f.nombre; }),
+          axisLine: { show: false }, axisTick: { show: false }, splitLine: { show: false },
+          axisLabel: { inside: true, align: 'left', verticalAlign: 'bottom', margin: 0, padding: [0, 0, chico ? 8 : 11, 0],
+            formatter: function (v, i) { return '{n|' + v + '}  {v|' + PM.num(FILAS[i].s, 2) + '}'; },
+            rich: { n: { fontFamily: PM.inter(), fontSize: chico ? 10.5 : 11.5, fontWeight: 600, color: tinta },
+                    v: { fontFamily: PM.mono(), fontSize: chico ? 10 : 10.5, fontWeight: 600, color: PM.var('--pizarra') } } } },
+        tooltip: PM.tooltip(function (ps) {
+          var p = ps.filter(function (q) { return q.seriesName && q.seriesName.charAt(0) !== '_'; })[0];
+          if (!p) return '';
+          var f = FILAS[p.dataIndex], h = PM.ttTitulo(f.nombre, f.n + (f.n === 1 ? ' país' : ' países') + ' · ' + D.anio);
+          act.forEach(function (a) { h += PM.ttFila(clave(a.color), a.nombre, PM.num(f.a[a.i], 2), 'area'); });
+          return h + PM.ttTotal('Índice general', PM.num(f.s, 2));
+        }, { axisPointer: PM.sombraEje() }),
+        series: series
+      };
+    }
+'''
+
+
 def gen_areas_regiones():
-    year = '2023'
-    accent = '#005F73'
-    region_data = {}
-    for iso, d in panel[year].items():
-        if iso not in meta: continue
-        reg = meta[iso]['region']
-        if reg not in region_data:
-            region_data[reg] = {f'a{i+1}':[] for i in range(5)}
-        for ai in range(5):
-            k = f'a{ai+1}'
-            if d.get(k) is not None:
-                region_data[reg][k].append(d[k])
+    anio = ULTIMO
+    filas = []
+    for reg_en, reg_es in REGION.items():
+        isos = [i for i in panel[anio] if i in meta and meta[i]['region'] == reg_en and panel[anio][i].get('s') is not None]
+        filas.append({
+            'k': reg_en, 'nombre': reg_es, 'n': len(isos), 's': fino(media([panel[anio][i]['s'] for i in isos])),
+            'a': [fino(media([panel[anio][i].get(a['k']) for i in isos])) for a in AREAS],
+            'serie': [fino(media(valores(y, 's', reg_en))) for y in ANUALES],
+        })
+    filas.sort(key=lambda f: -f['s'])
+    n_total = len(valores(anio))
+    ilac = next(i for i, f in enumerate(filas) if f['k'] == LAC)
+    lac = filas[ilac]
 
-    order = ['North America','Europe & Central Asia','East Asia & Pacific',
-             'Middle East & North Africa','Latin America & the Caribbean',
-             'South Asia','Sub-Saharan Africa']
-    cats = json.dumps([REGION_SHORT[r] for r in order])
+    # brechas entre regiones por área: (rango, mínimo, máximo, área)
+    rango = []
+    for j in range(5):
+        v = [f['a'][j] for f in filas]
+        rango.append((max(v) - min(v), min(v), max(v), j))
+    ancha, angosta = max(rango), min(rango)
+    a1 = sorted(filas, key=lambda f: -f['a'][0])
+    eca = next(f for f in filas if f['k'] == 'Europe & Central Asia')
+    verificar(angosta[3] == 0, 'la menor brecha entre regiones está en Tamaño del gobierno')
+    verificar(eca in filas[:2] and eca in a1[-2:] and eca not in a1[:2],
+              f'en Tamaño del gobierno el orden se invierte: {a1[0]["nombre"]} y {a1[1]["nombre"]} superan a {eca["nombre"]}')
+    lac_orden = sorted(range(5), key=lambda j: lac['a'][j])
+    na = next(f for f in filas if f['k'] == 'North America')
+    na_paises = sorted(NOMBRE[i] for i in panel[anio] if i in meta and meta[i]['region'] == 'North America')
+    verificar(len(na_paises) == 2, 'Norteamérica son solo dos países')
+    verificar(meta['IND']['region'] == meta['BTN']['region'], 'India y Bután son de la misma región')
+    nom = lambda j: AREAS[j]['nombre']
 
-    # Global averages per area
-    area_avgs = {}
-    for ai in range(5):
-        k = f'a{ai+1}'
-        all_vals = []
-        for r in order:
-            all_vals.extend(region_data[r][k])
-        area_avgs[k] = round(sum(all_vals)/len(all_vals), 2) if all_vals else 0
+    p = [
+        ['Qué muestra', 'Cada fila es una región; cada punto, el promedio de sus países en una de las cinco áreas del '
+         'índice (0 a 10: más es más libre), y la raya vertical, el índice general. Las filas van de la región más libre '
+         'a la menos libre; la línea gris une su peor y su mejor área.'],
+        ['Patrones clave', f'<strong>{filas[0]["nombre"]}</strong> ({num(filas[0]["s"])}) y <strong>{filas[1]["nombre"]}</strong> '
+         f'({num(filas[1]["s"])}) encabezan; <strong>{filas[-2]["nombre"]}</strong> ({num(filas[-2]["s"])}) y '
+         f'<strong>{filas[-1]["nombre"]}</strong> ({num(filas[-1]["s"])}) cierran. La mayor brecha entre regiones está en '
+         f'<strong>{nom(ancha[3])}</strong> (de {num(ancha[1])} a {num(ancha[2])}) y la menor, en <strong>{nom(angosta[3])}</strong> '
+         f'(de {num(angosta[1])} a {num(angosta[2])}), donde además el orden se invierte: {a1[0]["nombre"]} '
+         f'({num(a1[0]["a"][0])}) y {a1[1]["nombre"]} ({num(a1[1]["a"][0])}) superan a {eca["nombre"]} ({num(eca["a"][0])}), '
+         'porque esa área premia el gasto, las transferencias y los impuestos bajos.'],
+        ['América Latina y el Caribe', f'Con <strong>{num(lac["s"])}</strong>, la región es la {ORDINAL[ilac + 1]} de '
+         f'{CARDINAL[len(filas)]}. Su área más débil es <strong>{nom(lac_orden[0])}</strong> ({num(lac["a"][lac_orden[0]])}), '
+         f'seguida de <strong>{nom(lac_orden[1])}</strong> ({num(lac["a"][lac_orden[1]])}); la mejor, '
+         f'<strong>{nom(lac_orden[-1])}</strong> ({num(lac["a"][lac_orden[-1]])}).'],
+        ['ctx', f'<strong>Fuente:</strong> Fraser Institute, Economic Freedom of the World: 2025 Annual Report (datos de {anio}): '
+         f'{n_total} jurisdicciones, 5 áreas y 45 componentes. Promedio simple de los países de cada región (regiones del '
+         f'Banco Mundial); {na["nombre"]} son solo {na_paises[0]} y {na_paises[1]}.'],
+    ]
+    preguntas = [
+        ['¿Qué mide el índice de libertad económica?', EFW_QUE.format(n=n_total)],
+        ['¿Por qué una región pobre puede puntuar alto en Tamaño del gobierno?',
+         'Porque el área mide cuánto del ingreso pasa por el Estado: consumo e inversión pública, transferencias y '
+         'subsidios, empresas estatales e impuestos marginales. Un Estado chico puntúa alto aunque el país sea pobre, y los '
+         f'Estados de bienestar puntúan bajo: {eca["nombre"]} marca {num(eca["a"][0])} en esa área y {num(eca["a"][2])} en '
+         'Moneda sana.'],
+        ['¿Por qué promedios simples?',
+         'Cada país pesa lo mismo: el promedio describe las políticas de los países de la región, no la experiencia de su '
+         'población (en Asia del Sur, India no pesa más que Bután).'],
+    ]
+    datos = {
+        'anio': anio, 'lac': ilac,
+        'areas': [{'k': a['k'], 'i': j, 'nombre': a['nombre'], 'corto': a['corto'], 'color': a['color']} for j, a in enumerate(AREAS)],
+        'regiones': [{'nombre': f['nombre'], 'n': f['n'], 's': f['s'], 'a': f['a'], 'serie': f['serie']} for f in filas],
+        'brecha': {'v': fino(ancha[0]), 'area': AREAS[ancha[3]]['corto']},
+        'panel': p, 'preguntas': preguntas,
+    }
+    pagina('areas_regiones.html', 'Calificación por Áreas del Índice de Libertad Económica',
+           f'Promedio de cada región en las cinco áreas del índice, {anio} · de 0 a 10, más es más libre · {n_total} jurisdicciones',
+           ACENTO['areas'], CUERPO_AREAS, datos, JS_AREAS.replace('@@PANEL@@', JS_PANEL), estilo=ESTILO_AREAS)
 
-    # LAC values
-    lac_vals = {}
-    for ai in range(5):
-        k = f'a{ai+1}'
-        v = region_data['Latin America & the Caribbean'][k]
-        lac_vals[k] = round(sum(v)/len(v), 2) if v else 0
 
-    series_js = []
-    for ai in range(5):
-        k = f'a{ai+1}'
-        vals = []
-        for r in order:
-            v = region_data[r][k]
-            vals.append(round(sum(v)/len(v),2) if v else 0)
-        series_js.append(
-            f"{{name:'{AREA_NAMES[ai]}',type:'bar',data:{json.dumps(vals)},"
-            f"itemStyle:{{color:'{AREA_COLORS[ai]}',borderRadius:[3,3,0,0]}},barMaxWidth:18}}"
-        )
+# ════════════════════════════════════════════════════════════════════════════════════════════════
+# 2 y 3. SERIES DE TIEMPO — evolución mundial y Bolivia (una plantilla: vista Índice / Áreas)
+# ════════════════════════════════════════════════════════════════════════════════════════════════
+CUERPO_SERIE = r'''
+    <div class="hz-bar">
+      <div class="hz-item"><span class="hz-lbl">Vista</span><div class="hz-grp" id="b-vista"></div></div>
+    </div>
 
-    # Compute best/worst region
-    reg_overall = {}
-    for r in order:
-        all_s = []
-        for iso, d in panel[year].items():
-            if iso in meta and meta[iso]['region']==r and d.get('s') is not None:
-                all_s.append(d['s'])
-        reg_overall[r] = round(sum(all_s)/len(all_s),2) if all_s else 0
-    best_reg = max(reg_overall, key=reg_overall.get)
-    worst_reg = min(reg_overall, key=reg_overall.get)
+    <div class="kpi-grid" id="kpis"></div>
 
-    html = html_start('Calificacion por Areas — Regiones del Mundo', accent)
-    html += f'''
-  <div class="sec-hd">
-    <div class="sec-title"><span class="accent-bar" style="background:{accent}"></span>Calificacion por Areas del Indice de Libertad Economica</div>
-    <div class="sec-sub">Promedio regional por area, {year} &middot; Fraser Institute EFW &middot; 165 jurisdicciones</div>
-  </div>
-  <div class="kpi-row">
-    <div class="kpi"><div class="kpi-label">Region mas libre</div><div class="kpi-val" style="color:#0A9396;font-size:.9rem">{REGION_SHORT[best_reg]}</div><div class="kpi-delta" style="color:#0A9396">{reg_overall[best_reg]}/10</div></div>
-    <div class="kpi"><div class="kpi-label">Region menos libre</div><div class="kpi-val" style="color:#C71E1D;font-size:.9rem">{REGION_SHORT[worst_reg]}</div><div class="kpi-delta" style="color:#C71E1D">{reg_overall[worst_reg]}/10</div></div>
-    <div class="kpi"><div class="kpi-label">Am. Latina</div><div class="kpi-val" style="color:#EE9B00;font-size:.9rem">{reg_overall["Latin America & the Caribbean"]}</div><div class="kpi-delta" style="color:var(--muted)">de 10</div></div>
-  </div>
-  <div class="legend-bar">
-    {''.join(f'<span class="leg-item"><span class="leg-dot" style="background:{AREA_COLORS[i]}"></span>{AREA_NAMES[i]}</span>' for i in range(5))}
-  </div>
-  <div class="main-grid">
-    <div class="chart-card"><div id="chart"></div></div>
-    <div class="panel">
-      <div class="panel-hd" style="background:#1E40AF"><span class="panel-hd-t">Lectura del grafico</span></div>
-      <div class="panel-body">
-        <div class="pb"><div class="pb-lbl" style="color:{accent}">Que muestra</div><div class="pb-desc">Cada grupo de barras representa el <strong>promedio regional</strong> en las 5 areas del Indice de Libertad Economica del Fraser Institute. Las areas miden: tamano del gobierno, sistema legal, estabilidad monetaria, apertura comercial y regulacion.</div></div>
-        <div class="pb"><div class="pb-lbl" style="color:{accent}">Patrones clave</div><div class="pb-desc"><strong>Norteamerica y Europa</strong> lideran consistentemente, mientras que <strong>Asia del Sur y Africa Subsahariana</strong> muestran los puntajes mas bajos. El area de <strong>Moneda Sana</strong> es donde mas regiones convergen; las mayores brechas estan en <strong>Sistema Legal</strong> y <strong>Regulacion</strong>.</div></div>
-        <div class="pb"><div class="pb-lbl" style="color:{accent}">America Latina</div><div class="pb-desc">La region tiene un desempeno <strong>intermedio-bajo</strong>. Su area mas debil es <strong>Sistema Legal</strong> ({lac_vals['a2']}/10), reflejando debilidades institucionales, seguida de <strong>Regulacion</strong> ({lac_vals['a5']}/10). Su mejor area es <strong>Moneda Sana</strong> ({lac_vals['a3']}/10).</div></div>
-        <div class="ctx" style="border-left:3px solid {accent}"><p><strong>Fuente:</strong> Fraser Institute, Economic Freedom of the World {year}. 165 jurisdicciones, 5 areas, 45 variables.</p></div>
+    <div class="main-grid">
+      <div class="chart-card">
+        <div class="chart-ctrl">
+          <div class="tog-grp" id="pastillas-indice"></div>
+          <div class="tog-grp" id="pastillas-areas" style="display:none"></div>
+        </div>
+        <div class="grafico" id="chart"><div class="loading"><div class="spinner"></div><span>Cargando datos…</span></div></div>
+      </div>
+      <div class="panel">
+        <div class="panel-hd"><span class="panel-hd-t">Lectura del gráfico</span><span class="panel-hd-d" id="panel-fecha"></span></div>
+        <div class="panel-body" id="panel"></div>
       </div>
     </div>
-  </div>
-  {source_footer('<a href="https://www.fraserinstitute.org/economic-freedom" target="_blank">Fraser Institute</a>')}
-<script>
-function rebuildChart() {{ initChart(); }}
-function initChart() {{
-  var isDk = document.documentElement.getAttribute('data-theme')==='dark';
-  var tc = isDk?'#E2E8F0':'#1A2940';
-  var gc = isDk?'#1A2940':'#F1EDE5';
-  var ac = isDk?'#2A3A50':'#E2DDD3';
-  var lc = isDk?'#64748B':'#64748B';
-  var el = document.getElementById('chart');
-  if(window._chart) window._chart.dispose();
-  var chart = echarts.init(el);
-  window._chart = chart;
-  chart.setOption({{
-    backgroundColor:'transparent',
-    tooltip:{{trigger:'axis',axisPointer:{{type:'shadow'}},
-      backgroundColor:isDk?'#141414':'#fff',borderColor:isDk?'#333':'#E2E8F0',
-      textStyle:{{color:tc,fontSize:12,fontFamily:'Inter'}}}},
-    legend:{{show:false}},
-    grid:{{left:55,right:20,bottom:70,top:16,containLabel:false}},
-    xAxis:{{type:'category',data:{cats},
-      axisLabel:{{color:lc,fontSize:10,interval:0,rotate:25,fontFamily:'Inter'}},
-      axisLine:{{lineStyle:{{color:ac}}}},axisTick:{{show:false}}}},
-    yAxis:{{type:'value',min:0,max:10,
-      axisLabel:{{color:lc,fontSize:10,fontFamily:'JetBrains Mono'}},
-      splitLine:{{lineStyle:{{color:gc,type:'dashed'}}}},axisLine:{{show:false}}}},
-    series:[{','.join(series_js)}]
-  }});
-  window.addEventListener('resize',function(){{chart.resize()}});
-}}
-initChart();
-</script>
 '''
-    html += HTML_FOOT
-    with open(f'{OUT}/areas_regiones.html','w',encoding='utf-8') as f: f.write(html)
-    print('  OK areas_regiones.html')
+
+JS_SERIE = r'''
+    // D.indice: series de la vista «Índice» (la primera es la protagonista: 2,5 px y único relleno);
+    // D.areas: las cinco áreas (rampa oficial, 1,75 px). Todas sobre los mismos años D.anios.
+    var A = D.anios, a0 = A[0], a1 = A[A.length - 1], estado = { vista: 'indice' }, grafico;
+    var activas = { indice: new Set(D.indice.map(function (s) { return s.k; })), areas: new Set(D.areas.map(function (s) { return s.k; })) };
+    var visibles = function () {
+      return (estado.vista === 'indice' ? D.indice : D.areas).filter(function (s) { return activas[estado.vista].has(s.k); });
+    };
+
+    document.getElementById('panel-fecha').textContent = a0 + '–' + a1;
+    PM.botonera(document.getElementById('b-vista'), [['indice', 'Índice'], ['areas', 'Áreas']], estado.vista, function (v) {
+      estado.vista = v;
+      document.getElementById('pastillas-indice').style.display = v === 'indice' ? '' : 'none';
+      document.getElementById('pastillas-areas').style.display = v === 'areas' ? '' : 'none';
+      grafico.redibujar();
+    });
+    ['indice', 'areas'].forEach(function (v) {
+      PM.pastillas(document.getElementById('pastillas-' + v), D[v].map(function (s) {
+        return { k: s.k, nombre: rotulo(s.nombre, s.corto), color: s.color, forma: s.punteada ? 'punteada' : 'linea' };
+      }), activas[v], function () { grafico.redibujar(); });
+    });
+    cifras(); panel();
+    var el = document.getElementById('chart');
+    el.innerHTML = '';
+    grafico = PM.montar(el, opciones);
+    PM.alCambiarTema(function () { cifras(); panel(); });
+    PM.preguntas(document.getElementById('preguntas'), D.preguntas);
+
+    PM.leyendaImagen = function () {
+      return visibles().map(function (s) { return { name: s.nombre, color: PM.col(s.color), forma: s.punteada ? 'punteada' : 'linea' }; });
+    };
+    PM.tablaDatos = function () {
+      var vs = visibles();
+      return { cols: ['Año'].concat(vs.map(function (s) { return s.nombre; })),
+        filas: A.map(function (a, i) { return [a].concat(vs.map(function (s) { return s.v[i]; })); }) };
+    };
+
+    function cifras() {
+      document.getElementById('kpis').innerHTML = D.cifras.map(function (k) {
+        return PM.kpi({ color: k.color, rotulo: k.rotulo, valor: PM.num(k.valor, k.dec == null ? 2 : k.dec), delta: k.delta, tono: k.tono, serie: k.serie });
+      }).join('');
+    }
+@@PANEL@@
+    function opciones() {
+      var chico = PM.pequeno(), el = document.getElementById('chart'), vs = visibles(), vals = [];
+      vs.forEach(function (s) { s.v.forEach(function (x) { if (x != null) vals.push(x); }); });
+      var series = vs.map(function (s) { return serieAnual(s, A, s.v); });
+      if (series.length) series[0].markLine = hitos(D.hitos, chico);
+      var esIndice = estado.vista === 'indice';
+      return {
+        grid: PM.grid({ top: 30, bottom: 2 }),
+        xAxis: ejeAnios(a0, a1, el),
+        yAxis: PM.ejeY({ unidad: chico ? D.unidadCorta : D.unidad, fmt: PM.tick,
+          extra: PM.mezclar(rangoY(vals.length ? vals : [0, 10], 0, 10), { nameTextStyle: { align: 'left' } }) }),
+        tooltip: PM.tooltip(function (ps) {
+          var p = ps.filter(function (q) { return q.value && q.value[1] != null; });
+          if (!p.length) return '';
+          var i = A.indexOf(p[0].value[0]);
+          if (i < 0) return '';
+          var h = PM.ttTitulo(String(A[i]));
+          vs.forEach(function (s) { if (s.v[i] != null) h += PM.ttFila(clave(s.color), s.nombre, PM.num(s.v[i], 2), s.punteada ? 'punteada' : 'linea'); });
+          if (!esIndice) h += PM.ttTotal(D.total.nombre, PM.num(D.total.v[i], 2));
+          else h += PM.ttPie(D.pieTip[i]);
+          return h;
+        }),
+        series: series
+      };
+    }
+'''
 
 
-# ============================================================
-# 2. EVOLUCION MUNDIAL
-# ============================================================
+def serie_areas(fuente):
+    """Las cinco áreas como series de la vista «Áreas»: fuente(k) → valores por año."""
+    return [{'k': a['k'], 'nombre': a['nombre'], 'corto': a['corto'], 'color': a['color'], 'ancho': 1.75,
+             'v': [fino(x) for x in fuente(a['k'])]} for a in AREAS]
+
+
 def gen_evolucion_mundial():
-    accent = '#9B2226'
-    yrs = [y for y in sorted(panel.keys()) if int(y)>=1970]
-    yrs_int = [int(y) for y in yrs]
-    world_avg = []
-    area_s = {f'a{i+1}':[] for i in range(5)}
-    counts = []
-    for y in yrs:
-        ss = [d['s'] for d in panel[y].values() if d.get('s') is not None]
-        world_avg.append(round(sum(ss)/len(ss),3) if ss else None)
-        counts.append(len(ss))
-        for ai in range(5):
-            k = f'a{ai+1}'
-            vs = [d[k] for d in panel[y].values() if d.get(k) is not None]
-            area_s[k].append(round(sum(vs)/len(vs),3) if vs else None)
+    anios = [int(y) for y in ANIOS]
+    mundo = [media(valores(y)) for y in ANIOS]
+    n = [len(valores(y)) for y in ANIOS]
+    fijos = [i for i, d in panel[ANIOS[0]].items()
+             if d.get('s') is not None and all(panel[y].get(i, {}).get('s') is not None for y in ANIOS)]
+    fijo = [media([panel[y][i]['s'] for i in fijos]) for y in ANIOS]
+    area = {a['k']: [media(valores(y, a['k'])) for y in ANIOS] for a in AREAS}
+    ix = {a: i for i, a in enumerate(anios)}
+    v = lambda serie, a: serie[ix[a]]
 
-    # KPIs
-    latest = world_avg[-1]
-    peak_val = max(v for v in world_avg if v)
-    peak_yr = yrs_int[world_avg.index(peak_val)]
-    low_val = min(v for v in world_avg if v)
-    low_yr = yrs_int[world_avg.index(low_val)]
+    ultimo, a_ult = mundo[-1], anios[-1]
+    pico = max(mundo); a_pico = anios[mundo.index(pico)]
+    piso = min(mundo); a_piso = anios[mundo.index(piso)]
+    # Años 70: cae el promedio, con más gasto (Tamaño del gobierno) e inflación (Moneda sana)
+    verificar(v(mundo, 1975) < v(mundo, 1970) and v(area['a1'], 1975) < v(area['a1'], 1970)
+              and v(area['a3'], 1975) < v(area['a3'], 1970), 'el promedio cayó en los 70 con más gasto e inflación')
+    verificar(v(mundo, 2000) > v(mundo, 1990) > v(mundo, 1980), 'las reformas de los 80 y 90 lo llevaron hacia arriba')
+    # COVID: la mayor caída anual desde que la serie es anual, por gasto, regulación y comercio
+    caidas = [(mundo[i] - mundo[i - 1], anios[i]) for i in range(1, len(anios)) if anios[i - 1] >= 2000]
+    verificar(min(caidas)[1] == 2020, 'el COVID-19 provocó la mayor caída anual de la serie')
+    verificar(all(v(area[k], 2020) < v(area[k], 2019) for k in ('a1', 'a4', 'a5')), 'en 2020 cayeron gasto, comercio y regulación')
+    nivel = max(a for a in anios if a < 2020 and v(mundo, a) <= v(mundo, 2020))
+    verificar(ultimo < v(mundo, 2020), 'no hubo recuperación: el último dato sigue por debajo de 2020')
+    m3 = {a: v(area['a3'], a) for a in anios if a >= 2019}
+    a_m3 = min(m3, key=m3.get)
+    verificar(a_m3 > 2020 and m3[2019] - m3[a_m3] > 0.5, 'la inflación de 2021–2022 hundió a Moneda sana')
+    mejora = max(range(5), key=lambda j: v(area[AREAS[j]['k']], a_ult) - v(area[AREAS[j]['k']], 1980))
+    quieta = min(range(5), key=lambda j: max(area[AREAS[j]['k']]) - min(area[AREAS[j]['k']]))
+    ka, kq = AREAS[mejora]['k'], AREAS[quieta]['k']
+    rec = {k: v(area[k], a_ult) - v(area[k], 2020) for k in ('a1', 'a4')}
+    verificar(rec['a4'] > 0 and rec['a1'] > 0, 'comercio y tamaño del gobierno mejoraron después de 2020')
+    # los que entraron después de 1970: cuántos y de dónde, y que puntúan más bajo
+    en_1970 = set(i for i, d in panel[ANIOS[0]].items() if d.get('s') is not None)
+    nuevos = [i for i in panel[ULTIMO] if i not in en_1970 and panel[ULTIMO][i].get('s') is not None]
+    n_soc = sum(1 for i in nuevos if i in EX_SOCIALISTAS)
+    n_afr = sum(1 for i in nuevos if i in meta and meta[i]['region'] == 'Sub-Saharan Africa')
+    verificar(fijo[-1] > ultimo and media([panel[ULTIMO][i]['s'] for i in nuevos]) < fijo[-1],
+              'los países que entraron después puntúan más bajo')
+    a_tot = min(a for a in anios if v(n, a) == n[-1])
+    # Ponderado por población (desde 2000, cuando la serie es anual y la cobertura amplia): cada país pesa según
+    # su población de Maddison (la de 2022 para 2023, último año de esa base). Coincide con el informe Fraser.
+    def ponderado(y):
+        a = str(min(int(y), 2022))
+        pares = [(d['s'], pob[i][a]) for i, d in panel[y].items() if d.get('s') is not None and pob.get(i, {}).get(a)]
+        return sum(x * w for x, w in pares) / sum(w for _, w in pares)
+    pond = [ponderado(y) if int(y) >= 2000 else None for y in ANIOS]
+    verificar(all(q < m for q, m in zip(pond, mundo) if q is not None), 'ponderado por población, el promedio es menor')
+    sin_pob = [i for i, d in panel[ULTIMO].items() if d.get('s') is not None and not pob.get(i, {}).get('2022')]
+    pob_wdi = {c['iso']: c['population'] for c in cons if c.get('population')}
+    peso_sin = sum(pob_wdi.get(i, 0) for i in sin_pob) / sum(pob_wdi.get(i, 0) for i, d in panel[ULTIMO].items() if d.get('s') is not None)
+    verificar(peso_sin < 0.01, 'las jurisdicciones sin población en Maddison pesan menos del 1 %')
+    grandes = sorted((i for i, d in panel[ULTIMO].items() if d.get('s') is not None and pob.get(i, {}).get('2022')),
+                     key=lambda i: -pob[i]['2022'])[:8]
+    bajo = [i for i in grandes if panel[ULTIMO][i]['s'] < ultimo]
+    verificar(grandes[0] in bajo, 'el país más poblado puntúa por debajo del promedio simple')
+    qp = [x for x in pond if x is not None]
+    a_pico_p = [a for a, x in zip(anios, pond) if x is not None][qp.index(max(qp))]
+    verificar(a_pico_p == a_pico and pond[-1] < pond[anios.index(2020)] < pond[anios.index(2019)],
+              'el ponderado siguió el mismo camino: máximo en el mismo año y caída con el COVID-19')
+    nom = lambda i: NOMBRE.get(i, meta.get(i, {}).get('name', i))
+    lista = lambda xs: ', '.join(xs[:-1]) + ' y ' + xs[-1] if len(xs) > 1 else xs[0]
 
-    area_series_js = []
-    for ai in range(5):
-        k = f'a{ai+1}'
-        area_series_js.append(
-            f"{{name:'{AREA_NAMES[ai]}',type:'line',data:{json.dumps(area_s[k])},"
-            f"lineStyle:{{width:1.5,color:'{AREA_COLORS[ai]}',type:'dashed'}},"
-            f"itemStyle:{{color:'{AREA_COLORS[ai]}'}},symbol:'none',z:5}}"
-        )
-
-    html = html_start('Evolucion de la Libertad Economica Mundial', accent)
-    html += f'''
-  <div class="sec-hd">
-    <div class="sec-title"><span class="accent-bar" style="background:{accent}"></span>Evolucion de la Libertad Economica en el Mundo</div>
-    <div class="sec-sub">Promedio mundial del EFW y sus 5 areas, 1970-2023 &middot; Fraser Institute</div>
-  </div>
-  <div class="kpi-row">
-    <div class="kpi"><div class="kpi-label">EFW Global 2023</div><div class="kpi-val" style="color:{accent}">{latest}</div><div class="kpi-delta" style="color:var(--muted)">de 10</div></div>
-    <div class="kpi"><div class="kpi-label">Maximo historico</div><div class="kpi-val" style="color:#0A9396">{peak_val}</div><div class="kpi-delta" style="color:#0A9396">{peak_yr}</div></div>
-    <div class="kpi"><div class="kpi-label">Minimo historico</div><div class="kpi-val" style="color:#C71E1D">{low_val}</div><div class="kpi-delta" style="color:#C71E1D">{low_yr}</div></div>
-    <div class="kpi"><div class="kpi-label">Jurisdicciones 2023</div><div class="kpi-val">{counts[-1]}</div></div>
-  </div>
-  <div class="legend-bar">
-    <span class="leg-item"><span class="leg-line" style="border-top:3px solid var(--text)"></span>EFW Global</span>
-    {''.join(f'<span class="leg-item"><span class="leg-line" style="border-top:1.5px dashed {AREA_COLORS[i]}"></span>{AREA_NAMES[i]}</span>' for i in range(5))}
-  </div>
-  <div class="main-grid">
-    <div class="chart-card"><div id="chart"></div></div>
-    <div class="panel">
-      <div class="panel-hd" style="background:#6D28D9"><span class="panel-hd-t">Lectura del grafico</span></div>
-      <div class="panel-body">
-        <div class="pb"><div class="pb-lbl" style="color:{accent}">Tendencia general</div><div class="pb-desc">La libertad economica mundial cayo en los <strong>anos 70</strong> por la expansion del gasto publico e inflacion. Las reformas de los <strong>80 y 90</strong> (Reagan, Thatcher, apertura asiatica, caida del socialismo) impulsaron un ascenso sostenido hasta alcanzar su <strong>maximo en {peak_yr}</strong>.</div></div>
-        <div class="pb"><div class="pb-lbl" style="color:{accent}">Siglo XXI</div><div class="pb-desc">La liberalizacion continuo a ritmo moderado. El <strong>COVID-19</strong> (2020) provoco un fuerte retroceso por aumento del gasto publico y regulacion, eliminando casi <strong>dos decadas de avance</strong>. La recuperacion posterior ha sido parcial.</div></div>
-        <div class="pb"><div class="pb-lbl" style="color:{accent}">Areas</div><div class="pb-desc">Active las 5 areas en la leyenda para ver su evolucion individual. <strong>Moneda Sana</strong> fue el area de mayor mejora desde los 80. <strong>Tamano del Gobierno</strong> muestra la menor variacion temporal.</div></div>
-        <div class="ctx" style="border-left:3px solid {accent}"><p><strong>Fuente:</strong> Fraser Institute, Economic Freedom of the World 2024. Promedio no ponderado de todas las jurisdicciones disponibles cada ano.</p></div>
-      </div>
-    </div>
-  </div>
-  {source_footer('<a href="https://www.fraserinstitute.org/economic-freedom" target="_blank">Fraser Institute</a>')}
-<script>
-function rebuildChart() {{ initChart(); }}
-function initChart() {{
-  var isDk = document.documentElement.getAttribute('data-theme')==='dark';
-  var tc = isDk?'#FAF8F3':'#1A2940';
-  var gc = isDk?'#1A2940':'#F1EDE5';
-  var ac = isDk?'#2A3A50':'#E2DDD3';
-  var lc = isDk?'#64748B':'#64748B';
-  var nc = isDk?'#64748B':'#64748B';
-  var el = document.getElementById('chart');
-  if(window._chart) window._chart.dispose();
-  var chart = echarts.init(el);
-  window._chart = chart;
-  chart.setOption({{
-    backgroundColor:'transparent',
-    tooltip:{{trigger:'axis',backgroundColor:isDk?'#141414':'#fff',
-      borderColor:isDk?'#333':'#E2E8F0',textStyle:{{color:isDk?'#E2E8F0':'#1A2940',fontSize:12,fontFamily:'Inter'}}}},
-    legend:{{
-      data:['EFW Global',{','.join(["'"+n+"'" for n in AREA_NAMES])}],
-      bottom:0,textStyle:{{color:lc,fontSize:10}},itemWidth:16,itemHeight:8,itemGap:10,
-      selected:{{
-        'EFW Global':true,
-        {','.join(["'"+n+"':false" for n in AREA_NAMES])}
-      }}
-    }},
-    grid:{{left:55,right:20,bottom:50,top:16,containLabel:false}},
-    xAxis:{{type:'category',data:{json.dumps(yrs_int)},
-      axisLabel:{{color:lc,fontSize:10,fontFamily:'JetBrains Mono'}},
-      axisLine:{{lineStyle:{{color:ac}}}},axisTick:{{show:false}}}},
-    yAxis:{{type:'value',min:4,max:8.5,
-      name:'Indice EFW',nameLocation:'center',nameGap:38,
-      nameTextStyle:{{fontSize:11,fontFamily:'Inter',color:nc}},
-      axisLabel:{{color:lc,fontSize:10,fontFamily:'JetBrains Mono'}},
-      splitLine:{{lineStyle:{{color:gc,type:'dashed'}}}},axisLine:{{show:false}}}},
-    series:[
-      {{name:'EFW Global',type:'line',data:{json.dumps(world_avg)},
-        lineStyle:{{width:3,color:tc}},itemStyle:{{color:tc}},
-        symbol:'circle',symbolSize:5,z:10,
-        areaStyle:{{color:new echarts.graphic.LinearGradient(0,0,0,1,[
-          {{offset:0,color:isDk?'rgba(155,34,38,.15)':'rgba(155,34,38,.1)'}},
-          {{offset:1,color:'transparent'}}
-        ])}}}},
-      {','.join(area_series_js)}
+    p = [
+        ['Tendencia general', f'El promedio cayó en los <strong>años 70</strong> (de {num(v(mundo, 1970))} en 1970 a '
+         f'{num(v(mundo, 1975))} en 1975), con más gasto público e inflación. Las reformas de los 80 y 90 —Reagan, Thatcher, '
+         f'la apertura asiática y la caída del socialismo— lo llevaron de {num(v(mundo, 1980))} en 1980 a {num(v(mundo, 2000))} '
+         f'en 2000. El máximo llegó en <strong>{a_pico}</strong> ({num(pico)}).'],
+        ['Siglo XXI', f'La liberalización siguió a ritmo moderado hasta {a_pico}. El <strong>COVID-19</strong> provocó la mayor '
+         f'caída anual de la serie (de {num(v(mundo, 2019))} a {num(v(mundo, 2020))}), con más gasto, regulación y trabas al '
+         f'comercio: el promedio volvió al nivel de {nivel}. <strong>No hubo recuperación</strong>: la inflación de 2021–2022 '
+         f'hundió a Moneda sana (de {num(m3[2019])} en 2019 a {num(m3[a_m3])} en {a_m3}) y en {a_ult} el promedio '
+         f'({num(ultimo)}) sigue por debajo del de 2020.'],
+        ['Ponderado por población', f'Si cada país pesa según su población, el promedio es menor: <strong>{num(pond[-1])}</strong> '
+         f'en {a_ult}, frente a {num(ultimo)} del promedio simple. Lo empuja hacia abajo <strong>{nom(grandes[0])}</strong>, el país '
+         f'más poblado, con {num(panel[ULTIMO][grandes[0]]["s"])}, junto con {lista([nom(i) for i in bajo[1:]])}, también entre los '
+         f'ocho más poblados y por debajo del promedio. Siguió el mismo camino: máximo en {a_pico_p} ({num(max(qp))}) y caída con '
+         f'el COVID-19.'],
+        ['Áreas', f'<strong>{AREAS[mejora]["nombre"]}</strong> es el área que más mejoró desde 1980 (de {num(v(area[ka], 1980))} '
+         f'a {num(v(area[ka], a_ult))}); <strong>{AREAS[quieta]["nombre"]}</strong>, la que menos cambió (entre '
+         f'{num(min(area[kq]))} y {num(max(area[kq]))} en toda la serie). La vista <strong>Áreas</strong> las muestra una por una.'],
+        ['ctx', f'<strong>Fuente:</strong> Fraser Institute, Economic Freedom of the World: 2025 Annual Report. Promedio simple '
+         f'de las jurisdicciones con dato cada año: {n[0]} en 1970, {v(n, 1995)} en 1995, {v(n, 2000)} en 2000 y {n[-1]} desde '
+         f'{a_tot}; la línea de los mismos {len(fijos)} países descuenta la entrada de países nuevos. El ponderado usa la '
+         f'población del Maddison Project Database 2023 (la de 2022 para {a_ult}); quedan fuera {len(sin_pob)} jurisdicciones '
+         f'sin ese dato, que suman menos del {max(1, round(peso_sin * 100 + 0.5))} % de la población. Cada área promedia los '
+         f'países con dato en esa área. Hasta 2000 los datos son quinquenales.'],
     ]
-  }});
-  window.addEventListener('resize',function(){{chart.resize()}});
-}}
-initChart();
-</script>
-'''
-    html += HTML_FOOT
-    with open(f'{OUT}/evolucion_mundial.html','w',encoding='utf-8') as f: f.write(html)
-    print('  OK evolucion_mundial.html')
+    preguntas = [
+        ['¿Qué mide el índice de libertad económica?', EFW_QUE.format(n=n[-1])],
+        ['¿Por qué hay tres líneas?',
+         f'El índice calificaba a {n[0]} países en 1970 y hoy a {n[-1]}. De los {len(nuevos)} que entraron después, {n_soc} son '
+         f'de la antigua órbita socialista y {n_afr} de África Subsahariana, y en promedio puntúan más bajo: su entrada empuja '
+         f'el promedio hacia abajo aunque ningún país empeore. La línea de los <strong>mismos {len(fijos)} países</strong> '
+         f'calificados desde 1970 sigue siempre al mismo grupo: marca {num(fijo[-1])} en {a_ult}, frente a {num(ultimo)} del '
+         f'promedio de todos, y dibuja la misma historia. La punteada pondera por población: describe la libertad económica '
+         f'que vive la persona promedio, no el país promedio ({num(pond[-1])} en {a_ult}).'],
+        ['¿Por qué no se recuperó después de 2020?',
+         f'Porque la inflación de 2021–2022 llevó a Moneda sana de {num(m3[2019])} en 2019 a {num(m3[a_m3])} en {a_m3}, y '
+         f'eso anuló la mejora de otras áreas: entre 2020 y {a_ult}, Libertad para comerciar internacionalmente subió '
+         f'{num(rec["a4"])} puntos y Tamaño del gobierno, {num(rec["a1"])}.'],
+    ]
+    datos = {
+        'anios': anios, 'unidad': 'Índice EFW (0 a 10)', 'unidadCorta': 'Índice EFW',
+        'indice': [
+            {'k': 'mundo', 'nombre': 'Promedio mundial', 'color': GRANATE, 'ancho': 2.5, 'area': True,
+             'v': [fino(x) for x in mundo]},
+            {'k': 'fijo', 'nombre': f'Mismos {len(fijos)} países desde 1970', 'corto': f'Mismos {len(fijos)} países',
+             'color': PIZARRA, 'ancho': 1.75, 'v': [fino(x) for x in fijo]},
+            {'k': 'pond', 'nombre': 'Ponderado por población', 'color': '#EE9B00', 'ancho': 1.75, 'punteada': True,
+             'v': [None if x is None else fino(x) for x in pond]},
+        ],
+        'areas': serie_areas(lambda k: area[k]),
+        'total': {'nombre': 'Índice general', 'v': [fino(x) for x in mundo]},
+        'pieTip': [f'{c} jurisdicciones con dato' for c in n],
+        'hitos': [{'anio': 1989, 'largo': '1989 · cae el Muro de Berlín', 'corto': '1989', 'alinear': 'left'},
+                  {'anio': 2020, 'largo': '2020 · COVID-19', 'corto': '2020', 'alinear': 'right'}],
+        'cifras': [
+            {'color': GRANATE, 'rotulo': f'Promedio mundial · {a_ult}', 'valor': fino(ultimo),
+             'delta': f'▼ {num(pico - ultimo)} desde {a_pico}', 'tono': 'malo', 'serie': [fino(v(mundo, int(y))) for y in ANUALES]},
+            {'color': '#0A9396', 'rotulo': 'Máximo de la serie', 'valor': fino(pico), 'delta': f'en {a_pico}'},
+            {'color': '#EE9B00', 'rotulo': f'Ponderado por población · {a_ult}', 'valor': fino(pond[-1]),
+             'delta': f'promedio simple {num(ultimo)}', 'serie': [fino(x) for x in pond if x is not None]},
+            {'color': PIZARRA, 'rotulo': f'Jurisdicciones · {a_ult}', 'valor': n[-1], 'dec': 0, 'delta': f'{n[0]} en 1970'},
+        ],
+        'panel': p, 'preguntas': preguntas,
+    }
+    verificar(ultimo < pico, 'el promedio está por debajo de su máximo')
+    pagina('evolucion_mundial.html', 'Evolución de la Libertad Económica en el Mundo',
+           f'Promedio mundial del índice EFW y de sus cinco áreas, {anios[0]}–{a_ult} · de 0 a 10, más es más libre',
+           ACENTO['evolucion'], CUERPO_SERIE, datos, JS_SERIE.replace('@@PANEL@@', JS_PANEL))
 
 
-# ============================================================
-# 3. BOLIVIA EFW
-# ============================================================
 def gen_bolivia_efw():
-    accent = '#C71E1D'
-    yrs = [y for y in sorted(panel.keys()) if int(y)>=1970 and 'BOL' in panel[y]]
-    yrs_int = [int(y) for y in yrs]
-    bol_s = [panel[y]['BOL'].get('s') for y in yrs]
-    bol_a = {f'a{i+1}':[panel[y]['BOL'].get(f'a{i+1}') for y in yrs] for i in range(5)}
-    w_avg = [compute_world_avg(y) for y in yrs]
-    lac = [compute_region_avg(y, 'Latin America & the Caribbean') for y in yrs]
+    anios_s = [y for y in ANIOS if 'BOL' in panel[y]]
+    anios = [int(y) for y in anios_s]
+    bol = [panel[y]['BOL']['s'] for y in anios_s]
+    bola = {a['k']: [panel[y]['BOL'].get(a['k']) for y in anios_s] for a in AREAS}
+    mundo = [media(valores(y)) for y in anios_s]
+    lac = [media(valores(y, 's', LAC)) for y in anios_s]
+    pues = [puesto(y, 'BOL') for y in anios_s]
+    ix = {a: i for i, a in enumerate(anios)}
+    v = lambda serie, a: serie[ix[a]]
+    a_ult = anios[-1]
+    s_ult, (p_ult, n_ult) = bol[-1], pues[-1]
+    pico = max(bol); a_pico = anios[bol.index(pico)]
+    piso = min(bol); a_piso = anios[bol.index(piso)]
+    p_pico, n_pico = pues[bol.index(pico)]
 
-    latest = bol_s[-1]
-    # Find Bolivia's rank in 2023
-    y23 = panel['2023']
-    scores_23 = sorted([d['s'] for d in y23.values() if d.get('s') is not None], reverse=True)
-    bol_rank = scores_23.index(latest) + 1 if latest in scores_23 else '?'
-    peak_val = max(v for v in bol_s if v)
-    peak_yr = yrs_int[bol_s.index(peak_val)]
-    low_val = min(v for v in bol_s if v)
-    low_yr = yrs_int[bol_s.index(low_val)]
+    # Trayectoria: caída sin pausa hasta 1985, hiperinflación (Moneda sana casi en cero), giro del DS 21060
+    tramo = [v(bol, a) for a in anios if a <= 1985]
+    verificar(all(x > y for x, y in zip(tramo, tramo[1:])) and a_piso == 1985, 'Bolivia cayó sin pausa hasta 1985')
+    m85 = v(bola['a3'], 1985)
+    verificar(m85 < 1, 'en 1985 Moneda sana quedó casi en cero')
+    verificar(a_pico > 1985 and v(bol, 1985) < v(bol, 1990) < v(bol, 1995), 'el DS 21060 marcó el giro')
+    reciente = [v(bol, a) for a in anios if a >= 2008]
+    verificar(max(reciente) - min(reciente) < 0.5 and abs(media(reciente) - 6) < 0.25, 'desde 2008 oscila alrededor de 6')
+    verificar(v(bol, 2005) < pico and v(bol, 2008) < v(bol, 2005), 'tras el máximo, el puntaje retrocedió')
+    orden = sorted(range(5), key=lambda j: bola[AREAS[j]['k']][-1])
+    flojas, mejor = orden[:2], orden[-1]
+    verificar(AREAS[mejor]['k'] == 'a3', 'Moneda sana es la mejor área (por la estabilidad de precios)')
+    verificar(s_ult < mundo[-1] and s_ult < lac[-1], 'Bolivia está por debajo del promedio mundial y del latinoamericano')
+    lac_a = {a['k']: media(valores(ULTIMO, a['k'], LAC)) for a in AREAS}
+    dif = {a['k']: bola[a['k']][-1] - lac_a[a['k']] for a in AREAS}
+    sobre = [a for a in AREAS if dif[a['k']] > 0]
+    brecha = min(AREAS, key=lambda a: dif[a['k']])
+    verificar(len(sobre) == 1 and sobre[0]['k'] == 'a3', 'la única área en que Bolivia supera a la región es Moneda sana')
+    n_lac = len(valores(ULTIMO, 's', LAC))
+    nom = lambda j: AREAS[j]['nombre']
+    val = lambda j: num(bola[AREAS[j]['k']][-1])
 
-    # Best/worst area 2023
-    bol_23 = panel['2023']['BOL']
-    areas_23 = {AREA_NAMES[i]: bol_23.get(f'a{i+1}',0) for i in range(5)}
-    best_a = max(areas_23, key=areas_23.get)
-    worst_a = min(areas_23, key=areas_23.get)
-
-    area_js = []
-    for ai in range(5):
-        k = f'a{ai+1}'
-        area_js.append(
-            f"{{name:'{AREA_NAMES[ai]}',type:'line',data:{json.dumps(bol_a[k])},"
-            f"lineStyle:{{width:1.5,color:'{AREA_COLORS[ai]}'}},itemStyle:{{color:'{AREA_COLORS[ai]}'}},"
-            f"symbol:'none',z:3}}"
-        )
-    sel = ','.join([f"'{n}':false" for n in AREA_NAMES])
-
-    html = html_start('Bolivia en el Indice de Libertad Economica', accent)
-    html += f'''
-  <div class="sec-hd">
-    <div class="sec-title"><span class="accent-bar" style="background:{accent}"></span>Bolivia en el Indice de Libertad Economica</div>
-    <div class="sec-sub">Puntaje general y por areas, 1970-2023 &middot; Comparado con promedio mundial y regional</div>
-  </div>
-  <div class="kpi-row">
-    <div class="kpi"><div class="kpi-label">Bolivia 2023</div><div class="kpi-val" style="color:{accent}">{latest}</div><div class="kpi-delta" style="color:var(--muted)">#{bol_rank} de {len(scores_23)}</div></div>
-    <div class="kpi"><div class="kpi-label">Maximo</div><div class="kpi-val" style="color:#0A9396">{peak_val}</div><div class="kpi-delta" style="color:#0A9396">{peak_yr}</div></div>
-    <div class="kpi"><div class="kpi-label">Minimo</div><div class="kpi-val" style="color:#C71E1D">{low_val}</div><div class="kpi-delta" style="color:#C71E1D">{low_yr}</div></div>
-    <div class="kpi"><div class="kpi-label">Mejor area</div><div class="kpi-val" style="color:#0A9396;font-size:.8rem">{best_a}</div><div class="kpi-delta" style="color:#0A9396">{areas_23[best_a]}/10</div></div>
-  </div>
-  <div class="legend-bar">
-    <span class="leg-item"><span class="leg-line" style="border-top:3px solid #C71E1D"></span>Bolivia</span>
-    <span class="leg-item"><span class="leg-line" style="border-top:2px dashed #64748B"></span>Promedio Mundial</span>
-    <span class="leg-item"><span class="leg-line" style="border-top:2px dotted #EE9B00"></span>Promedio LAC</span>
-    {''.join(f'<span class="leg-item"><span class="leg-line" style="border-top:1.5px solid {AREA_COLORS[i]}"></span>{AREA_NAMES[i]}</span>' for i in range(5))}
-  </div>
-  <div class="main-grid">
-    <div class="chart-card"><div id="chart"></div></div>
-    <div class="panel">
-      <div class="panel-hd" style="background:#8B1A1A"><span class="panel-hd-t">Lectura del grafico</span></div>
-      <div class="panel-body">
-        <div class="pb"><div class="pb-lbl" style="color:{accent}">Trayectoria historica</div><div class="pb-desc">Bolivia mostro un <strong>deterioro constante hasta 1985</strong>, coincidiendo con dictaduras militares y la hiperinflacion. El <strong>Plan de Estabilizacion de 1985</strong> (DS 21060) marco un punto de inflexion con medidas de liberalizacion que impulsaron el puntaje hasta su maximo en <strong>{peak_yr} ({peak_val})</strong>.</div></div>
-        <div class="pb"><div class="pb-lbl" style="color:{accent}">Periodo reciente</div><div class="pb-desc">A partir de 2006, el modelo de mayor intervencion estatal revirtio parcialmente los avances. Las areas mas debiles son <strong>{worst_a}</strong> ({areas_23[worst_a]}/10) y el sistema legal, mientras que <strong>{best_a}</strong> ({areas_23[best_a]}/10) se mantiene relativamente alta gracias a la estabilidad de precios.</div></div>
-        <div class="pb"><div class="pb-lbl" style="color:{accent}">Comparativa</div><div class="pb-desc">Bolivia se ubica <strong>por debajo del promedio mundial y regional (LAC)</strong>. Active las 5 areas en la leyenda para ver en que dimensiones Bolivia tiene mas rezago respecto a la region.</div></div>
-        <div class="ctx" style="border-left:3px solid {accent}"><p><strong>Fuente:</strong> Fraser Institute, Economic Freedom of the World 2024. Bolivia ocupa el puesto #{bol_rank} de {len(scores_23)} jurisdicciones en 2023.</p></div>
-      </div>
-    </div>
-  </div>
-  {source_footer('<a href="https://www.fraserinstitute.org/economic-freedom" target="_blank">Fraser Institute</a>')}
-<script>
-function rebuildChart() {{ initChart(); }}
-function initChart() {{
-  var isDk = document.documentElement.getAttribute('data-theme')==='dark';
-  var gc = isDk?'#1A2940':'#F1EDE5';
-  var ac = isDk?'#2A3A50':'#E2DDD3';
-  var lc = isDk?'#64748B':'#64748B';
-  var nc = isDk?'#64748B':'#64748B';
-  var el = document.getElementById('chart');
-  if(window._chart) window._chart.dispose();
-  var chart = echarts.init(el);
-  window._chart = chart;
-  chart.setOption({{
-    backgroundColor:'transparent',
-    tooltip:{{trigger:'axis',backgroundColor:isDk?'#141414':'#fff',
-      borderColor:isDk?'#333':'#E2E8F0',
-      textStyle:{{color:isDk?'#E2E8F0':'#1A2940',fontSize:12,fontFamily:'Inter'}}}},
-    legend:{{
-      data:['Bolivia (EFW)','Promedio Mundial','Promedio LAC',{','.join(["'"+n+"'" for n in AREA_NAMES])}],
-      bottom:0,textStyle:{{color:lc,fontSize:10}},itemWidth:16,itemHeight:8,itemGap:8,
-      selected:{{'Promedio Mundial':true,'Promedio LAC':true,'Bolivia (EFW)':true,{sel}}}
-    }},
-    grid:{{left:55,right:20,bottom:52,top:16,containLabel:false}},
-    xAxis:{{type:'category',data:{json.dumps(yrs_int)},
-      axisLabel:{{color:lc,fontSize:10,fontFamily:'JetBrains Mono'}},
-      axisLine:{{lineStyle:{{color:ac}}}},axisTick:{{show:false}}}},
-    yAxis:{{type:'value',min:3,max:10,
-      name:'Indice EFW',nameLocation:'center',nameGap:38,
-      nameTextStyle:{{fontSize:11,fontFamily:'Inter',color:nc}},
-      axisLabel:{{color:lc,fontSize:10,fontFamily:'JetBrains Mono'}},
-      splitLine:{{lineStyle:{{color:gc,type:'dashed'}}}},axisLine:{{show:false}}}},
-    series:[
-      {{name:'Bolivia (EFW)',type:'line',data:{json.dumps(bol_s)},
-        lineStyle:{{width:3,color:'#C71E1D'}},itemStyle:{{color:'#C71E1D'}},
-        symbol:'circle',symbolSize:6,z:10}},
-      {{name:'Promedio Mundial',type:'line',data:{json.dumps(w_avg)},
-        lineStyle:{{width:2,color:'#64748B',type:'dashed'}},itemStyle:{{color:'#64748B'}},
-        symbol:'none',z:5}},
-      {{name:'Promedio LAC',type:'line',data:{json.dumps(lac)},
-        lineStyle:{{width:2,color:'#EE9B00',type:'dotted'}},itemStyle:{{color:'#EE9B00'}},
-        symbol:'none',z:5}},
-      {','.join(area_js)}
+    p = [
+        ['Trayectoria histórica', f'Bolivia cayó sin pausa hasta <strong>1985</strong> (de {num(bol[0])} en {anios[0]} a '
+         f'{num(piso)}), entre dictaduras militares e hiperinflación: ese año Moneda sana marcó {num(m85)} de 10. El '
+         f'<strong>Plan de Estabilización de 1985</strong> (DS 21060) marcó el giro: el puntaje subió hasta su máximo en '
+         f'<strong>{a_pico}</strong> ({num(pico)}), cuando Bolivia ocupaba el puesto {p_pico} de {n_pico}.'],
+        ['Período reciente', f'Tras el máximo, el puntaje retrocedió: {num(v(bol, 2005))} en 2005 y {num(v(bol, 2008))} en 2008, '
+         f'ya con el modelo de mayor intervención estatal vigente desde 2006. Desde entonces oscila alrededor de 6 '
+         f'({num(s_ult)} en {a_ult}). Las áreas más débiles son <strong>{nom(flojas[0])}</strong> ({val(flojas[0])}) y '
+         f'<strong>{nom(flojas[1])}</strong> ({val(flojas[1])}); <strong>{nom(mejor)}</strong> ({val(mejor)}) se mantiene alta: '
+         f'el dato es de {a_ult}, con precios todavía estables y antes del salto inflacionario de 2024.'],
+        ['Comparativa', f'En {a_ult} Bolivia ({num(s_ult)}) está por debajo del promedio mundial ({num(mundo[-1])}) y del '
+         f'latinoamericano ({num(lac[-1])}), y ocupa el puesto <strong>{p_ult} de {n_ult}</strong>. Frente a la región, la mayor '
+         f'brecha está en <strong>{brecha["nombre"]}</strong> ({num(bola[brecha["k"]][-1])} frente a {num(lac_a[brecha["k"]])}) y '
+         f'la única área en que Bolivia la supera es <strong>{sobre[0]["nombre"]}</strong> ({num(bola["a3"][-1])} frente a '
+         f'{num(lac_a["a3"])}).'],
+        ['ctx', f'<strong>Fuente:</strong> Fraser Institute, Economic Freedom of the World: 2025 Annual Report. Promedios '
+         f'simples: el latinoamericano reúne {n_lac} países en {a_ult}. Hasta 2000 los datos son quinquenales.'],
     ]
-  }});
-  window.addEventListener('resize',function(){{chart.resize()}});
-}}
-initChart();
-</script>
+    preguntas = [
+        ['¿Qué mide el índice de libertad económica?', EFW_QUE.format(n=n_ult)],
+        ['¿Qué pasó en 1985?',
+         f'La hiperinflación de 1984–1985 llevó a Moneda sana a {num(m85)} de 10 y al índice de Bolivia a su mínimo '
+         f'({num(piso)}). El DS 21060 liberó precios, tipo de cambio y comercio, y frenó la emisión: Moneda sana volvió a '
+         f'{num(v(bola["a3"], 1990))} en 1990 y a {num(v(bola["a3"], 1995))} en 1995, y el índice pasó del puesto '
+         f'{v(pues, 1985)[0]} de {v(pues, 1985)[1]} en 1985 al {v(pues, 1995)[0]} de {v(pues, 1995)[1]} en 1995.'],
+        ['¿Por qué Moneda sana es la mejor área?',
+         'El área mide el crecimiento del dinero, la inflación y su volatilidad, y la libertad para tener cuentas en moneda '
+         f'extranjera. Con inflación baja y tipo de cambio fijo, Bolivia marcó {num(bola["a3"][-1])} en {a_ult}. El índice '
+         'todavía no recoge la escasez de dólares ni la inflación de 2024 y 2025.'],
+    ]
+    datos = {
+        'anios': anios, 'unidad': 'Índice EFW (0 a 10)', 'unidadCorta': 'Índice EFW',
+        'indice': [
+            {'k': 'bol', 'nombre': 'Bolivia', 'color': '#C71E1D', 'ancho': 2.5, 'area': True, 'v': [fino(x) for x in bol]},
+            # América Latina en oro: con turquesa, frente al gris del promedio mundial no se distinguía (ΔE 11,9)
+            {'k': 'lac', 'nombre': 'América Latina y el Caribe', 'corto': 'América Latina', 'color': '#EE9B00', 'ancho': 1.75,
+             'v': [fino(x) for x in lac]},
+            {'k': 'mundo', 'nombre': 'Promedio mundial', 'color': PIZARRA, 'ancho': 1.75, 'v': [fino(x) for x in mundo]},
+        ],
+        'areas': serie_areas(lambda k: bola[k]),
+        'total': {'nombre': 'Índice de Bolivia', 'v': [fino(x) for x in bol]},
+        'pieTip': [f'Bolivia: puesto {pp} de {nn}' for pp, nn in pues],
+        'hitos': [{'anio': 1985, 'largo': '1985 · DS 21060', 'corto': '1985', 'alinear': 'left'},
+                  {'anio': 2006, 'largo': '2006 · nuevo modelo económico', 'corto': '2006', 'alinear': 'left'}],
+        'cifras': [
+            {'color': '#C71E1D', 'rotulo': f'Bolivia · {a_ult}', 'valor': s_ult, 'delta': f'puesto {p_ult} de {n_ult}',
+             'serie': [v(bol, int(y)) for y in ANUALES]},
+            {'color': '#005F73', 'rotulo': 'Máximo', 'valor': pico, 'delta': f'{a_pico} · puesto {p_pico}'},
+            {'color': '#9B2226', 'rotulo': 'Mínimo', 'valor': piso, 'delta': f'en {a_piso}'},
+            {'color': AREAS[mejor]['color'], 'rotulo': f'Mejor área · {a_ult}', 'valor': bola[AREAS[mejor]['k']][-1],
+             'delta': AREAS[mejor]['corto'], 'serie': [v(bola[AREAS[mejor]['k']], int(y)) for y in ANUALES]},
+        ],
+        'panel': p, 'preguntas': preguntas,
+    }
+    pagina('bolivia_efw.html', 'Bolivia en el Índice de Libertad Económica',
+           f'Puntaje general y por áreas, {anios[0]}–{a_ult}, frente al promedio mundial y al de América Latina y el Caribe',
+           ACENTO['bolivia'], CUERPO_SERIE, datos, JS_SERIE.replace('@@PANEL@@', JS_PANEL))
+
+
+# ════════════════════════════════════════════════════════════════════════════════════════════════
+# 4 y 5. COMPARATIVAS — buscador de países (hasta seis), insignia de cuartil, series sobre el eje de años
+# ════════════════════════════════════════════════════════════════════════════════════════════════
+# Seis colores como máximo: la regla de la marca (paleta.py: «hasta 6 series pasan todos») y lo que mide
+# validate_palette en los dos temas con todos los pares. Bolivia, rojo; los demás, en este orden. En oscuro
+# la tinta pasa a #F1F5F9 (y no a #E2E8F0): así se separa de la menta (ΔE 15,9 frente a 13,3).
+# El color más débil de cada tema va al final (sólo aparece si el lector agrega un quinto país):
+# en claro la menta (1,6:1 sobre blanco), en oscuro el petróleo (2,5:1 sobre #141414).
+# Mismo conjunto de colores en los dos temas (validado), reasignado.
+COLORES_PAIS = ['#0A9396', '#EE9B00', {'claro': '#005F73', 'oscuro': '#94D2BD'}, {'claro': '#001219', 'oscuro': '#F1F5F9'},
+                {'claro': '#94D2BD', 'oscuro': '#005F73'}]
+QC = ['#0A9396', '#94D2BD', '#EE9B00', '#C71E1D']   # cuartiles: escala ordinal de la marca (1, el más libre)
+
+CUERPO_COMP = r'''
+    <div class="hz-bar">
+      <div class="hz-item busca-item">
+        <div class="busca" id="busca">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/></svg>
+          <input type="text" id="buscar" placeholder="Agregar un país (hasta seis)…" autocomplete="off" spellcheck="false"
+            role="combobox" aria-expanded="false" aria-controls="lista" aria-autocomplete="list" aria-label="Buscar un país para agregar" />
+          <div class="lista" id="lista" role="listbox"></div>
+        </div>
+      </div>@@CONTROLES@@
+    </div>
+
+    <div class="main-grid">
+      <div class="chart-card">
+        <div class="chart-ctrl">
+          <div class="tog-grp" id="sel"></div>
+          <div class="ley" id="ley-q"></div>
+        </div>
+        <div class="grafico" id="chart"><div class="loading"><div class="spinner"></div><span>Cargando datos…</span></div></div>
+      </div>
+      <div class="panel">
+        <div class="panel-hd"><span class="panel-hd-t">Lectura del gráfico</span><span class="panel-hd-d" id="panel-fecha"></span></div>
+        <div class="panel-body" id="panel"></div>
+      </div>
+    </div>
 '''
-    html += HTML_FOOT
-    with open(f'{OUT}/bolivia_efw.html','w',encoding='utf-8') as f: f.write(html)
-    print('  OK bolivia_efw.html')
+
+ESTILO_COMP = r'''
+    /* Buscador (molde v2.3: recto, grises fríos, foco en el acento) */
+    .busca-item { flex: 1 1 240px; max-width: 340px; }
+    .busca { position: relative; width: 100%; }
+    .busca svg { position: absolute; left: 10px; top: 50%; width: 14px; height: 14px; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
+    .busca input {
+      width: 100%; height: 33px; padding: 0 12px 0 31px; border: 1px solid var(--border); border-radius: var(--r-s);
+      background: var(--card); color: var(--tinta); font: 500 .74rem/1 'Inter', sans-serif; outline: none;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .busca input::placeholder { color: var(--muted); }
+    .busca input:focus { border-color: var(--acento); box-shadow: 0 0 0 3px color-mix(in srgb, var(--acento) 16%, transparent); }
+    .lista {
+      position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 30; max-height: 286px; overflow-y: auto;
+      background: var(--card); border: 1px solid var(--border); border-radius: var(--r-s);
+      box-shadow: 0 16px 34px -14px rgba(0, 18, 25, .4); display: none; scrollbar-width: thin;
+    }
+    .lista.abierta { display: block; }
+    .op {
+      display: flex; align-items: center; gap: 9px; width: 100%; padding: 7px 10px; border: 0; background: none;
+      cursor: pointer; text-align: left; font: 500 .74rem/1.3 'Inter', sans-serif; color: var(--tinta);
+    }
+    .op:hover, .op.activa { background: var(--suave); }
+    .op[aria-disabled="true"] { cursor: default; opacity: .45; }
+    .op .rg { margin-left: auto; padding-left: 10px; font-size: .62rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .qd { flex: none; min-width: 34px; padding: 2px 0; text-align: center; font: 700 .6rem/1.3 'JetBrains Mono', monospace; border-radius: var(--r-s); }
+    .qd.sin { background: var(--suave); color: var(--muted); }
+    .aviso { padding: 8px 10px; font: 500 .66rem/1.45 'Inter', sans-serif; color: var(--muted); border-bottom: 1px solid var(--border); }
+    /* País elegido = pastilla (ocultar/mostrar) + botón para quitarlo; insignia de cuartil al final */
+    .tag { display: inline-flex; align-items: stretch; }
+    .tag .pill { border-right: 0; }
+    .tag .pill.fijo { cursor: default; border-right: 1px solid var(--pb); }
+    .tag-x {
+      display: inline-flex; align-items: center; padding: 0 7px; border: 1px solid var(--border); border-left: 0;
+      border-radius: var(--r-s); background: transparent; color: var(--muted); cursor: pointer; font: 600 .78rem/1 'Inter', sans-serif;
+      transition: color .2s, background-color .2s, border-color .2s;
+    }
+    .tag-x:hover { color: var(--tinta); background: var(--suave); }
+    .tag.on .tag-x { border-color: var(--pb); }
+    .qb { display: inline-flex; align-items: center; gap: 4px; margin-left: 3px; font: 600 .6rem/1 'JetBrains Mono', monospace; color: var(--muted); }
+    .qb i { width: 7px; height: 7px; display: inline-block; flex: none; }
+    #ley-q .ley-d { border-radius: 0; width: 8px; height: 8px; }
+    @media (max-width: 640px) {
+      .busca-item { max-width: none; flex-basis: 100%; }
+      .tag-x { padding: 0 6px; }
+    }'''
+
+JS_COMP = r'''
+    // D.paises: [{i iso, n nombre, r región, s puntaje EFW del último año, q cuartil, p puesto, al alias} + datos].
+    var PAISES = D.paises, PAIS = {}, MAX = 6, elegidos = D.inicial.slice(), ocultos = new Set(), colorDe = {}, grafico;
+    var estado = { escala: 'log', periodo: D.periodos ? D.periodos[0][0] : null };
+    var plano = function (t) { return String(t).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase(); };
+    PAISES.forEach(function (p) { PAIS[p.i] = p; p.b = plano(p.n + ' ' + p.i + ' ' + (p.al || '')); p.nb = plano(p.n); });
+    PAISES.sort(function (a, b) { return a.n.localeCompare(b.n, 'es'); });
+    var QN = { 1: 'cuartil 1 · más libre', 2: 'cuartil 2', 3: 'cuartil 3', 4: 'cuartil 4 · menos libre' };
+    @@DATOS_PAIS@@
+
+    // color estable por país: Bolivia, rojo; el resto toma el primer color libre y lo devuelve al salir
+    function asignar() {
+      var usados = {};
+      Object.keys(colorDe).forEach(function (iso) { if (elegidos.indexOf(iso) < 0) delete colorDe[iso]; else usados[colorDe[iso]] = 1; });
+      elegidos.forEach(function (iso) {
+        if (colorDe[iso] != null) return;
+        if (iso === 'BOL') { colorDe[iso] = -1; return; }
+        for (var k = 0; k < D.colores.length; k++) if (!usados[k]) { colorDe[iso] = k; usados[k] = 1; return; }
+      });
+    }
+    var color = function (iso) { return colorDe[iso] === -1 ? C.rojo : D.colores[colorDe[iso]]; };
+    var qcol = function (q) { return D.qc[q - 1]; };
+    var visibles = function () { return elegidos.filter(function (iso) { return !ocultos.has(iso); }); };
+
+    document.getElementById('ley-q').innerHTML = '<span class="ley-i">Cuartil EFW ' + D.anioQ + '</span>' + [1, 2, 3, 4].map(function (q) {
+      return '<span class="ley-i"><span class="ley-d" style="background:' + qcol(q) + '"></span>' + (q === 1 ? '1 · más libre' : q === 4 ? '4 · menos libre' : q) + '</span>';
+    }).join('');
+    (D.controles || []).forEach(function (c) {
+      PM.botonera(document.getElementById(c.id), c.ops, estado[c.k], function (v) { estado[c.k] = v; fecha(); grafico.redibujar(); });
+    });
+    function fecha() { document.getElementById('panel-fecha').textContent = estado.periodo ? estado.periodo + '–' + D.ultimo : D.fecha; }
+    fecha();
+    asignar(); fichas(); panel(); buscador();
+    var el = document.getElementById('chart');
+    el.innerHTML = '';
+    grafico = PM.montar(el, opciones);
+    PM.alCambiarTema(function () { fichas(); panel(); });
+    PM.preguntas(document.getElementById('preguntas'), D.preguntas);
+
+    PM.leyendaImagen = function () {
+      return visibles().map(function (iso) { return { name: PAIS[iso].n, color: PM.col(color(iso)), forma: 'linea' }; });
+    };
+    PM.tablaDatos = function () {
+      var vs = visibles();
+      return { cols: ['Año'].concat(vs.map(function (iso) { return PAIS[iso].n; })),
+        filas: anios(vs).map(function (a) { return [a].concat(vs.map(function (iso) { return valor(iso, a); })); }) };
+    };
+
+    function insignia(p) {
+      return p.q ? '<span class="qb" title="' + QN[p.q] + ' · EFW ' + D.anioQ + '"><i style="background:' + qcol(p.q) + '"></i>' + PM.num(p.s, 2) + '</span>' : '';
+    }
+    // países elegidos: la pastilla oculta o muestra (la de Bolivia queda fija) y la × lo quita
+    function fichas() {
+      var cont = document.getElementById('sel'), dk = PM.dk();
+      cont.innerHTML = elegidos.map(function (iso) {
+        var p = PAIS[iso], on = !ocultos.has(iso), bol = iso === 'BOL', c = color(iso);
+        var vars = '--pc:' + PM.col(c) + ';--pf:' + PM.rgba(c, dk ? 0.16 : 0.09) + ';--pb:' + PM.rgba(c, dk ? 0.6 : 0.45);
+        return '<span class="tag' + (on ? ' on' : '') + '" data-iso="' + iso + '" style="' + vars + '">' +
+          (bol ? '<span class="pill fijo" aria-pressed="true" title="Bolivia queda siempre en el gráfico" style="' + vars + '">'
+               : '<button type="button" class="pill" aria-pressed="' + on + '" title="Ocultar o mostrar ' + p.n + '" style="' + vars + '">') +
+          '<span class="lp"></span>' + p.n + insignia(p) + (bol ? '</span>' : '</button>') +
+          (bol ? '' : '<button type="button" class="tag-x" aria-label="Quitar ' + p.n + '" title="Quitar ' + p.n + '">×</button>') + '</span>';
+      }).join('');
+      cont.querySelectorAll('button.pill').forEach(function (b) {
+        b.addEventListener('click', function () {
+          var iso = b.parentNode.dataset.iso;
+          if (ocultos.has(iso)) ocultos.delete(iso); else ocultos.add(iso);
+          fichas(); grafico.redibujar();
+        });
+      });
+      cont.querySelectorAll('.tag-x').forEach(function (b) {
+        b.addEventListener('click', function () { quitar(b.parentNode.dataset.iso); });
+      });
+    }
+    function agregar(iso) {
+      if (elegidos.indexOf(iso) >= 0 || elegidos.length >= MAX) return;
+      elegidos.push(iso); asignar(); fichas(); grafico.redibujar();
+    }
+    function quitar(iso) {
+      elegidos = elegidos.filter(function (x) { return x !== iso; }); ocultos.delete(iso);
+      asignar(); fichas(); grafico.redibujar();
+    }
+
+    // ── Buscador: sin tildes, por nombre en español, código o nombre en inglés; con teclado ──
+    function buscador() {
+      var inp = document.getElementById('buscar'), lst = document.getElementById('lista'), act = -1, ops = [];
+      function abrir(si) { lst.classList.toggle('abierta', si); inp.setAttribute('aria-expanded', si); }
+      function pintar() {
+        var q = plano(inp.value.trim()), lleno = elegidos.length >= MAX;
+        ops = PAISES.filter(function (p) { return elegidos.indexOf(p.i) < 0 && (!q || p.b.indexOf(q) >= 0); });
+        if (q) ops.sort(function (a, b) {
+          var ra = a.nb.indexOf(q) === 0 ? 0 : (' ' + a.nb).indexOf(' ' + q) >= 0 ? 1 : 2;
+          var rb = b.nb.indexOf(q) === 0 ? 0 : (' ' + b.nb).indexOf(' ' + q) >= 0 ? 1 : 2;
+          return ra - rb || a.n.localeCompare(b.n, 'es');
+        });
+        act = ops.length && !lleno ? 0 : -1;
+        lst.innerHTML = (lleno ? '<div class="aviso">Ya hay seis países: quite uno para sumar otro.</div>' : '') +
+          (ops.length ? ops.map(function (p, k) {
+            var c = p.q ? qcol(p.q) : null;
+            return '<button type="button" class="op' + (k === act ? ' activa' : '') + '" role="option" data-iso="' + p.i + '"' +
+              (lleno ? ' aria-disabled="true"' : '') + '>' +
+              '<span class="qd' + (c ? '' : ' sin') + '"' + (c ? ' style="background:' + c + ';color:' + PM.sobre(c) + '"' : '') + '>' + (p.q ? PM.num(p.s, 2) : '—') + '</span>' +
+              '<span>' + p.n + '</span><span class="rg">' + p.r + '</span></button>';
+          }).join('') : '<div class="aviso">Ningún país coincide con «' + inp.value.replace(/[<>&"]/g, '') + '».</div>');
+        abrir(true);
+      }
+      function marcar(k) {
+        var bs = lst.querySelectorAll('.op');
+        if (!bs.length || elegidos.length >= MAX) return;
+        act = (k + bs.length) % bs.length;
+        bs.forEach(function (b, j) { b.classList.toggle('activa', j === act); });
+        bs[act].scrollIntoView({ block: 'nearest' });
+      }
+      inp.addEventListener('input', pintar);
+      inp.addEventListener('focus', pintar);
+      inp.addEventListener('keydown', function (e) {
+        if (e.key === 'ArrowDown') { e.preventDefault(); if (!lst.classList.contains('abierta')) pintar(); else marcar(act + 1); }
+        else if (e.key === 'ArrowUp') { e.preventDefault(); marcar(act - 1); }
+        else if (e.key === 'Enter') { e.preventDefault(); if (act >= 0 && ops[act]) { agregar(ops[act].i); inp.value = ''; pintar(); } }
+        else if (e.key === 'Escape') { abrir(false); inp.blur(); }
+      });
+      lst.addEventListener('mousedown', function (e) { e.preventDefault(); });   // el clic no le quita el foco al campo
+      lst.addEventListener('click', function (e) {
+        var b = e.target.closest('.op'); if (!b || b.getAttribute('aria-disabled') === 'true') return;
+        agregar(b.dataset.iso); inp.value = ''; pintar();
+      });
+      document.addEventListener('click', function (e) { if (!e.target.closest('#busca')) abrir(false); });
+    }
+@@PANEL@@
+    function opciones() {
+      var chico = PM.pequeno(), dk = PM.dk(), el = document.getElementById('chart'), vs = visibles(), X = anios(vs), vals = [];
+      var r = rango();
+      // rótulo al final de cada línea (escritorio): el margen derecho mide el nombre más largo
+      var conRotulo = !chico && el.clientWidth >= 520, der = 14;
+      if (conRotulo) {
+        var cv = (opciones.cv = opciones.cv || document.createElement('canvas').getContext('2d'));
+        cv.font = '600 10.5px Inter, sans-serif';
+        vs.forEach(function (iso) { der = Math.max(der, Math.ceil(cv.measureText(PAIS[iso].n).width) + 22); });
+      }
+      var series = vs.map(function (iso) {
+        var p = PAIS[iso], bol = iso === 'BOL', col = color(iso), n = -1;
+        var data = X.map(function (a) { return [a, valor(iso, a)]; });
+        data.forEach(function (d, i) { if (d[1] != null) { n = i; vals.push(d[1]); } });
+        var o = PM.linea(col, { ancho: bol ? 2.5 : 1.75, extra: {
+          name: p.n, data: data, connectNulls: true, z: bol ? 5 : 3,
+          markPoint: n >= 0 ? PM.puntoFinal(col, data[n][0], data[n][1]) : undefined,
+          endLabel: { show: conRotulo, formatter: p.n, distance: 9, color: PM.tx(col), fontFamily: PM.inter(), fontSize: 10.5, fontWeight: 600 },
+          labelLayout: { moveOverlap: 'shiftY' }
+        } });
+        if (bol) o.areaStyle = { origin: 'start', color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+          { offset: 0, color: PM.rgba(col, dk ? 0.14 : 0.08) }, { offset: 1, color: PM.rgba(col, 0) }]) };
+        return o;
+      });
+      return {
+        grid: PM.grid({ top: 28, bottom: 2, right: der }),
+        xAxis: ejeAnios(r[0], r[1], el),
+        yAxis: ejeValor(vals, chico),
+        tooltip: PM.tooltip(function (ps) {
+          var p = ps.filter(function (q) { return q.value && q.value[1] != null; });
+          if (!p.length) return '';
+          var a = p[0].value[0], filas = vs.map(function (iso) { return [iso, valor(iso, a)]; });
+          var con = filas.filter(function (f) { return f[1] != null; }).sort(function (x, y) { return y[1] - x[1]; });
+          var sin = filas.filter(function (f) { return f[1] == null; });
+          var h = PM.ttTitulo(String(a));
+          con.forEach(function (f) { h += PM.ttFila(clave(color(f[0])), PAIS[f[0]].n, fmt(f[1]), 'linea'); });
+          if (sin.length) h += PM.ttPie('Sin dato ese año: ' + sin.map(function (f) { return PAIS[f[0]].n; }).join(', '));
+          return h;
+        }),
+        series: series
+      };
+    }
+'''
+
+# EFW: valores alineados a D.anios
+DATOS_EFW = r'''var A = D.anios;
+    PAISES.forEach(function (p) { p.idx = {}; A.forEach(function (a, i) { if (p.v[i] != null) p.idx[a] = p.v[i]; }); });
+    var valor = function (iso, a) { var v = PAIS[iso].idx[a]; return v == null ? null : v; };
+    var fmt = function (v) { return PM.num(v, 2); };
+    var rango = function () { return [A[0], A[A.length - 1]]; };
+    // los años con dato de algún país visible (el cursor salta de dato en dato)
+    function anios(vs) { return A.filter(function (a) { return vs.some(function (iso) { return PAIS[iso].idx[a] != null; }); }); }
+    // eje en enteros (de 1 en 1, o de 2 en 2 si el rango es amplio), dentro de 0 a 10
+    function ejeValor(vals, chico) {
+      var lo = vals.length ? Math.floor(Math.min.apply(null, vals)) : 0, hi = vals.length ? Math.ceil(Math.max.apply(null, vals)) : 10;
+      var paso = hi - lo > 6 ? 2 : 1;
+      lo = Math.max(0, Math.floor(lo / paso) * paso); hi = Math.min(10, Math.max(lo + paso, Math.ceil(hi / paso) * paso));
+      return PM.ejeY({ unidad: chico ? 'Índice EFW' : 'Índice EFW (0 a 10)', fmt: PM.tick,
+        extra: { min: lo, max: hi, interval: paso, nameTextStyle: { align: 'left' } } });
+    }'''
+
+# PIB: tramos de años seguidos [año inicial, valor, diferencia, …] → {año: valor}
+DATOS_PIB = r'''PAISES.forEach(function (p) {
+      p.idx = {};
+      p.d.forEach(function (t) { for (var j = 1, v = 0; j < t.length; j++) { v = j === 1 ? t[1] : v + t[j]; p.idx[t[0] + j - 1] = v; } });
+    });
+    var valor = function (iso, a) { var v = PAIS[iso].idx[a]; return v == null ? null : v; };
+    var fmt = function (v) { return '$' + PM.num(v, 0); };
+    var rango = function () { return [+estado.periodo, D.ultimo]; };
+    function anios(vs) {
+      var r = rango(), X = {};
+      vs.forEach(function (iso) { Object.keys(PAIS[iso].idx).forEach(function (a) { a = +a; if (a >= r[0] && a <= r[1]) X[a] = 1; }); });
+      return Object.keys(X).map(Number).sort(function (a, b) { return a - b; });
+    }
+    // logarítmica: cortes en potencias de 10; la base en 1, 2 o 5 × 10ⁿ (sin rótulo si no es potencia) y el techo
+    // en la potencia siguiente, así siempre quedan tres décadas rotuladas
+    function ejeValor(vals, chico) {
+      var lo = vals.length ? Math.min.apply(null, vals) : 500, hi = vals.length ? Math.max.apply(null, vals) : 50000;
+      // en el teléfono, en miles: «100» en lugar de «$100.000» le devuelve al trazado el ancho del eje
+      var dolar = chico ? function (v) { return PM.tick(v / 1000); } : function (v) { return '$' + PM.tick(v); };
+      var unidad = chico ? 'PIB per cápita (miles de $)' : 'PIB per cápita ($ de 2011, PPA)';
+      if (estado.escala === 'log') {
+        var e0 = Math.pow(10, Math.floor(Math.log10(lo))), e1 = Math.pow(10, Math.floor(Math.log10(hi)));
+        var base = [5, 2, 1].map(function (k) { return k * e0; }).filter(function (b) { return b <= lo; })[0] || e0;
+        var techo = hi <= e1 ? e1 : e1 * 10;
+        var pot = function (v) { return Math.abs(Math.log10(v) - Math.round(Math.log10(v))) < 1e-9; };
+        return PM.ejeY({ unidad: unidad, fmt: dolar, extra: { type: 'log', logBase: 10, min: base, max: techo,
+          nameTextStyle: { align: 'left' }, axisLabel: { showMinLabel: pot(base), showMaxLabel: pot(techo) } } });
+      }
+      var paso = [2000, 5000, 10000, 20000, 25000, 50000].filter(function (p) { return Math.ceil(hi / p) <= (chico ? 5 : 6); })[0] || 50000;
+      return PM.ejeY({ unidad: unidad, fmt: dolar, extra: { min: 0, max: Math.ceil(hi / paso) * paso, interval: paso, nameTextStyle: { align: 'left' } } });
+    }'''
 
 
-# ============================================================
-# 4. COMPARATIVA PAISES EFW (Interactive)
-# ============================================================
+def lista_paises():
+    """Las jurisdicciones del índice con su puesto y cuartil del último año."""
+    n = len(valores(ULTIMO))
+    out = {}
+    for iso in panel[ULTIMO]:
+        if iso not in meta or panel[ULTIMO][iso].get('s') is None:
+            continue
+        p, _ = puesto(ULTIMO, iso)
+        out[iso] = {'i': iso, 'n': NOMBRE[iso], 'r': REGION[meta[iso]['region']], 's': panel[ULTIMO][iso]['s'],
+                    'q': cuartil(p, n), 'p': p, 'al': alias(iso)}
+    return out, n
+
+
+def js_comp(datos_pais):
+    return JS_COMP.replace('@@DATOS_PAIS@@', datos_pais).replace('@@PANEL@@', JS_PANEL)
+
+
 def gen_comparativa_paises():
-    accent = '#94D2BD'
-    yrs = [y for y in sorted(panel.keys()) if int(y)>=1970]
-    yrs_int = [int(y) for y in yrs]
-    countries = build_country_list()
+    anios = [int(y) for y in ANIOS]
+    paises, n = lista_paises()
+    for iso, d in paises.items():
+        d['v'] = [panel[y].get(iso, {}).get('s') for y in ANIOS]
+    s = lambda iso, a: panel[str(a)][iso]['s']
+    # Divergencia: Chile y Bolivia casi empatados en 1975; Venezuela, el camino inverso hasta el último puesto
+    verificar(abs(s('CHL', 1975) - s('BOL', 1975)) < 0.2 and s('CHL', ULTIMO) - s('BOL', ULTIMO) > 1,
+              'en 1975 Chile y Bolivia puntuaban casi igual')
+    p_ven, n_ven = puesto(ULTIMO, 'VEN')
+    verificar(p_ven == n_ven and s('VEN', 1970) > 6, 'Venezuela recorrió el camino inverso hasta el último puesto')
+    # Bolivia en la mitad superior del ranking: un solo tramo de años seguidos de la serie
+    arriba = [y for y in ANIOS if puesto(y, 'BOL')[0] <= puesto(y, 'BOL')[1] / 2]
+    pos = [ANIOS.index(y) for y in arriba]
+    verificar(arriba and pos == list(range(pos[0], pos[0] + len(pos))), 'Bolivia estuvo en la mitad superior en un solo tramo')
+    p00, n00 = puesto('2000', 'BOL')
+    p_bol, _ = puesto(ULTIMO, 'BOL')
+    tam = [sum(1 for d in paises.values() if d['q'] == q) for q in (1, 2, 3, 4)]
+    n70 = len(valores(ANIOS[0]))
+    a_tot = min(int(y) for y in ANIOS if len(valores(y)) == n)
 
-    all_data = {}
-    for iso in [c['iso'] for c in countries]:
-        vals = []
-        for y in yrs:
-            v = panel[y].get(iso,{}).get('s')
-            vals.append(v)
-        all_data[iso] = vals
-
-    defaults = ['BOL','CHL','ARG','VEN','IRL','SGP','NZL','USA']
-
-    html = html_start('Comparativa Internacional — Libertad Economica', accent, SELECTOR_CSS)
-    html += f'''
-  <div class="sec-hd">
-    <div class="sec-title"><span class="accent-bar" style="background:{accent}"></span>Comparativa Internacional de Libertad Economica</div>
-    <div class="sec-sub">Selecciona paises para comparar su evolucion en el EFW, 1970-2023 &middot; 165 jurisdicciones disponibles</div>
-  </div>
-  <div class="controls-row">
-    <div class="search-box">
-      <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      <input type="text" id="search" placeholder="Buscar pais para agregar..." autocomplete="off">
-      <div class="dropdown" id="dropdown"></div>
-    </div>
-  </div>
-  <div class="tags" id="tags"></div>
-  <div class="main-grid">
-    <div class="chart-card"><div id="chart"></div></div>
-    <div class="panel">
-      <div class="panel-hd" style="background:#005F73"><span class="panel-hd-t">Lectura del grafico</span></div>
-      <div class="panel-body">
-        <div class="pb"><div class="pb-lbl" style="color:{accent}">Como usar</div><div class="pb-desc">Use el buscador para <strong>agregar paises</strong> a la comparativa. Cada etiqueta muestra el <strong>puntaje EFW 2023</strong> con un badge de color segun su cuartil: <span style="color:#0A9396">&#9679; Q1 (mas libre)</span>, <span style="color:#005F73">&#9679; Q2</span>, <span style="color:#EE9B00">&#9679; Q3</span>, <span style="color:#C71E1D">&#9679; Q4 (menos libre)</span>. Haga clic en &times; para remover.</div></div>
-        <div class="pb"><div class="pb-lbl" style="color:{accent}">Divergencia historica</div><div class="pb-desc">Paises que partieron de niveles similares de libertad economica en los 70 tomaron <strong>caminos radicalmente distintos</strong>. Compare Bolivia y Chile, o Argentina y Singapur, para ver como las <strong>decisiones institucionales</strong> generan trayectorias divergentes a lo largo de decadas.</div></div>
-        <div class="pb"><div class="pb-lbl" style="color:{accent}">Bolivia en contexto</div><div class="pb-desc">Bolivia (linea gruesa roja) se mantiene consistentemente en la <strong>mitad inferior</strong> del ranking mundial. Su breve periodo de reformas (1985-2000) es visible como una mejora parcial que no logro consolidarse.</div></div>
-        <div class="ctx" style="border-left:3px solid {accent}"><p><strong>Fuente:</strong> Fraser Institute, EFW 2024. El badge de cuartil refleja la posicion en 2023. Las series comienzan segun disponibilidad de datos por pais.</p></div>
-      </div>
-    </div>
-  </div>
-  {source_footer('<a href="https://www.fraserinstitute.org/economic-freedom" target="_blank">Fraser Institute</a>')}
-<script>
-var YEARS = {json.dumps(yrs_int)};
-var COUNTRIES = {json.dumps(countries)};
-var ALL_DATA = {json.dumps(all_data)};
-var QC = {{1:'#0A9396',2:'#005F73',3:'#EE9B00',4:'#C71E1D'}};
-var QL = {{1:'Cuartil Superior',2:'Segundo Cuartil',3:'Tercer Cuartil',4:'Cuartil Inferior'}};
-var PALETTE = {json.dumps(PALETTE)};
-var selected = {json.dumps(defaults)};
-var colorMap = {{}};
-var colorIdx = 0;
-
-function getColor(iso) {{
-  if (!colorMap[iso]) {{ colorMap[iso] = PALETTE[colorIdx % PALETTE.length]; colorIdx++; }}
-  return colorMap[iso];
-}}
-function getCountry(iso) {{ return COUNTRIES.find(function(c){{return c.iso===iso}}); }}
-function rebuildChart() {{ initChart(); }}
-
-function initChart() {{
-  var isDk = document.documentElement.getAttribute('data-theme')==='dark';
-  var gc = isDk?'#1A2940':'#F1EDE5';
-  var ac = isDk?'#2A3A50':'#E2DDD3';
-  var lc = isDk?'#64748B':'#64748B';
-  var nc = isDk?'#64748B':'#64748B';
-  var el = document.getElementById('chart');
-  if(window._chart) window._chart.dispose();
-  var chart = echarts.init(el);
-  window._chart = chart;
-  var series = []; var allVals = [];
-  selected.forEach(function(iso) {{
-    var c = getCountry(iso), col = getColor(iso), isBol = iso==='BOL';
-    var data = ALL_DATA[iso] || [];
-    data.forEach(function(v){{ if(v!=null) allVals.push(v); }});
-    series.push({{
-      name: c ? c.name : iso, type:'line', data: data,
-      lineStyle: {{width: isBol?3:2, color: col}},
-      itemStyle: {{color: col}},
-      symbol: isBol?'circle':'none', symbolSize: isBol?5:0, z: isBol?10:5
-    }});
-  }});
-  var yMin = allVals.length ? Math.max(0, Math.floor(Math.min.apply(null,allVals)-0.5)) : 2;
-  var yMax = allVals.length ? Math.min(10, Math.ceil(Math.max.apply(null,allVals)+0.3)) : 10;
-  chart.setOption({{
-    backgroundColor:'transparent',
-    tooltip: {{trigger:'axis',backgroundColor:isDk?'#141414':'#fff',
-      borderColor:isDk?'#333':'#E2E8F0',
-      textStyle:{{color:isDk?'#E2E8F0':'#1A2940',fontSize:12,fontFamily:'Inter'}},
-      order:'valueDesc'}},
-    legend: {{show:false}},
-    grid: {{left:55,right:20,bottom:32,top:16,containLabel:false}},
-    xAxis: {{type:'category',data:YEARS,
-      axisLabel:{{color:lc,fontSize:10,fontFamily:'JetBrains Mono'}},
-      axisLine:{{lineStyle:{{color:ac}}}},axisTick:{{show:false}}}},
-    yAxis: {{type:'value',min:yMin,max:yMax,
-      name:'Indice EFW',nameLocation:'center',nameGap:38,
-      nameTextStyle:{{fontSize:11,fontFamily:'Inter',color:nc}},
-      axisLabel:{{color:lc,fontSize:10,fontFamily:'JetBrains Mono'}},
-      splitLine:{{lineStyle:{{color:gc,type:'dashed'}}}},axisLine:{{show:false}}}},
-    series: series
-  }});
-  window.addEventListener('resize',function(){{chart.resize()}});
-}}
-
-function renderTags() {{
-  var html = '';
-  selected.forEach(function(iso) {{
-    var c = getCountry(iso), col = getColor(iso);
-    var qc = c ? QC[c.q] : '#999';
-    var isBol = iso==='BOL';
-    html += '<span class="tag'+(isBol?' tag-bol':'')+'">'
-      + '<span class="q-dot" style="background:'+qc+'"></span>'
-      + '<span style="border-bottom:2px solid '+col+'">'+(c?c.name:iso)+'</span>'
-      + '<span class="q-score">'+(c?c.score:'')+'</span>'
-      + (isBol?'':' <span class="x" onclick="removeCountry(\\x27'+iso+'\\x27)">&times;</span>')
-      + '</span>';
-  }});
-  document.getElementById('tags').innerHTML = html;
-}}
-
-function addCountry(iso) {{
-  if (selected.indexOf(iso)===-1) {{ selected.push(iso); renderTags(); initChart(); }}
-  document.getElementById('search').value = '';
-  document.getElementById('dropdown').classList.remove('open');
-}}
-function removeCountry(iso) {{
-  selected = selected.filter(function(s){{return s!==iso}});
-  renderTags(); initChart();
-}}
-
-var searchEl = document.getElementById('search');
-var ddEl = document.getElementById('dropdown');
-searchEl.addEventListener('input', function() {{
-  var q = this.value.toLowerCase().trim();
-  if (!q) {{ ddEl.classList.remove('open'); return; }}
-  var matches = COUNTRIES.filter(function(c) {{
-    return (c.name.toLowerCase().indexOf(q)!==-1 || c.iso.toLowerCase().indexOf(q)!==-1)
-      && selected.indexOf(c.iso)===-1;
-  }}).slice(0,8);
-  if (!matches.length) {{ ddEl.classList.remove('open'); return; }}
-  ddEl.innerHTML = matches.map(function(c) {{
-    return '<div class="dd-item" onclick="addCountry(\\x27'+c.iso+'\\x27)">'
-      + '<span class="q-badge" style="background:'+QC[c.q]+'">'+c.score+'</span>'
-      + '<span class="cname">'+c.name+'</span>'
-      + '<span class="region">'+c.region+'</span></div>';
-  }}).join('');
-  ddEl.classList.add('open');
-}});
-searchEl.addEventListener('focus', function() {{ if(this.value) this.dispatchEvent(new Event('input')); }});
-document.addEventListener('click', function(e) {{
-  if (!e.target.closest('.search-box')) ddEl.classList.remove('open');
-}});
-
-renderTags();
-initChart();
-</script>
-'''
-    html += HTML_FOOT
-    with open(f'{OUT}/comparativa_paises.html','w',encoding='utf-8') as f: f.write(html)
-    print('  OK comparativa_paises.html')
+    p = [
+        ['Cómo usar', 'Busque un país y agréguelo: hasta seis a la vez, con Bolivia fija. Pulse una pastilla para ocultar o '
+         f'mostrar ese país y la × para quitarlo. La insignia es el puntaje EFW {ULTIMO} y su color, el cuartil: turquesa '
+         'el más libre, después menta, oro y rojo.'],
+        ['Divergencia histórica', f'En 1975 <strong>Chile</strong> ({num(s("CHL", 1975))}) y <strong>Bolivia</strong> '
+         f'({num(s("BOL", 1975))}) puntuaban casi igual; en {ULTIMO} Chile marca {num(s("CHL", ULTIMO))} y Bolivia '
+         f'{num(s("BOL", ULTIMO))}. <strong>Venezuela</strong> recorrió el camino inverso: de {num(s("VEN", 1970))} en 1970 a '
+         f'{num(s("VEN", ULTIMO))} en {ULTIMO}, el último puesto de {n_ven}. Compare también Argentina y Singapur.'],
+        ['Bolivia en contexto', f'Bolivia estuvo en la <strong>mitad superior</strong> del ranking entre {arriba[0]} y '
+         f'{arriba[-1]}, tras las reformas de 1985 (puesto {p00} de {n00} en 2000); después volvió a la mitad inferior: '
+         f'puesto <strong>{p_bol} de {n}</strong> en {ULTIMO}.'],
+        ['ctx', f'<strong>Fuente:</strong> Fraser Institute, Economic Freedom of the World: 2025 Annual Report. El cuartil es el '
+         f'de {ULTIMO}, por puesto (con el puntaje a dos decimales, los empates comparten puesto). Hasta 2000 los datos son '
+         'quinquenales; cada serie empieza cuando el país entra en el índice.'],
+    ]
+    preguntas = [
+        ['¿Qué mide el índice de libertad económica?', EFW_QUE.format(n=n)],
+        ['¿Qué es el cuartil?', f'Las {n} jurisdicciones de {ULTIMO}, ordenadas de más a menos libre y repartidas en cuatro '
+         f'grupos: el cuartil 1 reúne a las {tam[0]} más libres y el 4, a las {tam[3]} menos libres. Lo indica el color de la '
+         'insignia: turquesa, menta, oro y rojo, la misma escala del mapa.'],
+        ['¿Por qué algunas series empiezan tarde?', f'El índice calificaba a {n70} países en 1970 y llegó a {n} en {a_tot}: '
+         'cada país entra cuando hay datos suficientes para calificarlo. Hasta 1995 la serie es quinquenal y desde 2000, anual.'],
+    ]
+    datos = {
+        'anios': anios, 'fecha': f'{anios[0]}–{anios[-1]}', 'anioQ': ULTIMO, 'inicial': ['BOL', 'CHL', 'ARG', 'VEN', 'SGP'],
+        'colores': COLORES_PAIS, 'qc': QC,
+        'paises': sorted(paises.values(), key=lambda d: d['i']), 'panel': p, 'preguntas': preguntas,
+    }
+    pagina('comparativa_paises.html', 'Comparativa Internacional de Libertad Económica',
+           f'Índice EFW por país, {anios[0]}–{anios[-1]} · {n} jurisdicciones · de 0 a 10, más es más libre',
+           ACENTO['paises'], CUERPO_COMP.replace('@@CONTROLES@@', ''), datos, js_comp(DATOS_EFW), estilo=ESTILO_COMP)
 
 
-# ============================================================
-# 5. COMPARATIVA PIB PER CAPITA (Interactive)
-# ============================================================
 def gen_comparativa_pib():
-    accent = '#EE9B00'
-    yrs = list(range(1950, 2023))
-    countries = build_country_list()
+    efw, _ = lista_paises()
 
-    isos_with_gdp = set(gdp_raw.keys())
-    gdp_all = {}
-    for iso in isos_with_gdp:
-        vals = []
-        for y in yrs:
-            v = gdp_raw[iso].get(str(y))
-            vals.append(round(v) if v else None)
-        gdp_all[iso] = vals
+    def tramos(serie):
+        """{año: valor} → [[año inicial, primer valor, diferencia, diferencia, …], …] por años seguidos: las
+        diferencias año a año son más cortas que los valores (la página pesa una cuarta parte menos)."""
+        out, cur = [], None
+        for a in sorted(int(y) for y in serie):
+            x = round(serie[str(a)])
+            if cur and a == cur[0] + len(cur) - 1:
+                cur.append(x)
+            else:
+                cur = [a, x]
+                out.append(cur)
+        return [t[:2] + [t[j] - t[j - 1] for j in range(2, len(t))] for t in out]
 
-    countries_gdp = [c for c in countries if c['iso'] in isos_with_gdp]
-    defaults = ['BOL','CHL','ARG','VEN','IRL','SGP','KOR','USA']
+    paises = []
+    for iso, serie in gdp.items():
+        serie = {a: x for a, x in serie.items() if x}
+        if not serie:
+            continue
+        d = dict(efw[iso]) if iso in efw else {'i': iso, 'n': NOMBRE[iso], 'r': REGION_EXTRA[iso], 'al': alias(iso)}
+        d['d'] = tramos(serie)
+        paises.append(d)
+    g = lambda iso, a: gdp[iso].get(str(a))
+    a0 = min(int(a) for x in gdp.values() for a in x)
+    ultimo = max(int(a) for x in gdp.values() for a in x)
+    # 1950 frente a hoy: Bolivia triplicaba a Corea; hoy Corea multiplica a Bolivia
+    r50, rhoy = g('BOL', 1950) / g('KOR', 1950), g('KOR', ultimo) / g('BOL', ultimo)
+    verificar(2.5 < r50 < 3.5 and rhoy > 5, 'en 1950 Bolivia triplicaba el PIB per cápita de Corea del Sur')
+    a_bol = min(int(a) for a in gdp['BOL'])
+    a_bol2 = min(int(a) for a in gdp['BOL'] if int(a) > a_bol)
+    verificar(g('VEN', 1950) > g('CHL', 1950) and g('VEN', ultimo) < g('BOL', ultimo) < g('CHL', ultimo),
+              'Venezuela era más rica que Chile en 1950 y hoy está por debajo de Bolivia')
+    asia, latam = ['KOR', 'SGP', 'HKG', 'JPN'], ['ARG', 'CHL', 'VEN', 'URY', 'MEX']
+    verificar(max(g(i, 1950) for i in asia) < g('ARG', 1950) and
+              min(g(i, ultimo) for i in asia) > max(g(i, ultimo) for i in latam),
+              'el milagro asiático partió por debajo de la América Latina rica y hoy la supera')
 
-    html = html_start('Comparativa de PIB per Capita', accent, SELECTOR_CSS)
-    html += f'''
-  <div class="sec-hd">
-    <div class="sec-title"><span class="accent-bar" style="background:{accent}"></span>Evolucion del PIB per Capita</div>
-    <div class="sec-sub">Selecciona paises para comparar &middot; Dolares internacionales de 2011, 1950-2022 &middot; Maddison Project Database 2023</div>
-  </div>
-  <div class="controls-row">
-    <div class="search-box">
-      <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      <input type="text" id="search" placeholder="Buscar pais para agregar..." autocomplete="off">
-      <div class="dropdown" id="dropdown"></div>
-    </div>
-    <span class="hz-lbl">Escala:</span>
-    <div class="hz-grp">
-      <button class="hz-btn active" id="btn-log">Logaritmica</button>
-      <button class="hz-btn" id="btn-nat">Natural</button>
-    </div>
-  </div>
-  <div class="tags" id="tags"></div>
-  <div class="main-grid">
-    <div class="chart-card"><div id="chart"></div></div>
-    <div class="panel">
-      <div class="panel-hd" style="background:#A86E00"><span class="panel-hd-t">Lectura del grafico</span></div>
-      <div class="panel-body">
-        <div class="pb"><div class="pb-lbl" style="color:{accent}">Como usar</div><div class="pb-desc">Use el buscador para <strong>agregar paises</strong>. El badge de color indica el <strong>cuartil de libertad economica</strong> (EFW 2023): <span style="color:#0A9396">&#9679; mas libre</span> a <span style="color:#C71E1D">&#9679; menos libre</span>. Use el toggle <strong>Logaritmica/Natural</strong> para cambiar la escala del eje Y.</div></div>
-        <div class="pb"><div class="pb-lbl" style="color:{accent}">Divergencia de ingresos</div><div class="pb-desc">En 1950, la <strong>brecha de ingresos entre paises era mucho menor</strong>. Las trayectorias divergieron dramaticamente segun las instituciones adoptadas. Compare Corea del Sur (libre) con Bolivia, o Irlanda con Argentina, para ver el impacto acumulado de decadas de <strong>politicas mas o menos libres</strong>.</div></div>
-        <div class="pb"><div class="pb-lbl" style="color:{accent}">Bolivia</div><div class="pb-desc">Bolivia (linea gruesa roja) muestra un <strong>crecimiento lento y volatil</strong>. En 1950 tenia un PIB per capita similar al de Corea del Sur; hoy es <strong>6 veces menor</strong>. El estancamiento refleja decadas de instituciones debiles y baja libertad economica.</div></div>
-        <div class="ctx" style="border-left:3px solid {accent}"><p><strong>Fuente:</strong> Maddison Project Database 2023 (Bolt & van Zanden). PIB per capita en dolares internacionales de 2011 (PPP). Alterne entre escala logaritmica y natural.</p></div>
-      </div>
-    </div>
-  </div>
-  {source_footer('Maddison Project Database 2023 (Bolt & van Zanden, 2024)')}
-<script>
-var YEARS = {json.dumps(yrs)};
-var COUNTRIES = {json.dumps(countries_gdp)};
-var ALL_DATA = {json.dumps(gdp_all)};
-var QC = {{1:'#0A9396',2:'#005F73',3:'#EE9B00',4:'#C71E1D'}};
-var QL = {{1:'Cuartil Superior',2:'Segundo Cuartil',3:'Tercer Cuartil',4:'Cuartil Inferior'}};
-var PALETTE = {json.dumps(PALETTE)};
-var selected = {json.dumps(defaults)};
-var colorMap = {{}};
-var colorIdx = 0;
-var scaleMode = 'log';
+    def extremos(a):
+        v = [(x[str(a)], iso) for iso, x in gdp.items() if x.get(str(a))]
+        return min(v), max(v), len(v)
 
-function getColor(iso) {{
-  if (!colorMap[iso]) {{ colorMap[iso] = PALETTE[colorIdx % PALETTE.length]; colorIdx++; }}
-  return colorMap[iso];
-}}
-function getCountry(iso) {{ return COUNTRIES.find(function(c){{return c.iso===iso}}); }}
-function rebuildChart() {{ initChart(); }}
-
-function setScale(mode) {{
-  scaleMode = mode;
-  document.getElementById('btn-log').className = 'hz-btn' + (mode==='log'?' active':'');
-  document.getElementById('btn-nat').className = 'hz-btn' + (mode==='natural'?' active':'');
-  initChart();
-}}
-
-document.getElementById('btn-log').addEventListener('click', function(){{ setScale('log'); }});
-document.getElementById('btn-nat').addEventListener('click', function(){{ setScale('natural'); }});
-
-function initChart() {{
-  var isDk = document.documentElement.getAttribute('data-theme')==='dark';
-  var gc = isDk?'#1A2940':'#F1EDE5';
-  var ac = isDk?'#2A3A50':'#E2DDD3';
-  var lc = isDk?'#64748B':'#64748B';
-  var nc = isDk?'#64748B':'#64748B';
-  var el = document.getElementById('chart');
-  if(window._chart) window._chart.dispose();
-  var chart = echarts.init(el);
-  window._chart = chart;
-  var allVals = [];
-  var series = selected.map(function(iso) {{
-    var c = getCountry(iso), col = getColor(iso), isBol = iso==='BOL';
-    var data = ALL_DATA[iso] || [];
-    data.forEach(function(v){{ if(v!=null) allVals.push(v); }});
-    return {{
-      name: c ? c.name : iso, type:'line', data: data,
-      lineStyle: {{width: isBol?3:2, color: col}},
-      itemStyle: {{color: col}},
-      symbol:'none', z: isBol?10:5, connectNulls:true
-    }};
-  }});
-  var isLog = scaleMode==='log';
-  var yAxisCfg = {{
-    name:'PIB per capita (USD 2011)',nameLocation:'center',
-    nameTextStyle:{{fontSize:11,fontFamily:'Inter',color:nc}},
-    axisLabel:{{color:lc,fontSize:10,fontFamily:'JetBrains Mono',
-      formatter:function(v){{return '$'+(v>=1000?Math.round(v/1000)+'k':v);}}}},
-    splitLine:{{lineStyle:{{color:gc,type:'dashed'}}}},axisLine:{{show:false}}
-  }};
-  if (isLog) {{
-    yAxisCfg.type = 'log'; yAxisCfg.min = 500; yAxisCfg.nameGap = 50;
-  }} else {{
-    var hi = allVals.length ? Math.max.apply(null,allVals) : 50000;
-    yAxisCfg.type = 'value'; yAxisCfg.min = 0;
-    yAxisCfg.max = Math.ceil(hi/5000)*5000; yAxisCfg.nameGap = 60;
-  }}
-  chart.setOption({{
-    backgroundColor:'transparent',
-    tooltip: {{trigger:'axis',backgroundColor:isDk?'#141414':'#fff',
-      borderColor:isDk?'#333':'#E2E8F0',
-      textStyle:{{color:isDk?'#E2E8F0':'#1A2940',fontSize:12,fontFamily:'Inter'}},
-      order:'valueDesc',
-      valueFormatter:function(v){{return v?'$'+Math.round(v).toLocaleString():'Sin datos';}}}},
-    legend: {{show:false}},
-    grid: {{left:65,right:20,bottom:32,top:16,containLabel:false}},
-    xAxis: {{type:'category',data:YEARS,
-      axisLabel:{{color:lc,fontSize:10,fontFamily:'JetBrains Mono',interval:9}},
-      axisLine:{{lineStyle:{{color:ac}}}},axisTick:{{show:false}}}},
-    yAxis: yAxisCfg,
-    series: series
-  }});
-  window.addEventListener('resize',function(){{chart.resize()}});
-}}
-
-function renderTags() {{
-  var html = '';
-  selected.forEach(function(iso) {{
-    var c = getCountry(iso), col = getColor(iso);
-    var qc = c ? QC[c.q] : '#999';
-    var isBol = iso==='BOL';
-    html += '<span class="tag'+(isBol?' tag-bol':'')+'">'
-      + '<span class="q-dot" style="background:'+qc+'"></span>'
-      + '<span style="border-bottom:2px solid '+col+'">'+(c?c.name:iso)+'</span>'
-      + '<span class="q-score">'+(c?c.score:'')+'</span>'
-      + (isBol?'':' <span class="x" onclick="removeCountry(\\x27'+iso+'\\x27)">&times;</span>')
-      + '</span>';
-  }});
-  document.getElementById('tags').innerHTML = html;
-}}
-
-function addCountry(iso) {{
-  if (selected.indexOf(iso)===-1) {{ selected.push(iso); renderTags(); initChart(); }}
-  document.getElementById('search').value = '';
-  document.getElementById('dropdown').classList.remove('open');
-}}
-function removeCountry(iso) {{
-  selected = selected.filter(function(s){{return s!==iso}});
-  renderTags(); initChart();
-}}
-
-var searchEl = document.getElementById('search');
-var ddEl = document.getElementById('dropdown');
-searchEl.addEventListener('input', function() {{
-  var q = this.value.toLowerCase().trim();
-  if (!q) {{ ddEl.classList.remove('open'); return; }}
-  var matches = COUNTRIES.filter(function(c) {{
-    return (c.name.toLowerCase().indexOf(q)!==-1 || c.iso.toLowerCase().indexOf(q)!==-1)
-      && selected.indexOf(c.iso)===-1;
-  }}).slice(0,8);
-  if (!matches.length) {{ ddEl.classList.remove('open'); return; }}
-  ddEl.innerHTML = matches.map(function(c) {{
-    return '<div class="dd-item" onclick="addCountry(\\x27'+c.iso+'\\x27)">'
-      + '<span class="q-badge" style="background:'+QC[c.q]+'">'+c.score+'</span>'
-      + '<span class="cname">'+c.name+'</span>'
-      + '<span class="region">'+c.region+'</span></div>';
-  }}).join('');
-  ddEl.classList.add('open');
-}});
-searchEl.addEventListener('focus', function() {{ if(this.value) this.dispatchEvent(new Event('input')); }});
-document.addEventListener('click', function(e) {{
-  if (!e.target.closest('.search-box')) ddEl.classList.remove('open');
-}});
-
-renderTags();
-initChart();
-</script>
-'''
-    html += HTML_FOOT
-    with open(f'{OUT}/comparativa_pib.html','w',encoding='utf-8') as f: f.write(html)
-    print('  OK comparativa_pib.html')
+    lo0, hi0, n0 = extremos(a0)
+    lo1, hi1, n1 = extremos(ultimo)
+    p = [
+        ['Cómo usar', f'Busque un país ({len(paises)} disponibles) y agréguelo: hasta seis a la vez, con Bolivia fija. La '
+         f'insignia es el puntaje de libertad económica {ULTIMO} y su color, el cuartil; los países sin dato del índice no la '
+         'llevan. En escala logarítmica, el mismo ritmo de crecimiento se ve con la misma pendiente.'],
+        ['Dos siglos de divergencia', f'En {a0} el país más rico de la base ({NOMBRE[hi0[1]]}, {usd(hi0[0])}) tenía un ingreso '
+         f'{num(hi0[0] / lo0[0], 1)} veces el del más pobre ({NOMBRE[lo0[1]]}, {usd(lo0[0])}); en {ultimo}, la distancia entre '
+         f'{NOMBRE[hi1[1]]} y {NOMBRE[lo1[1]]} es de {num(hi1[0] / lo1[0], 0)} veces. <strong>Venezuela</strong> era más rica que '
+         f'Chile en 1950 ({usd(g("VEN", 1950))} frente a {usd(g("CHL", 1950))}); en {ultimo} está por debajo de Bolivia.'],
+        ['Bolivia', f'Bolivia tiene datos desde {a_bol} ({usd(g("BOL", a_bol))}). En 1950 su PIB per cápita '
+         f'<strong>triplicaba</strong> al de Corea del Sur ({usd(g("BOL", 1950))} frente a {usd(g("KOR", 1950))}); en {ultimo} el '
+         f'coreano es <strong>{num(rhoy, 1)} veces</strong> el boliviano ({usd(g("KOR", ultimo))} frente a '
+         f'{usd(g("BOL", ultimo))}). En {ultimo - a_bol} años el ingreso boliviano se multiplicó por '
+         f'{num(g("BOL", ultimo) / g("BOL", a_bol), 1)}; el coreano, por {num(g("KOR", ultimo) / g("KOR", a0), 0)} desde {a0}.'],
+        ['El milagro asiático', 'Corea del Sur, Singapur, Hong Kong y Japón partieron en 1950 de niveles parecidos o inferiores '
+         f'a los de América Latina: el más alto de los cuatro ({usd(max(g(i, 1950) for i in asia))}) no llegaba al de Argentina '
+         f'({usd(g("ARG", 1950))}). Con apertura comercial, moneda sana y Estado de derecho lograron uno de los crecimientos más '
+         'rápidos de la historia; en escala logarítmica se ve la aceleración.'],
+        ['ctx', '<strong>Fuente:</strong> Maddison Project Database 2023 (Bolt y van Zanden, 2024). PIB per cápita en dólares '
+         f'internacionales de 2011 (PPA). Antes de 1950 las cifras son reconstrucciones históricas, con años sueltos y más '
+         f'incertidumbre: la base tiene {n0} países en {a0} y {n1} en {ultimo}.'],
+    ]
+    preguntas = [
+        ['¿Qué son los dólares de 2011 (PPA)?', 'La producción por habitante medida a precios internacionales de 2011, con '
+         'paridad de poder adquisitivo: un dólar compra lo mismo en todos los países y años, así que las cifras se comparan '
+         'entre sí y en el tiempo. La base es el Maddison Project Database 2023, de la Universidad de Groningen.'],
+        ['¿Por qué la escala logarítmica?', 'En escala logarítmica la misma distancia vertical es el mismo porcentaje: pasar '
+         'de $1.000 a $2.000 ocupa lo mismo que de $20.000 a $40.000. Así se comparan ritmos de crecimiento entre países '
+         'ricos y pobres; la escala natural muestra mejor las diferencias absolutas de hoy.'],
+        ['¿Qué tan confiables son los datos antiguos?', f'Antes de 1950 las cifras son reconstrucciones históricas: muchos '
+         f'países tienen años sueltos (Bolivia empieza en {a_bol} y salta a {a_bol2}) y el margen de error es mayor. Desde '
+         '1950 la serie es anual para casi todos.'],
+    ]
+    controles = (
+        '\n      <div class="hz-item"><span class="hz-lbl">Escala</span><div class="hz-grp" id="b-escala"></div></div>'
+        '\n      <div class="hz-item"><span class="hz-lbl">Período</span><div class="hz-grp" id="b-periodo"></div></div>')
+    periodos = [[str(a0), f'Desde {a0}'], ['1950', 'Desde 1950']]
+    datos = {
+        'ultimo': ultimo, 'fecha': f'{a0}–{ultimo}', 'anioQ': ULTIMO, 'inicial': ['BOL', 'KOR', 'CHL', 'ARG', 'VEN'],
+        'colores': COLORES_PAIS, 'qc': QC, 'periodos': periodos,
+        'controles': [{'id': 'b-escala', 'k': 'escala', 'ops': [['log', 'Logarítmica'], ['nat', 'Natural']]},
+                      {'id': 'b-periodo', 'k': 'periodo', 'ops': periodos}],
+        'paises': sorted(paises, key=lambda d: d['i']), 'panel': p, 'preguntas': preguntas,
+    }
+    pagina('comparativa_pib.html', 'Evolución del PIB per Cápita',
+           f'PIB per cápita en dólares internacionales de 2011 (PPA), {a0}–{ultimo} · Maddison Project Database 2023',
+           ACENTO['pib'], CUERPO_COMP.replace('@@CONTROLES@@', controles), datos, js_comp(DATOS_PIB),
+           fuente=MADDISON, estilo=ESTILO_COMP)
 
 
-# ============================================================
 if __name__ == '__main__':
-    print('Generating 5 embeds (premium design)...')
+    print('Generando los 5 gráficos complementarios (molde de monitores)…')
     gen_areas_regiones()
     gen_evolucion_mundial()
     gen_bolivia_efw()
     gen_comparativa_paises()
     gen_comparativa_pib()
-    print('\nDone!')
+    print('Listo.')

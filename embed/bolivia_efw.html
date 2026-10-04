@@ -1,169 +1,190 @@
 <!DOCTYPE html>
-<html lang="es" data-theme="light">
+<html lang="es" data-theme="light" style="--acento:#C71E1D">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Bolivia en el Indice de Libertad Economica - Populi</title>
+  <title>Bolivia en el Índice de Libertad Económica · Populi</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300..800&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,400&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="comun/monitor.css" />
   <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+  <script src="comun/monitor.js"></script>
   <style>
-    :root { --accent:#C71E1D; }
-
-    :root {
-      /* Paleta oficial POPULI (2026-08-10) — espejo de populi-marca/paleta.css */
-      --populi:#C71E1D; --populi-light:#E8706B; --populi-deep:#8B1A1A; --gold:#EE9B00;
-      --cream:#F5EFE0; --brown-dark:#3D2B1F;
-      --navy:#0D1B2A; --navy-light:#1A2940; --slate:#475569; --slate-light:#64748B;
-      --warm-white:#FAF8F3; --light-gray:#F1EDE5; --border:#E2DDD3; --dark-border:#2A3A50;
-      --bg:var(--warm-white); --card:#FFFFFF; --text:var(--brown-dark); --muted:var(--slate-light);
-      --radius:12px;
-    }
-    [data-theme="dark"] {
-      --bg:#080808; --card:#141414; --text:#E2E8F0; --muted:#64748B;
-      --border:#2A3A50; --light-gray:#1A1A1A; --cream:#1A2940;
-    }
-    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;-webkit-font-smoothing:antialiased;transition:background .25s,color .25s}
-    .wrap{max-width:1200px;margin:0 auto;padding:20px 16px}
-    .sec-hd{margin-bottom:12px}
-    .sec-title{font-family:'Playfair Display',Georgia,serif;font-size:1.55rem;font-weight:700;color:var(--navy);display:flex;align-items:center;gap:10px;line-height:1.15}
-    [data-theme="dark"] .sec-title{color:#fff}
-    .accent-bar{width:4px;height:26px;border-radius:2px;flex-shrink:0}
-    .sec-sub{font-size:.78rem;color:var(--muted);padding-left:14px;margin-top:2px}
-    [data-theme="dark"] .sec-sub{color:rgba(255,255,255,.4)}
-    .legend-bar{display:flex;flex-wrap:wrap;gap:4px 10px;padding:2px 14px 10px;align-items:center}
-    .leg-item{display:flex;align-items:center;gap:3px;font-size:.58rem;font-weight:600;color:var(--muted);white-space:nowrap}
-    .leg-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
-    .leg-line{width:16px;height:0;flex-shrink:0}
-    .main-grid{display:grid;grid-template-columns:3fr 2fr;gap:16px}
-    @media(max-width:900px){.main-grid{grid-template-columns:1fr}}
-    @media(max-width:500px){.sec-title{font-size:1.2rem}}
-    .chart-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;height:560px}
-    [data-theme="dark"] .chart-card{background:#141414;border-color:var(--dark-border)}
-    @media(max-width:900px){.chart-card{height:440px}}
-    @media(max-width:500px){.chart-card{height:340px}}
-    #chart{width:100%;height:100%}
-    .panel{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;display:flex;flex-direction:column}
-    [data-theme="dark"] .panel{background:#141414;border-color:var(--dark-border)}
-    .panel-hd{padding:10px 14px;display:flex;align-items:center;justify-content:space-between}
-    .panel-hd-t{font-size:.56rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.8)}
-    .panel-body{padding:14px;flex:1;overflow-y:auto}
-    .pb{margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)}
-    [data-theme="dark"] .pb{border-color:var(--dark-border)}
-    .pb:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
-    .pb-lbl{font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px}
-    .pb-desc{font-size:.68rem;line-height:1.5;color:var(--muted)}
-    [data-theme="dark"] .pb-desc{color:rgba(255,255,255,.45)}
-    .pb-desc strong{color:var(--navy)}
-    [data-theme="dark"] .pb-desc strong{color:#E2E8F0}
-    .ctx{background:var(--cream);border-radius:6px;padding:8px 10px;margin-top:6px}
-    [data-theme="dark"] .ctx{background:var(--navy-light)}
-    .ctx p{font-size:.68rem;line-height:1.5;color:var(--muted)}
-    [data-theme="dark"] .ctx p{color:#64748B}
-    .source{display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding:0 2px}
-    .source-txt{font-size:.6rem;color:var(--muted)}
-    .source-txt a{color:var(--populi);font-weight:600;text-decoration:none}
-    .source-txt a:hover{text-decoration:underline}
-    .kpi-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;padding-left:14px}
-    .kpi{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 14px;min-width:110px}
-    [data-theme="dark"] .kpi{background:#141414;border-color:var(--dark-border)}
-    .kpi-label{font-size:.52rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:2px}
-    .kpi-val{font-family:'JetBrains Mono',monospace;font-size:1.1rem;font-weight:700}
-    .kpi-delta{font-size:.6rem;font-family:'JetBrains Mono',monospace}
-
+    /* Pastillas con nombre largo (escritorio) y corto (teléfono) */
+    .nc { display: none; }
+    @media (max-width: 640px) { .nl { display: none; } .nc { display: inline; } }
   </style>
 </head>
 <body>
-<div class="wrap">
+  <div class="wrap">
+    <div class="sec-hd">
+      <h2 class="sec-title"><span class="accent-bar"></span>Bolivia en el Índice de Libertad Económica</h2>
+      <p class="sec-sub">Puntaje general y por áreas, 1970–2023, frente al promedio mundial y al de América Latina y el Caribe</p>
+    </div>
 
-  <div class="sec-hd">
-    <div class="sec-title"><span class="accent-bar" style="background:#C71E1D"></span>Bolivia en el Indice de Libertad Economica</div>
-    <div class="sec-sub">Puntaje general y por areas, 1970-2023 &middot; Comparado con promedio mundial y regional</div>
-  </div>
-  <div class="kpi-row">
-    <div class="kpi"><div class="kpi-label">Bolivia 2023</div><div class="kpi-val" style="color:#C71E1D">6.05</div><div class="kpi-delta" style="color:var(--muted)">#116 de 165</div></div>
-    <div class="kpi"><div class="kpi-label">Maximo</div><div class="kpi-val" style="color:#0A9396">6.71</div><div class="kpi-delta" style="color:#0A9396">2000</div></div>
-    <div class="kpi"><div class="kpi-label">Minimo</div><div class="kpi-val" style="color:#C71E1D">3.93</div><div class="kpi-delta" style="color:#C71E1D">1985</div></div>
-    <div class="kpi"><div class="kpi-label">Mejor area</div><div class="kpi-val" style="color:#0A9396;font-size:.8rem">Moneda Sana</div><div class="kpi-delta" style="color:#0A9396">9.29/10</div></div>
-  </div>
-  <div class="legend-bar">
-    <span class="leg-item"><span class="leg-line" style="border-top:3px solid #C71E1D"></span>Bolivia</span>
-    <span class="leg-item"><span class="leg-line" style="border-top:2px dashed #64748B"></span>Promedio Mundial</span>
-    <span class="leg-item"><span class="leg-line" style="border-top:2px dotted #EE9B00"></span>Promedio LAC</span>
-    <span class="leg-item"><span class="leg-line" style="border-top:1.5px solid #C71E1D"></span>Tamano del Gobierno</span><span class="leg-item"><span class="leg-line" style="border-top:1.5px solid #0A9396"></span>Sistema Legal</span><span class="leg-item"><span class="leg-line" style="border-top:1.5px solid #EE9B00"></span>Moneda Sana</span><span class="leg-item"><span class="leg-line" style="border-top:1.5px solid #005F73"></span>Comercio Internacional</span><span class="leg-item"><span class="leg-line" style="border-top:1.5px solid #DF5D25"></span>Regulacion</span>
-  </div>
-  <div class="main-grid">
-    <div class="chart-card"><div id="chart"></div></div>
-    <div class="panel">
-      <div class="panel-hd" style="background:#8B1A1A"><span class="panel-hd-t">Lectura del grafico</span></div>
-      <div class="panel-body">
-        <div class="pb"><div class="pb-lbl" style="color:#C71E1D">Trayectoria historica</div><div class="pb-desc">Bolivia mostro un <strong>deterioro constante hasta 1985</strong>, coincidiendo con dictaduras militares y la hiperinflacion. El <strong>Plan de Estabilizacion de 1985</strong> (DS 21060) marco un punto de inflexion con medidas de liberalizacion que impulsaron el puntaje hasta su maximo en <strong>2000 (6.71)</strong>.</div></div>
-        <div class="pb"><div class="pb-lbl" style="color:#C71E1D">Periodo reciente</div><div class="pb-desc">A partir de 2006, el modelo de mayor intervencion estatal revirtio parcialmente los avances. Las areas mas debiles son <strong>Sistema Legal</strong> (4.13/10) y el sistema legal, mientras que <strong>Moneda Sana</strong> (9.29/10) se mantiene relativamente alta gracias a la estabilidad de precios.</div></div>
-        <div class="pb"><div class="pb-lbl" style="color:#C71E1D">Comparativa</div><div class="pb-desc">Bolivia se ubica <strong>por debajo del promedio mundial y regional (LAC)</strong>. Active las 5 areas en la leyenda para ver en que dimensiones Bolivia tiene mas rezago respecto a la region.</div></div>
-        <div class="ctx" style="border-left:3px solid #C71E1D"><p><strong>Fuente:</strong> Fraser Institute, Economic Freedom of the World 2024. Bolivia ocupa el puesto #116 de 165 jurisdicciones en 2023.</p></div>
+    <div class="hz-bar">
+      <div class="hz-item"><span class="hz-lbl">Vista</span><div class="hz-grp" id="b-vista"></div></div>
+    </div>
+
+    <div class="kpi-grid" id="kpis"></div>
+
+    <div class="main-grid">
+      <div class="chart-card">
+        <div class="chart-ctrl">
+          <div class="tog-grp" id="pastillas-indice"></div>
+          <div class="tog-grp" id="pastillas-areas" style="display:none"></div>
+        </div>
+        <div class="grafico" id="chart"><div class="loading"><div class="spinner"></div><span>Cargando datos…</span></div></div>
+      </div>
+      <div class="panel">
+        <div class="panel-hd"><span class="panel-hd-t">Lectura del gráfico</span><span class="panel-hd-d" id="panel-fecha"></span></div>
+        <div class="panel-body" id="panel"></div>
       </div>
     </div>
+
+    <div class="edu-grid" id="preguntas"></div>
+    <div class="source"><span class="source-txt" id="fuente">Fuente: <a href="https://www.fraserinstitute.org/economic-freedom" target="_blank" rel="noopener">Fraser Institute</a>, Economic Freedom of the World: 2025 Annual Report · Elaboración: <a href="https://populi.org.bo" target="_blank" rel="noopener">Centro de Estudios POPULI</a></span></div>
   </div>
-  <div class="source"><span class="source-txt">Fuente: <a href="https://www.fraserinstitute.org/economic-freedom" target="_blank">Fraser Institute</a> · Elaboracion: <a href="https://populi.org.bo" target="_blank">POPULI</a></span></div>
-<script>
-function rebuildChart() { initChart(); }
-function initChart() {
-  var isDk = document.documentElement.getAttribute('data-theme')==='dark';
-  var gc = isDk?'#1A2940':'#F1EDE5';
-  var ac = isDk?'#2A3A50':'#E2DDD3';
-  var lc = isDk?'#64748B':'#64748B';
-  var nc = isDk?'#64748B':'#64748B';
-  var el = document.getElementById('chart');
-  if(window._chart) window._chart.dispose();
-  var chart = echarts.init(el);
-  window._chart = chart;
-  chart.setOption({
-    backgroundColor:'transparent',
-    tooltip:{trigger:'axis',backgroundColor:isDk?'#141414':'#fff',
-      borderColor:isDk?'#333':'#E2E8F0',
-      textStyle:{color:isDk?'#E2E8F0':'#1A2940',fontSize:12,fontFamily:'Inter'}},
-    legend:{
-      data:['Bolivia (EFW)','Promedio Mundial','Promedio LAC','Tamano del Gobierno','Sistema Legal','Moneda Sana','Comercio Internacional','Regulacion'],
-      bottom:0,textStyle:{color:lc,fontSize:10},itemWidth:16,itemHeight:8,itemGap:8,
-      selected:{'Promedio Mundial':true,'Promedio LAC':true,'Bolivia (EFW)':true,'Tamano del Gobierno':false,'Sistema Legal':false,'Moneda Sana':false,'Comercio Internacional':false,'Regulacion':false}
-    },
-    grid:{left:55,right:20,bottom:52,top:16,containLabel:false},
-    xAxis:{type:'category',data:[1970, 1975, 1980, 1985, 1990, 1995, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023],
-      axisLabel:{color:lc,fontSize:10,fontFamily:'JetBrains Mono'},
-      axisLine:{lineStyle:{color:ac}},axisTick:{show:false}},
-    yAxis:{type:'value',min:3,max:10,
-      name:'Indice EFW',nameLocation:'center',nameGap:38,
-      nameTextStyle:{fontSize:11,fontFamily:'Inter',color:nc},
-      axisLabel:{color:lc,fontSize:10,fontFamily:'JetBrains Mono'},
-      splitLine:{lineStyle:{color:gc,type:'dashed'}},axisLine:{show:false}},
-    series:[
-      {name:'Bolivia (EFW)',type:'line',data:[4.5, 4.34, 4.33, 3.93, 5.44, 6.34, 6.71, 6.55, 6.65, 6.56, 6.42, 6.35, 6.22, 6.09, 5.98, 6.1, 6.11, 5.96, 6.06, 6.07, 5.99, 5.93, 6.08, 6.12, 6.17, 6.17, 6.04, 6.07, 6.13, 6.05],
-        lineStyle:{width:3,color:'#C71E1D'},itemStyle:{color:'#C71E1D'},
-        symbol:'circle',symbolSize:6,z:10},
-      {name:'Promedio Mundial',type:'line',data:[5.71, 5.32, 5.37, 5.44, 5.78, 6.18, 6.31, 6.33, 6.37, 6.4, 6.46, 6.53, 6.53, 6.58, 6.46, 6.5, 6.54, 6.54, 6.58, 6.63, 6.66, 6.68, 6.72, 6.72, 6.74, 6.76, 6.58, 6.57, 6.53, 6.56],
-        lineStyle:{width:2,color:'#64748B',type:'dashed'},itemStyle:{color:'#64748B'},
-        symbol:'none',z:5},
-      {name:'Promedio LAC',type:'line',data:[5.66, 5.14, 5.11, 4.93, 5.5, 6.39, 6.76, 6.74, 6.73, 6.66, 6.7, 6.77, 6.76, 6.77, 6.68, 6.73, 6.72, 6.7, 6.7, 6.73, 6.7, 6.75, 6.76, 6.75, 6.81, 6.79, 6.58, 6.51, 6.55, 6.57],
-        lineStyle:{width:2,color:'#EE9B00',type:'dotted'},itemStyle:{color:'#EE9B00'},
-        symbol:'none',z:5},
-      {name:'Tamano del Gobierno',type:'line',data:[6.38, 6.34, 6.15, 7.7, 6.9, 6.71, 7.78, 7.15, 7.24, 6.82, 6.3, 6.27, 6.05, 6.15, 6.2, 6.16, 6.17, 6.15, 6.12, 6.12, 6.11, 6.04, 6.04, 6.05, 6.01, 6.0, 5.93, 5.92, 5.93, 5.94],lineStyle:{width:1.5,color:'#C71E1D'},itemStyle:{color:'#C71E1D'},symbol:'none',z:3},{name:'Sistema Legal',type:'line',data:[2.4, 2.25, 2.21, 2.66, 3.31, 3.86, 3.75, 3.67, 3.7, 3.74, 3.53, 3.69, 3.35, 3.54, 3.65, 3.77, 3.88, 3.98, 4.02, 4.11, 4.13, 4.28, 4.3, 4.3, 4.28, 4.12, 4.06, 4.17, 4.14, 4.13],lineStyle:{width:1.5,color:'#0A9396'},itemStyle:{color:'#0A9396'},symbol:'none',z:3},{name:'Moneda Sana',type:'line',data:[9.34, 6.27, 5.35, 0.01, 4.9, 8.25, 9.01, 9.36, 9.62, 9.28, 9.29, 9.09, 9.14, 8.45, 7.82, 8.43, 8.54, 7.78, 8.36, 8.36, 8.29, 8.26, 8.81, 8.93, 9.17, 9.38, 9.5, 9.48, 9.42, 9.29],lineStyle:{width:1.5,color:'#EE9B00'},itemStyle:{color:'#EE9B00'},symbol:'none',z:3},{name:'Comercio Internacional',type:'line',data:[2.95, 5.53, 4.7, 4.56, 6.34, 7.41, 7.52, 7.39, 7.54, 7.56, 7.34, 7.23, 7.3, 7.13, 7.09, 6.97, 6.94, 6.92, 6.91, 6.84, 6.56, 6.63, 6.77, 6.83, 6.76, 6.76, 6.14, 6.09, 6.45, 6.46],lineStyle:{width:1.5,color:'#005F73'},itemStyle:{color:'#005F73'},symbol:'none',z:3},{name:'Regulacion',type:'line',data:[2.15, 1.92, 3.2, 4.5, 5.57, 5.32, 5.41, 5.06, 5.06, 5.3, 5.56, 5.44, 5.23, 5.13, 5.12, 5.13, 5.02, 4.98, 4.91, 4.92, 4.84, 4.42, 4.48, 4.5, 4.63, 4.58, 4.56, 4.68, 4.68, 4.42],lineStyle:{width:1.5,color:'#DF5D25'},itemStyle:{color:'#DF5D25'},symbol:'none',z:3}
-    ]
-  });
-  window.addEventListener('resize',function(){chart.resize()});
-}
-initChart();
-</script>
-</div>
-<script>
-    window.addEventListener('message', function(e) {
-      if (e.data && e.data.theme) {
-        document.documentElement.setAttribute('data-theme', e.data.theme);
-        if (typeof rebuildChart === 'function') rebuildChart();
-      }
+
+  <script>
+  (function () {
+    var C = PM.C, D = {"anios":[1970,1975,1980,1985,1990,1995,2000,2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,2014,2015,2016,2017,2018,2019,2020,2021,2022,2023],"unidad":"Índice EFW (0 a 10)","unidadCorta":"Índice EFW","indice":[{"k":"bol","nombre":"Bolivia","color":"#C71E1D","ancho":2.5,"area":true,"v":[4.5,4.34,4.33,3.93,5.44,6.34,6.71,6.55,6.65,6.56,6.42,6.35,6.22,6.09,5.98,6.1,6.11,5.96,6.06,6.07,5.99,5.93,6.08,6.12,6.17,6.17,6.04,6.07,6.13,6.05]},{"k":"lac","nombre":"América Latina y el Caribe","corto":"América Latina","color":"#EE9B00","ancho":1.75,"v":[5.657826,5.13913,5.1075,4.925417,5.497917,6.3852,6.762,6.74,6.7272,6.6576,6.7004,6.769615,6.762692,6.773846,6.681154,6.727692,6.720769,6.696154,6.702692,6.727308,6.7,6.745769,6.756154,6.749615,6.808077,6.788077,6.577308,6.510769,6.550769,6.566923]},{"k":"mundo","nombre":"Promedio mundial","color":{"claro":"#5C6B70","oscuro":"#8A9699"},"ancho":1.75,"v":[5.711031,5.32243,5.373364,5.438596,5.778974,6.176179,6.314114,6.331572,6.366313,6.39575,6.462188,6.528261,6.530435,6.57559,6.462112,6.499938,6.541914,6.542716,6.576543,6.632654,6.659136,6.68,6.723086,6.715671,6.742988,6.756303,6.584364,6.569939,6.526727,6.555636]}],"areas":[{"k":"a1","nombre":"Tamaño del gobierno","corto":"Tamaño del gobierno","color":"#C71E1D","ancho":1.75,"v":[6.38,6.34,6.15,7.7,6.9,6.71,7.78,7.15,7.24,6.82,6.3,6.27,6.05,6.15,6.2,6.16,6.17,6.15,6.12,6.12,6.11,6.04,6.04,6.05,6.01,6.0,5.93,5.92,5.93,5.94]},{"k":"a2","nombre":"Sistema legal y derechos de propiedad","corto":"Sistema legal","color":"#EE9B00","ancho":1.75,"v":[2.4,2.25,2.21,2.66,3.31,3.86,3.75,3.67,3.7,3.74,3.53,3.69,3.35,3.54,3.65,3.77,3.88,3.98,4.02,4.11,4.13,4.28,4.3,4.3,4.28,4.12,4.06,4.17,4.14,4.13]},{"k":"a3","nombre":"Moneda sana","corto":"Moneda sana","color":"#0A9396","ancho":1.75,"v":[9.34,6.27,5.35,0.01,4.9,8.25,9.01,9.36,9.62,9.28,9.29,9.09,9.14,8.45,7.82,8.43,8.54,7.78,8.36,8.36,8.29,8.26,8.81,8.93,9.17,9.38,9.5,9.48,9.42,9.29]},{"k":"a4","nombre":"Libertad para comerciar internacionalmente","corto":"Comercio internacional","color":"#005F73","ancho":1.75,"v":[2.95,5.53,4.7,4.56,6.34,7.41,7.52,7.39,7.54,7.56,7.34,7.23,7.3,7.13,7.09,6.97,6.94,6.92,6.91,6.84,6.56,6.63,6.77,6.83,6.76,6.76,6.14,6.09,6.45,6.46]},{"k":"a5","nombre":"Regulación","corto":"Regulación","color":"#001219","ancho":1.75,"v":[2.15,1.92,3.2,4.5,5.57,5.32,5.41,5.06,5.06,5.3,5.56,5.44,5.23,5.13,5.12,5.13,5.02,4.98,4.91,4.92,4.84,4.42,4.48,4.5,4.63,4.58,4.56,4.68,4.68,4.42]}],"total":{"nombre":"Índice de Bolivia","v":[4.5,4.34,4.33,3.93,5.44,6.34,6.71,6.55,6.65,6.56,6.42,6.35,6.22,6.09,5.98,6.1,6.11,5.96,6.06,6.07,5.99,5.93,6.08,6.12,6.17,6.17,6.04,6.07,6.13,6.05]},"pieTip":["Bolivia: puesto 82 de 97","Bolivia: puesto 82 de 107","Bolivia: puesto 86 de 110","Bolivia: puesto 97 de 114","Bolivia: puesto 70 de 117","Bolivia: puesto 57 de 123","Bolivia: puesto 59 de 158","Bolivia: puesto 70 de 159","Bolivia: puesto 70 de 160","Bolivia: puesto 76 de 160","Bolivia: puesto 80 de 160","Bolivia: puesto 89 de 161","Bolivia: puesto 99 de 161","Bolivia: puesto 110 de 161","Bolivia: puesto 109 de 161","Bolivia: puesto 110 de 161","Bolivia: puesto 110 de 162","Bolivia: puesto 115 de 162","Bolivia: puesto 111 de 162","Bolivia: puesto 114 de 162","Bolivia: puesto 120 de 162","Bolivia: puesto 126 de 162","Bolivia: puesto 118 de 162","Bolivia: puesto 119 de 164","Bolivia: puesto 118 de 164","Bolivia: puesto 124 de 165","Bolivia: puesto 120 de 165","Bolivia: puesto 114 de 165","Bolivia: puesto 106 de 165","Bolivia: puesto 116 de 165"],"hitos":[{"anio":1985,"largo":"1985 · DS 21060","corto":"1985","alinear":"left"},{"anio":2006,"largo":"2006 · nuevo modelo económico","corto":"2006","alinear":"left"}],"cifras":[{"color":"#C71E1D","rotulo":"Bolivia · 2023","valor":6.05,"delta":"puesto 116 de 165","serie":[6.71,6.55,6.65,6.56,6.42,6.35,6.22,6.09,5.98,6.1,6.11,5.96,6.06,6.07,5.99,5.93,6.08,6.12,6.17,6.17,6.04,6.07,6.13,6.05]},{"color":"#005F73","rotulo":"Máximo","valor":6.71,"delta":"2000 · puesto 59"},{"color":"#9B2226","rotulo":"Mínimo","valor":3.93,"delta":"en 1985"},{"color":"#0A9396","rotulo":"Mejor área · 2023","valor":9.29,"delta":"Moneda sana","serie":[9.01,9.36,9.62,9.28,9.29,9.09,9.14,8.45,7.82,8.43,8.54,7.78,8.36,8.36,8.29,8.26,8.81,8.93,9.17,9.38,9.5,9.48,9.42,9.29]}],"panel":[["Trayectoria histórica","Bolivia cayó sin pausa hasta <strong>1985</strong> (de 4,50 en 1970 a 3,93), entre dictaduras militares e hiperinflación: ese año Moneda sana marcó 0,01 de 10. El <strong>Plan de Estabilización de 1985</strong> (DS 21060) marcó el giro: el puntaje subió hasta su máximo en <strong>2000</strong> (6,71), cuando Bolivia ocupaba el puesto 59 de 158."],["Período reciente","Tras el máximo, el puntaje retrocedió: 6,35 en 2005 y 5,98 en 2008, ya con el modelo de mayor intervención estatal vigente desde 2006. Desde entonces oscila alrededor de 6 (6,05 en 2023). Las áreas más débiles son <strong>Sistema legal y derechos de propiedad</strong> (4,13) y <strong>Regulación</strong> (4,42); <strong>Moneda sana</strong> (9,29) se mantiene alta: el dato es de 2023, con precios todavía estables y antes del salto inflacionario de 2024."],["Comparativa","En 2023 Bolivia (6,05) está por debajo del promedio mundial (6,56) y del latinoamericano (6,57), y ocupa el puesto <strong>116 de 165</strong>. Frente a la región, la mayor brecha está en <strong>Regulación</strong> (4,42 frente a 6,24) y la única área en que Bolivia la supera es <strong>Moneda sana</strong> (9,29 frente a 7,33)."],["ctx","<strong>Fuente:</strong> Fraser Institute, Economic Freedom of the World: 2025 Annual Report. Promedios simples: el latinoamericano reúne 26 países en 2023. Hasta 2000 los datos son quinquenales."]],"preguntas":[["¿Qué mide el índice de libertad económica?","El índice <strong>Economic Freedom of the World</strong> (EFW) del Fraser Institute califica de 0 a 10 a 165 jurisdicciones con 45 componentes agrupados en cinco áreas: tamaño del gobierno, sistema legal y derechos de propiedad, moneda sana, libertad para comerciar internacionalmente y regulación. Más puntaje es más libertad."],["¿Qué pasó en 1985?","La hiperinflación de 1984–1985 llevó a Moneda sana a 0,01 de 10 y al índice de Bolivia a su mínimo (3,93). El DS 21060 liberó precios, tipo de cambio y comercio, y frenó la emisión: Moneda sana volvió a 4,90 en 1990 y a 8,25 en 1995, y el índice pasó del puesto 97 de 114 en 1985 al 57 de 123 en 1995."],["¿Por qué Moneda sana es la mejor área?","El área mide el crecimiento del dinero, la inflación y su volatilidad, y la libertad para tener cuentas en moneda extranjera. Con inflación baja y tipo de cambio fijo, Bolivia marcó 9,29 en 2023. El índice todavía no recoge la escasez de dólares ni la inflación de 2024 y 2025."]]};
+
+    // ── Eje de años PROPORCIONAL (de valor, no de categorías) ─────────────────────────────────
+    // El tramo quinquenal (1970, 1975… 2000) ocupa el ancho que le toca. Rótulos derechos cada 5, 10,
+    // 20… años según el ancho real del lienzo (el mismo aire mínimo que PM.ejeTiempo), marcas menores
+    // por año o por lustro cuando entran, y el último año sin rótulo si no cae en el paso.
+    function ejeAnios(a0, a1, el, extra) {
+      var chico = PM.pequeno(), dk = PM.dk(), fs = chico ? 10 : 10.5, car = fs * 0.6 + 0.15;
+      var px = Math.max(140, (el.clientWidth || 600) - 64) / Math.max(1, a1 - a0);
+      var aire = Math.max(chico ? 48 : 56, 4 * car + 12);
+      var paso = [5, 10, 20, 40, 50, 100].filter(function (k) {
+        return (a0 % k === 0 || (k % 10 === 0 && a0 % 10 === 0)) && k * px >= aire;
+      })[0] || 100;
+      var menor = [1, 5, 10].filter(function (m) { return paso % m === 0 && m < paso && m * px >= 9; })[0];
+      var linea = dk ? '#3A4549' : '#C9CDCE';
+      return PM.mezclar({
+        type: 'value', min: a0, max: a1, interval: paso,
+        axisLine: { show: true, onZero: false, lineStyle: { color: linea } },
+        axisTick: { show: true, length: 4, lineStyle: { color: linea } },
+        minorTick: { show: !!menor, splitNumber: menor ? paso / menor : 1, length: 2, lineStyle: { color: linea } },
+        splitLine: { show: false }, axisPointer: { snap: true },
+        axisLabel: {
+          margin: 9, hideOverlap: true,
+          formatter: function (v) { var a = Math.round(v); return (a - a0) % paso === 0 ? '{a|' + a + '}' : ''; },
+          rich: { a: { fontFamily: PM.mono(), fontSize: fs, lineHeight: fs + 4, fontWeight: 600,
+            color: dk ? 'rgba(226,232,240,.9)' : 'rgba(0,18,25,.8)' } }
+        }
+      }, extra);
+    }
+    // Eje Y en pasos de 0,5, 1 o 2 (los que dejen 4 a 6 cortes), con base y techo en el paso
+    function rangoY(vals, piso, techo) {
+      var lo = Math.min.apply(null, vals), hi = Math.max.apply(null, vals), paso = 2;
+      [0.5, 1, 2].some(function (p) { if ((Math.ceil(hi / p) - Math.floor(lo / p)) <= 6) { paso = p; return true; } });
+      return { min: Math.max(piso, Math.floor(lo / paso) * paso), max: Math.min(techo, Math.ceil(hi / paso) * paso), interval: paso };
+    }
+    // Serie anual sobre el eje de años: pares [año, valor]; protagonista con relleno y punto final con halo
+    function serieAnual(s, anios, vals) {
+      var data = anios.map(function (a, i) { return [a, vals[i] == null ? null : vals[i]]; }), n = -1;
+      data.forEach(function (d, i) { if (d[1] != null) n = i; });
+      var o = PM.linea(s.color, { ancho: s.ancho, punteada: s.punteada, extra: {
+        name: s.nombre, data: data, connectNulls: true, z: s.area ? 4 : 3,
+        markPoint: n >= 0 ? PM.puntoFinal(s.color, data[n][0], data[n][1]) : undefined
+      } });
+      if (s.area) o.areaStyle = { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+        { offset: 0, color: PM.rgba(s.color, PM.dk() ? 0.16 : 0.10) }, { offset: 1, color: PM.rgba(s.color, 0) }]) };
+      return o;
+    }
+    // Hitos: raya punteada de umbral (1,25 px pizarra) y rótulo derecho ARRIBA del trazado
+    function hitos(lista, chico) {
+      var pz = PM.dk() ? '#8A9699' : '#5C6B70';
+      return { silent: true, symbol: 'none', animation: false,
+        lineStyle: { color: pz, width: 1.25, type: [4, 3] },
+        label: { show: true, position: 'end', distance: 7, color: pz, fontFamily: PM.inter(), fontSize: chico ? 10 : 10.5, fontWeight: 600 },
+        data: lista.map(function (h) { return { xAxis: h.anio, label: { formatter: chico ? h.corto : h.largo, align: h.alinear } }; }) };
+    }
+    // Clave de color en el tooltip, que es de vidrio oscuro en los dos temas: la tinta se invierte como en oscuro
+    function clave(c) { return String(PM.col(c)).toUpperCase() === '#001219' ? '#E2E8F0' : c; }
+    // Nombre de pastilla: largo en escritorio, corto en el teléfono
+    function rotulo(largo, corto) { return !corto || largo === corto ? largo : '<span class="nl">' + largo + '</span><span class="nc">' + corto + '</span>'; }
+
+
+    // D.indice: series de la vista «Índice» (la primera es la protagonista: 2,5 px y único relleno);
+    // D.areas: las cinco áreas (rampa oficial, 1,75 px). Todas sobre los mismos años D.anios.
+    var A = D.anios, a0 = A[0], a1 = A[A.length - 1], estado = { vista: 'indice' }, grafico;
+    var activas = { indice: new Set(D.indice.map(function (s) { return s.k; })), areas: new Set(D.areas.map(function (s) { return s.k; })) };
+    var visibles = function () {
+      return (estado.vista === 'indice' ? D.indice : D.areas).filter(function (s) { return activas[estado.vista].has(s.k); });
+    };
+
+    document.getElementById('panel-fecha').textContent = a0 + '–' + a1;
+    PM.botonera(document.getElementById('b-vista'), [['indice', 'Índice'], ['areas', 'Áreas']], estado.vista, function (v) {
+      estado.vista = v;
+      document.getElementById('pastillas-indice').style.display = v === 'indice' ? '' : 'none';
+      document.getElementById('pastillas-areas').style.display = v === 'areas' ? '' : 'none';
+      grafico.redibujar();
     });
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme:dark)').matches)
-      document.documentElement.setAttribute('data-theme', 'dark');
-</script>
-</body></html>
+    ['indice', 'areas'].forEach(function (v) {
+      PM.pastillas(document.getElementById('pastillas-' + v), D[v].map(function (s) {
+        return { k: s.k, nombre: rotulo(s.nombre, s.corto), color: s.color, forma: s.punteada ? 'punteada' : 'linea' };
+      }), activas[v], function () { grafico.redibujar(); });
+    });
+    cifras(); panel();
+    var el = document.getElementById('chart');
+    el.innerHTML = '';
+    grafico = PM.montar(el, opciones);
+    PM.alCambiarTema(function () { cifras(); panel(); });
+    PM.preguntas(document.getElementById('preguntas'), D.preguntas);
+
+    PM.leyendaImagen = function () {
+      return visibles().map(function (s) { return { name: s.nombre, color: PM.col(s.color), forma: s.punteada ? 'punteada' : 'linea' }; });
+    };
+    PM.tablaDatos = function () {
+      var vs = visibles();
+      return { cols: ['Año'].concat(vs.map(function (s) { return s.nombre; })),
+        filas: A.map(function (a, i) { return [a].concat(vs.map(function (s) { return s.v[i]; })); }) };
+    };
+
+    function cifras() {
+      document.getElementById('kpis').innerHTML = D.cifras.map(function (k) {
+        return PM.kpi({ color: k.color, rotulo: k.rotulo, valor: PM.num(k.valor, k.dec == null ? 2 : k.dec), delta: k.delta, tono: k.tono, serie: k.serie });
+      }).join('');
+    }
+
+    function panel() {
+      document.getElementById('panel').innerHTML = D.panel.map(function (b) {
+        return b[0] === 'ctx' ? PM.ctx(b[1]) : PM.pb(PM.var('--acento'), b[0], null, b[1]);
+      }).join('');
+    }
+
+    function opciones() {
+      var chico = PM.pequeno(), el = document.getElementById('chart'), vs = visibles(), vals = [];
+      vs.forEach(function (s) { s.v.forEach(function (x) { if (x != null) vals.push(x); }); });
+      var series = vs.map(function (s) { return serieAnual(s, A, s.v); });
+      if (series.length) series[0].markLine = hitos(D.hitos, chico);
+      var esIndice = estado.vista === 'indice';
+      return {
+        grid: PM.grid({ top: 30, bottom: 2 }),
+        xAxis: ejeAnios(a0, a1, el),
+        yAxis: PM.ejeY({ unidad: chico ? D.unidadCorta : D.unidad, fmt: PM.tick,
+          extra: PM.mezclar(rangoY(vals.length ? vals : [0, 10], 0, 10), { nameTextStyle: { align: 'left' } }) }),
+        tooltip: PM.tooltip(function (ps) {
+          var p = ps.filter(function (q) { return q.value && q.value[1] != null; });
+          if (!p.length) return '';
+          var i = A.indexOf(p[0].value[0]);
+          if (i < 0) return '';
+          var h = PM.ttTitulo(String(A[i]));
+          vs.forEach(function (s) { if (s.v[i] != null) h += PM.ttFila(clave(s.color), s.nombre, PM.num(s.v[i], 2), s.punteada ? 'punteada' : 'linea'); });
+          if (!esIndice) h += PM.ttTotal(D.total.nombre, PM.num(D.total.v[i], 2));
+          else h += PM.ttPie(D.pieTip[i]);
+          return h;
+        }),
+        series: series
+      };
+    }
+
+  })();
+  </script>
+</body>
+</html>

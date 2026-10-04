@@ -1,148 +1,199 @@
 <!DOCTYPE html>
-<html lang="es" data-theme="light">
+<html lang="es" data-theme="light" style="--acento:#005F73">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Calificacion por Areas — Regiones del Mundo - Populi</title>
+  <title>Calificación por Áreas del Índice de Libertad Económica · Populi</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300..800&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,400&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="comun/monitor.css" />
   <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+  <script src="comun/monitor.js"></script>
   <style>
-    :root { --accent:#005F73; }
-
-    :root {
-      /* Paleta oficial POPULI (2026-08-10) — espejo de populi-marca/paleta.css */
-      --populi:#C71E1D; --populi-light:#E8706B; --populi-deep:#8B1A1A; --gold:#EE9B00;
-      --cream:#F5EFE0; --brown-dark:#3D2B1F;
-      --navy:#0D1B2A; --navy-light:#1A2940; --slate:#475569; --slate-light:#64748B;
-      --warm-white:#FAF8F3; --light-gray:#F1EDE5; --border:#E2DDD3; --dark-border:#2A3A50;
-      --bg:var(--warm-white); --card:#FFFFFF; --text:var(--brown-dark); --muted:var(--slate-light);
-      --radius:12px;
-    }
-    [data-theme="dark"] {
-      --bg:#080808; --card:#141414; --text:#E2E8F0; --muted:#64748B;
-      --border:#2A3A50; --light-gray:#1A1A1A; --cream:#1A2940;
-    }
-    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;-webkit-font-smoothing:antialiased;transition:background .25s,color .25s}
-    .wrap{max-width:1200px;margin:0 auto;padding:20px 16px}
-    .sec-hd{margin-bottom:12px}
-    .sec-title{font-family:'Playfair Display',Georgia,serif;font-size:1.55rem;font-weight:700;color:var(--navy);display:flex;align-items:center;gap:10px;line-height:1.15}
-    [data-theme="dark"] .sec-title{color:#fff}
-    .accent-bar{width:4px;height:26px;border-radius:2px;flex-shrink:0}
-    .sec-sub{font-size:.78rem;color:var(--muted);padding-left:14px;margin-top:2px}
-    [data-theme="dark"] .sec-sub{color:rgba(255,255,255,.4)}
-    .legend-bar{display:flex;flex-wrap:wrap;gap:4px 10px;padding:2px 14px 10px;align-items:center}
-    .leg-item{display:flex;align-items:center;gap:3px;font-size:.58rem;font-weight:600;color:var(--muted);white-space:nowrap}
-    .leg-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
-    .leg-line{width:16px;height:0;flex-shrink:0}
-    .main-grid{display:grid;grid-template-columns:3fr 2fr;gap:16px}
-    @media(max-width:900px){.main-grid{grid-template-columns:1fr}}
-    @media(max-width:500px){.sec-title{font-size:1.2rem}}
-    .chart-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;height:560px}
-    [data-theme="dark"] .chart-card{background:#141414;border-color:var(--dark-border)}
-    @media(max-width:900px){.chart-card{height:440px}}
-    @media(max-width:500px){.chart-card{height:340px}}
-    #chart{width:100%;height:100%}
-    .panel{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;display:flex;flex-direction:column}
-    [data-theme="dark"] .panel{background:#141414;border-color:var(--dark-border)}
-    .panel-hd{padding:10px 14px;display:flex;align-items:center;justify-content:space-between}
-    .panel-hd-t{font-size:.56rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.8)}
-    .panel-body{padding:14px;flex:1;overflow-y:auto}
-    .pb{margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)}
-    [data-theme="dark"] .pb{border-color:var(--dark-border)}
-    .pb:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
-    .pb-lbl{font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px}
-    .pb-desc{font-size:.68rem;line-height:1.5;color:var(--muted)}
-    [data-theme="dark"] .pb-desc{color:rgba(255,255,255,.45)}
-    .pb-desc strong{color:var(--navy)}
-    [data-theme="dark"] .pb-desc strong{color:#E2E8F0}
-    .ctx{background:var(--cream);border-radius:6px;padding:8px 10px;margin-top:6px}
-    [data-theme="dark"] .ctx{background:var(--navy-light)}
-    .ctx p{font-size:.68rem;line-height:1.5;color:var(--muted)}
-    [data-theme="dark"] .ctx p{color:#64748B}
-    .source{display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding:0 2px}
-    .source-txt{font-size:.6rem;color:var(--muted)}
-    .source-txt a{color:var(--populi);font-weight:600;text-decoration:none}
-    .source-txt a:hover{text-decoration:underline}
-    .kpi-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;padding-left:14px}
-    .kpi{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 14px;min-width:110px}
-    [data-theme="dark"] .kpi{background:#141414;border-color:var(--dark-border)}
-    .kpi-label{font-size:.52rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:2px}
-    .kpi-val{font-family:'JetBrains Mono',monospace;font-size:1.1rem;font-weight:700}
-    .kpi-delta{font-size:.6rem;font-family:'JetBrains Mono',monospace}
-
+    /* Pastillas con nombre largo (escritorio) y corto (teléfono) */
+    .nc { display: none; }
+    @media (max-width: 640px) { .nl { display: none; } .nc { display: inline; } }
+    /* el punto de cada área en su pastilla; la raya del índice general, vertical como en el gráfico */
+    #pastillas .lp.area { border-radius: 50%; }
+    .ref .raya { width: 3px; height: 13px; background: var(--tinta); flex: none; }
   </style>
 </head>
 <body>
-<div class="wrap">
+  <div class="wrap">
+    <div class="sec-hd">
+      <h2 class="sec-title"><span class="accent-bar"></span>Calificación por Áreas del Índice de Libertad Económica</h2>
+      <p class="sec-sub">Promedio de cada región en las cinco áreas del índice, 2023 · de 0 a 10, más es más libre · 165 jurisdicciones</p>
+    </div>
 
-  <div class="sec-hd">
-    <div class="sec-title"><span class="accent-bar" style="background:#005F73"></span>Calificacion por Areas del Indice de Libertad Economica</div>
-    <div class="sec-sub">Promedio regional por area, 2023 &middot; Fraser Institute EFW &middot; 165 jurisdicciones</div>
-  </div>
-  <div class="kpi-row">
-    <div class="kpi"><div class="kpi-label">Region mas libre</div><div class="kpi-val" style="color:#0A9396;font-size:.9rem">Norteamerica</div><div class="kpi-delta" style="color:#0A9396">8.01/10</div></div>
-    <div class="kpi"><div class="kpi-label">Region menos libre</div><div class="kpi-val" style="color:#C71E1D;font-size:.9rem">Africa Subsahariana</div><div class="kpi-delta" style="color:#C71E1D">5.9/10</div></div>
-    <div class="kpi"><div class="kpi-label">Am. Latina</div><div class="kpi-val" style="color:#EE9B00;font-size:.9rem">6.57</div><div class="kpi-delta" style="color:var(--muted)">de 10</div></div>
-  </div>
-  <div class="legend-bar">
-    <span class="leg-item"><span class="leg-dot" style="background:#C71E1D"></span>Tamano del Gobierno</span><span class="leg-item"><span class="leg-dot" style="background:#0A9396"></span>Sistema Legal</span><span class="leg-item"><span class="leg-dot" style="background:#EE9B00"></span>Moneda Sana</span><span class="leg-item"><span class="leg-dot" style="background:#005F73"></span>Comercio Internacional</span><span class="leg-item"><span class="leg-dot" style="background:#DF5D25"></span>Regulacion</span>
-  </div>
-  <div class="main-grid">
-    <div class="chart-card"><div id="chart"></div></div>
-    <div class="panel">
-      <div class="panel-hd" style="background:#1E40AF"><span class="panel-hd-t">Lectura del grafico</span></div>
-      <div class="panel-body">
-        <div class="pb"><div class="pb-lbl" style="color:#005F73">Que muestra</div><div class="pb-desc">Cada grupo de barras representa el <strong>promedio regional</strong> en las 5 areas del Indice de Libertad Economica del Fraser Institute. Las areas miden: tamano del gobierno, sistema legal, estabilidad monetaria, apertura comercial y regulacion.</div></div>
-        <div class="pb"><div class="pb-lbl" style="color:#005F73">Patrones clave</div><div class="pb-desc"><strong>Norteamerica y Europa</strong> lideran consistentemente, mientras que <strong>Asia del Sur y Africa Subsahariana</strong> muestran los puntajes mas bajos. El area de <strong>Moneda Sana</strong> es donde mas regiones convergen; las mayores brechas estan en <strong>Sistema Legal</strong> y <strong>Regulacion</strong>.</div></div>
-        <div class="pb"><div class="pb-lbl" style="color:#005F73">America Latina</div><div class="pb-desc">La region tiene un desempeno <strong>intermedio-bajo</strong>. Su area mas debil es <strong>Sistema Legal</strong> (4.9/10), reflejando debilidades institucionales, seguida de <strong>Regulacion</strong> (6.24/10). Su mejor area es <strong>Moneda Sana</strong> (7.33/10).</div></div>
-        <div class="ctx" style="border-left:3px solid #005F73"><p><strong>Fuente:</strong> Fraser Institute, Economic Freedom of the World 2023. 165 jurisdicciones, 5 areas, 45 variables.</p></div>
+    <div class="kpi-grid" id="kpis"></div>
+
+    <div class="main-grid">
+      <div class="chart-card">
+        <div class="chart-ctrl">
+          <div class="tog-grp" id="pastillas"></div>
+          <span class="ref"><span class="raya"></span>Índice general</span>
+        </div>
+        <div class="grafico" id="chart"><div class="loading"><div class="spinner"></div><span>Cargando datos…</span></div></div>
+      </div>
+      <div class="panel">
+        <div class="panel-hd"><span class="panel-hd-t">Lectura del gráfico</span><span class="panel-hd-d" id="panel-fecha"></span></div>
+        <div class="panel-body" id="panel"></div>
       </div>
     </div>
+
+    <div class="edu-grid" id="preguntas"></div>
+    <div class="source"><span class="source-txt" id="fuente">Fuente: <a href="https://www.fraserinstitute.org/economic-freedom" target="_blank" rel="noopener">Fraser Institute</a>, Economic Freedom of the World: 2025 Annual Report · Elaboración: <a href="https://populi.org.bo" target="_blank" rel="noopener">Centro de Estudios POPULI</a></span></div>
   </div>
-  <div class="source"><span class="source-txt">Fuente: <a href="https://www.fraserinstitute.org/economic-freedom" target="_blank">Fraser Institute</a> · Elaboracion: <a href="https://populi.org.bo" target="_blank">POPULI</a></span></div>
-<script>
-function rebuildChart() { initChart(); }
-function initChart() {
-  var isDk = document.documentElement.getAttribute('data-theme')==='dark';
-  var tc = isDk?'#E2E8F0':'#1A2940';
-  var gc = isDk?'#1A2940':'#F1EDE5';
-  var ac = isDk?'#2A3A50':'#E2DDD3';
-  var lc = isDk?'#64748B':'#64748B';
-  var el = document.getElementById('chart');
-  if(window._chart) window._chart.dispose();
-  var chart = echarts.init(el);
-  window._chart = chart;
-  chart.setOption({
-    backgroundColor:'transparent',
-    tooltip:{trigger:'axis',axisPointer:{type:'shadow'},
-      backgroundColor:isDk?'#141414':'#fff',borderColor:isDk?'#333':'#E2E8F0',
-      textStyle:{color:tc,fontSize:12,fontFamily:'Inter'}},
-    legend:{show:false},
-    grid:{left:55,right:20,bottom:70,top:16,containLabel:false},
-    xAxis:{type:'category',data:["Norteamerica", "Europa y Asia Central", "Asia Oriental y Pacifico", "Medio Oriente y N. de Africa", "America Latina y el Caribe", "Asia del Sur", "Africa Subsahariana"],
-      axisLabel:{color:lc,fontSize:10,interval:0,rotate:25,fontFamily:'Inter'},
-      axisLine:{lineStyle:{color:ac}},axisTick:{show:false}},
-    yAxis:{type:'value',min:0,max:10,
-      axisLabel:{color:lc,fontSize:10,fontFamily:'JetBrains Mono'},
-      splitLine:{lineStyle:{color:gc,type:'dashed'}},axisLine:{show:false}},
-    series:[{name:'Tamano del Gobierno',type:'bar',data:[6.82, 6.1, 6.72, 6.21, 7.17, 7.51, 6.95],itemStyle:{color:'#C71E1D',borderRadius:[3,3,0,0]},barMaxWidth:18},{name:'Sistema Legal',type:'bar',data:[7.75, 6.66, 5.84, 4.51, 4.9, 5.17, 4.22],itemStyle:{color:'#0A9396',borderRadius:[3,3,0,0]},barMaxWidth:18},{name:'Moneda Sana',type:'bar',data:[8.93, 8.1, 8.03, 7.23, 7.33, 6.2, 6.49],itemStyle:{color:'#EE9B00',borderRadius:[3,3,0,0]},barMaxWidth:18},{name:'Comercio Internacional',type:'bar',data:[8.32, 8.26, 7.54, 6.47, 7.2, 6.33, 6.11],itemStyle:{color:'#005F73',borderRadius:[3,3,0,0]},barMaxWidth:18},{name:'Regulacion',type:'bar',data:[8.22, 6.76, 6.82, 5.8, 6.24, 6.38, 5.71],itemStyle:{color:'#DF5D25',borderRadius:[3,3,0,0]},barMaxWidth:18}]
-  });
-  window.addEventListener('resize',function(){chart.resize()});
-}
-initChart();
-</script>
-</div>
-<script>
-    window.addEventListener('message', function(e) {
-      if (e.data && e.data.theme) {
-        document.documentElement.setAttribute('data-theme', e.data.theme);
-        if (typeof rebuildChart === 'function') rebuildChart();
-      }
-    });
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme:dark)').matches)
-      document.documentElement.setAttribute('data-theme', 'dark');
-</script>
-</body></html>
+
+  <script>
+  (function () {
+    var C = PM.C, D = {"anio":"2023","lac":3,"areas":[{"k":"a1","i":0,"nombre":"Tamaño del gobierno","corto":"Tamaño del gobierno","color":"#C71E1D"},{"k":"a2","i":1,"nombre":"Sistema legal y derechos de propiedad","corto":"Sistema legal","color":"#EE9B00"},{"k":"a3","i":2,"nombre":"Moneda sana","corto":"Moneda sana","color":"#0A9396"},{"k":"a4","i":3,"nombre":"Libertad para comerciar internacionalmente","corto":"Comercio internacional","color":"#005F73"},{"k":"a5","i":4,"nombre":"Regulación","corto":"Regulación","color":"#001219"}],"regiones":[{"nombre":"Norteamérica","n":2,"s":8.01,"a":[6.82,7.75,8.935,8.32,8.22],"serie":[8.465,8.305,8.295,8.315,8.335,8.33,8.32,8.28,8.155,8.035,8.03,8.035,8.085,8.115,8.19,8.21,8.24,8.215,8.15,8.12,7.89,7.89,7.935,8.01]},{"nombre":"Europa y Asia Central","n":46,"s":7.178478,"a":[6.104348,6.664565,8.102391,8.260652,6.763261],"serie":[6.698696,6.79,6.903478,6.926087,7.04413,7.098913,7.118478,7.149783,7.063043,7.07587,7.137174,7.161957,7.226304,7.252826,7.325217,7.328478,7.393913,7.383913,7.408696,7.447174,7.222174,7.258478,7.114565,7.178478]},{"nombre":"Asia Oriental y Pacífico","n":21,"s":6.989048,"a":[6.719524,5.838095,8.031905,7.53619,6.820952],"serie":[6.693158,6.542,6.6345,6.656,6.771,6.8935,6.846,6.835,6.7275,6.8535,6.895238,6.918571,6.995714,7.001429,7.07,7.107143,7.118095,7.175238,7.19381,7.197619,7.041429,6.992857,6.958571,6.989048]},{"nombre":"América Latina y el Caribe","n":26,"s":6.566923,"a":[7.169615,4.900385,7.329231,7.203462,6.235385],"serie":[6.762,6.74,6.7272,6.6576,6.7004,6.769615,6.762692,6.773846,6.681154,6.727692,6.720769,6.696154,6.702692,6.727308,6.7,6.745769,6.756154,6.749615,6.808077,6.788077,6.577308,6.510769,6.550769,6.566923]},{"nombre":"Asia del Sur","n":5,"s":6.32,"a":[7.506,5.172,6.202,6.33,6.38],"serie":[6.094,6.066,6.096,6.198,6.07,6.142,6.098,6.194,6.004,6.06,6.09,6.116,6.108,6.262,6.26,6.406,6.412,6.44,6.498,6.496,6.318,6.266,6.348,6.32]},{"nombre":"Medio Oriente y Norte de África","n":21,"s":6.044762,"a":[6.21,4.511905,7.229524,6.474762,5.795714],"serie":[6.174211,6.243158,6.143,6.1815,6.1965,6.2645,6.23,6.3635,6.1795,6.1355,6.198,6.1475,6.1275,6.2,6.193,6.116,6.201,6.180952,6.195714,6.178095,6.079524,6.068095,6.059048,6.044762]},{"nombre":"África Subsahariana","n":44,"s":5.895455,"a":[6.945682,4.223182,6.485682,6.113864,5.710455],"serie":[5.441905,5.46381,5.482143,5.569286,5.62,5.665714,5.701667,5.765714,5.650476,5.712619,5.749286,5.749524,5.775,5.89,5.895476,5.94381,5.98381,5.979302,6.001628,6.048182,5.915455,5.897273,5.871364,5.895455]}],"brecha":{"v":3.526818,"area":"Sistema legal"},"panel":[["Qué muestra","Cada fila es una región; cada punto, el promedio de sus países en una de las cinco áreas del índice (0 a 10: más es más libre), y la raya vertical, el índice general. Las filas van de la región más libre a la menos libre; la línea gris une su peor y su mejor área."],["Patrones clave","<strong>Norteamérica</strong> (8,01) y <strong>Europa y Asia Central</strong> (7,18) encabezan; <strong>Medio Oriente y Norte de África</strong> (6,04) y <strong>África Subsahariana</strong> (5,90) cierran. La mayor brecha entre regiones está en <strong>Sistema legal y derechos de propiedad</strong> (de 4,22 a 7,75) y la menor, en <strong>Tamaño del gobierno</strong> (de 6,10 a 7,51), donde además el orden se invierte: Asia del Sur (7,51) y América Latina y el Caribe (7,17) superan a Europa y Asia Central (6,10), porque esa área premia el gasto, las transferencias y los impuestos bajos."],["América Latina y el Caribe","Con <strong>6,57</strong>, la región es la cuarta de siete. Su área más débil es <strong>Sistema legal y derechos de propiedad</strong> (4,90), seguida de <strong>Regulación</strong> (6,24); la mejor, <strong>Moneda sana</strong> (7,33)."],["ctx","<strong>Fuente:</strong> Fraser Institute, Economic Freedom of the World: 2025 Annual Report (datos de 2023): 165 jurisdicciones, 5 áreas y 45 componentes. Promedio simple de los países de cada región (regiones del Banco Mundial); Norteamérica son solo Canadá y Estados Unidos."]],"preguntas":[["¿Qué mide el índice de libertad económica?","El índice <strong>Economic Freedom of the World</strong> (EFW) del Fraser Institute califica de 0 a 10 a 165 jurisdicciones con 45 componentes agrupados en cinco áreas: tamaño del gobierno, sistema legal y derechos de propiedad, moneda sana, libertad para comerciar internacionalmente y regulación. Más puntaje es más libertad."],["¿Por qué una región pobre puede puntuar alto en Tamaño del gobierno?","Porque el área mide cuánto del ingreso pasa por el Estado: consumo e inversión pública, transferencias y subsidios, empresas estatales e impuestos marginales. Un Estado chico puntúa alto aunque el país sea pobre, y los Estados de bienestar puntúan bajo: Europa y Asia Central marca 6,10 en esa área y 8,10 en Moneda sana."],["¿Por qué promedios simples?","Cada país pesa lo mismo: el promedio describe las políticas de los países de la región, no la experiencia de su población (en Asia del Sur, India no pesa más que Bután)."]]};
+
+    // ── Eje de años PROPORCIONAL (de valor, no de categorías) ─────────────────────────────────
+    // El tramo quinquenal (1970, 1975… 2000) ocupa el ancho que le toca. Rótulos derechos cada 5, 10,
+    // 20… años según el ancho real del lienzo (el mismo aire mínimo que PM.ejeTiempo), marcas menores
+    // por año o por lustro cuando entran, y el último año sin rótulo si no cae en el paso.
+    function ejeAnios(a0, a1, el, extra) {
+      var chico = PM.pequeno(), dk = PM.dk(), fs = chico ? 10 : 10.5, car = fs * 0.6 + 0.15;
+      var px = Math.max(140, (el.clientWidth || 600) - 64) / Math.max(1, a1 - a0);
+      var aire = Math.max(chico ? 48 : 56, 4 * car + 12);
+      var paso = [5, 10, 20, 40, 50, 100].filter(function (k) {
+        return (a0 % k === 0 || (k % 10 === 0 && a0 % 10 === 0)) && k * px >= aire;
+      })[0] || 100;
+      var menor = [1, 5, 10].filter(function (m) { return paso % m === 0 && m < paso && m * px >= 9; })[0];
+      var linea = dk ? '#3A4549' : '#C9CDCE';
+      return PM.mezclar({
+        type: 'value', min: a0, max: a1, interval: paso,
+        axisLine: { show: true, onZero: false, lineStyle: { color: linea } },
+        axisTick: { show: true, length: 4, lineStyle: { color: linea } },
+        minorTick: { show: !!menor, splitNumber: menor ? paso / menor : 1, length: 2, lineStyle: { color: linea } },
+        splitLine: { show: false }, axisPointer: { snap: true },
+        axisLabel: {
+          margin: 9, hideOverlap: true,
+          formatter: function (v) { var a = Math.round(v); return (a - a0) % paso === 0 ? '{a|' + a + '}' : ''; },
+          rich: { a: { fontFamily: PM.mono(), fontSize: fs, lineHeight: fs + 4, fontWeight: 600,
+            color: dk ? 'rgba(226,232,240,.9)' : 'rgba(0,18,25,.8)' } }
+        }
+      }, extra);
+    }
+    // Eje Y en pasos de 0,5, 1 o 2 (los que dejen 4 a 6 cortes), con base y techo en el paso
+    function rangoY(vals, piso, techo) {
+      var lo = Math.min.apply(null, vals), hi = Math.max.apply(null, vals), paso = 2;
+      [0.5, 1, 2].some(function (p) { if ((Math.ceil(hi / p) - Math.floor(lo / p)) <= 6) { paso = p; return true; } });
+      return { min: Math.max(piso, Math.floor(lo / paso) * paso), max: Math.min(techo, Math.ceil(hi / paso) * paso), interval: paso };
+    }
+    // Serie anual sobre el eje de años: pares [año, valor]; protagonista con relleno y punto final con halo
+    function serieAnual(s, anios, vals) {
+      var data = anios.map(function (a, i) { return [a, vals[i] == null ? null : vals[i]]; }), n = -1;
+      data.forEach(function (d, i) { if (d[1] != null) n = i; });
+      var o = PM.linea(s.color, { ancho: s.ancho, punteada: s.punteada, extra: {
+        name: s.nombre, data: data, connectNulls: true, z: s.area ? 4 : 3,
+        markPoint: n >= 0 ? PM.puntoFinal(s.color, data[n][0], data[n][1]) : undefined
+      } });
+      if (s.area) o.areaStyle = { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+        { offset: 0, color: PM.rgba(s.color, PM.dk() ? 0.16 : 0.10) }, { offset: 1, color: PM.rgba(s.color, 0) }]) };
+      return o;
+    }
+    // Hitos: raya punteada de umbral (1,25 px pizarra) y rótulo derecho ARRIBA del trazado
+    function hitos(lista, chico) {
+      var pz = PM.dk() ? '#8A9699' : '#5C6B70';
+      return { silent: true, symbol: 'none', animation: false,
+        lineStyle: { color: pz, width: 1.25, type: [4, 3] },
+        label: { show: true, position: 'end', distance: 7, color: pz, fontFamily: PM.inter(), fontSize: chico ? 10 : 10.5, fontWeight: 600 },
+        data: lista.map(function (h) { return { xAxis: h.anio, label: { formatter: chico ? h.corto : h.largo, align: h.alinear } }; }) };
+    }
+    // Clave de color en el tooltip, que es de vidrio oscuro en los dos temas: la tinta se invierte como en oscuro
+    function clave(c) { return String(PM.col(c)).toUpperCase() === '#001219' ? '#E2E8F0' : c; }
+    // Nombre de pastilla: largo en escritorio, corto en el teléfono
+    function rotulo(largo, corto) { return !corto || largo === corto ? largo : '<span class="nl">' + largo + '</span><span class="nc">' + corto + '</span>'; }
+
+
+    var AREAS = D.areas, FILAS = D.regiones, activas = new Set(AREAS.map(function (a) { return a.k; })), grafico;
+
+    document.getElementById('panel-fecha').textContent = D.anio;
+    PM.pastillas(document.getElementById('pastillas'), AREAS.map(function (a) {
+      return { k: a.k, nombre: rotulo(a.nombre, a.corto), color: a.color, forma: 'area' };
+    }), activas, function () { grafico.redibujar(); });
+    cifras(); panel();
+    var el = document.getElementById('chart');
+    el.innerHTML = '';
+    grafico = PM.montar(el, opciones);
+    PM.alCambiarTema(function () { cifras(); panel(); });
+    PM.preguntas(document.getElementById('preguntas'), D.preguntas);
+
+    // imagen y CSV: el gráfico no tiene eje de categorías en X ni una serie por fila
+    PM.leyendaImagen = function () {
+      return AREAS.filter(function (a) { return activas.has(a.k); })
+        .map(function (a) { return { name: a.nombre, color: PM.col(a.color), forma: 'punto' }; })
+        .concat([{ name: 'Índice general', color: PM.col(C.tinta), forma: 'area' }]);
+    };
+    PM.tablaDatos = function () {
+      return { cols: ['Región', 'Países', 'Índice general'].concat(AREAS.map(function (a) { return a.nombre; })),
+        filas: FILAS.map(function (f) { return [f.nombre, f.n, f.s].concat(f.a); }) };
+    };
+
+    function cifras() {
+      var b = FILAS[0], w = FILAS[FILAS.length - 1], l = FILAS[D.lac];
+      document.getElementById('kpis').innerHTML =
+        PM.kpi({ color: C.turquesa, rotulo: 'Región más libre', valor: PM.num(b.s, 2), delta: b.nombre, serie: b.serie }) +
+        PM.kpi({ color: C.rojo, rotulo: 'Región menos libre', valor: PM.num(w.s, 2), delta: w.nombre, serie: w.serie }) +
+        PM.kpi({ color: C.oro, rotulo: 'América Latina y el Caribe', valor: PM.num(l.s, 2), delta: 'puesto ' + (D.lac + 1) + ' de ' + FILAS.length, serie: l.serie }) +
+        PM.kpi({ color: C.petroleo, rotulo: 'Mayor brecha entre regiones', valor: PM.num(D.brecha.v, 2), delta: D.brecha.area });
+    }
+
+    function panel() {
+      document.getElementById('panel').innerHTML = D.panel.map(function (b) {
+        return b[0] === 'ctx' ? PM.ctx(b[1]) : PM.pb(PM.var('--acento'), b[0], null, b[1]);
+      }).join('');
+    }
+
+    function opciones() {
+      var dk = PM.dk(), chico = PM.pequeno(), card = PM.var('--card') || '#fff', tinta = PM.col(C.tinta);
+      var act = AREAS.filter(function (a) { return activas.has(a.k); }), vals = [];
+      FILAS.forEach(function (f) { vals.push(f.s); act.forEach(function (a) { vals.push(f.a[a.i]); }); });
+      var x0 = Math.floor(Math.min.apply(null, vals)), x1 = Math.ceil(Math.max.apply(null, vals)), linea = dk ? '#3A4549' : '#C9CDCE';
+      var extremos = function (f) { var v = act.map(function (a) { return f.a[a.i]; }).concat([f.s]); return [Math.min.apply(null, v), Math.max.apply(null, v)]; };
+      var series = [
+        // la línea gris une el área más baja con la más alta de cada región
+        { name: '_rango', type: 'custom', silent: true, z: 1, tooltip: { show: false },
+          renderItem: function (p, api) {
+            var e = extremos(FILAS[p.dataIndex]), a = api.coord([e[0], p.dataIndex]), b = api.coord([e[1], p.dataIndex]);
+            return { type: 'line', shape: { x1: a[0], y1: a[1], x2: b[0], y2: b[1] }, style: { stroke: linea, lineWidth: 2 } };
+          },
+          data: FILAS.map(function (f, i) { return [f.s, i]; }) },
+        // el índice general: raya vertical de tinta, debajo de los puntos
+        { name: 'Índice general', type: 'scatter', z: 2, symbol: 'rect', symbolSize: [3, chico ? 17 : 21],
+          itemStyle: { color: tinta }, emphasis: { disabled: true }, data: FILAS.map(function (f, i) { return [f.s, i]; }) }
+      ];
+      act.forEach(function (a) {
+        series.push({ name: a.nombre, type: 'scatter', z: 3, symbolSize: chico ? 10 : 12,
+          itemStyle: { color: PM.col(a.color), borderColor: card, borderWidth: 1.5 }, emphasis: { scale: 1.3 },
+          data: FILAS.map(function (f, i) { return [f.a[a.i], i]; }) });
+      });
+      return {
+        grid: PM.grid({ top: 6, bottom: 2 }),
+        xAxis: PM.ejeY({ extra: { type: 'value', min: x0, max: x1, interval: 1,
+          axisLine: { show: true, lineStyle: { color: linea } } } }),
+        // el nombre de la región va ARRIBA de su fila, dentro del trazado: todo el ancho es para los puntos
+        yAxis: { type: 'category', inverse: true, data: FILAS.map(function (f) { return f.nombre; }),
+          axisLine: { show: false }, axisTick: { show: false }, splitLine: { show: false },
+          axisLabel: { inside: true, align: 'left', verticalAlign: 'bottom', margin: 0, padding: [0, 0, chico ? 8 : 11, 0],
+            formatter: function (v, i) { return '{n|' + v + '}  {v|' + PM.num(FILAS[i].s, 2) + '}'; },
+            rich: { n: { fontFamily: PM.inter(), fontSize: chico ? 10.5 : 11.5, fontWeight: 600, color: tinta },
+                    v: { fontFamily: PM.mono(), fontSize: chico ? 10 : 10.5, fontWeight: 600, color: PM.var('--pizarra') } } } },
+        tooltip: PM.tooltip(function (ps) {
+          var p = ps.filter(function (q) { return q.seriesName && q.seriesName.charAt(0) !== '_'; })[0];
+          if (!p) return '';
+          var f = FILAS[p.dataIndex], h = PM.ttTitulo(f.nombre, f.n + (f.n === 1 ? ' país' : ' países') + ' · ' + D.anio);
+          act.forEach(function (a) { h += PM.ttFila(clave(a.color), a.nombre, PM.num(f.a[a.i], 2), 'area'); });
+          return h + PM.ttTotal('Índice general', PM.num(f.s, 2));
+        }, { axisPointer: PM.sombraEje() }),
+        series: series
+      };
+    }
+
+  })();
+  </script>
+</body>
+</html>
