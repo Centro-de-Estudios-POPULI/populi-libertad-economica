@@ -260,6 +260,7 @@
     }
 
     // ── Descargas ────────────────────────────────────────────────────────────────────────────
+    PM.imagen = { proporcion: 1 };   // imagen de descarga cuadrada: el radar es redondo
     PM.leyendaImagen = function () {
       return [{ name: 'Top 10 · las más libres (' + estado.anio + ')', color: PM.col(TOP), forma: 'area' },
         { name: 'Bottom 10 · las menos libres (' + estado.anio + ')', color: PM.col(BOT), forma: 'area' }];

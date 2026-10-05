@@ -141,6 +141,7 @@
       PM.alCambiarTema(function () { leyenda(); cifras(); panel(); });
       PM.preguntas(document.getElementById('preguntas'), PREGUNTAS);
       // descargas: la leyenda de la imagen repite la del gráfico; el CSV trae una fila por país
+      PM.imagen = { proporcion: 1 };   // imagen de descarga cuadrada: la nube necesita alto
       PM.leyendaImagen = function () {
         var it = estado.color === 'cuartil'
           ? [1, 2, 3, 4].map(function (q) { return { name: QN[q], color: PM.col(QC[q]), forma: 'punto' }; })

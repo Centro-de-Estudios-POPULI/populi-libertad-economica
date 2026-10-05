@@ -255,6 +255,7 @@
       echarts.registerMap('world', r[2]);
       var el = document.getElementById('chart');
       el.style.aspectRatio = (ASPECTO * 0.97).toFixed(3);
+      PM.imagen = { aspecto: ASPECTO * 0.97 };   // la imagen de descarga, con el aspecto del mapa (sin franjas vacías)
       el.innerHTML = '';
       leyenda(); textos(); lineaTiempo(); guardas(el);
       grafico = PM.montar(el, opciones);
