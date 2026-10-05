@@ -201,20 +201,22 @@ PIE = r'''
 # JavaScript que comparten las cuatro páginas de series de tiempo
 JS_COMUN = r'''
     // ── Eje de años PROPORCIONAL (de valor, no de categorías) ─────────────────────────────────
-    // El tramo quinquenal (1970, 1975… 2000) ocupa el ancho que le toca. Rótulos derechos cada 5, 10,
-    // 20… años según el ancho real del lienzo (el mismo aire mínimo que PM.ejeTiempo), marcas menores
-    // por año o por lustro cuando entran, y el último año sin rótulo si no cae en el paso.
+    // El tramo quinquenal (1970, 1975… 2000) ocupa el ancho que le toca. Rótulos derechos cada 1, 2, 5,
+    // 10, 20… años según el ancho del trazado, con el MISMO criterio que PM.ejeTiempo: el aire entre rótulos
+    // sale del ancho del texto, y el ancho del trazado es el medido (PM.montar lo mide y, si el estimado no
+    // coincidía, vuelve a armar el eje). Marcas menores por año o por lustro cuando entran.
     function ejeAnios(a0, a1, el, extra) {
       var chico = PM.pequeno(), dk = PM.dk(), fs = chico ? 10 : 10.5, car = fs * 0.6 + 0.15;
-      var px = Math.max(140, (el.clientWidth || 600) - 64) / Math.max(1, a1 - a0);
-      var aire = Math.max(chico ? 48 : 56, 4 * car + 12);
-      var paso = [5, 10, 20, 40, 50, 100].filter(function (k) {
+      var util = el._util && el._util.ancho === el.clientWidth ? el._util.util : Math.max(140, (el.clientWidth || 600) - 64);
+      var px = util / Math.max(1, a1 - a0);
+      var aire = 4 * car + (chico ? 12 : 14);
+      var paso = [1, 2, 5, 10, 20, 40, 50, 100].filter(function (k) {
         return (a0 % k === 0 || (k % 10 === 0 && a0 % 10 === 0)) && k * px >= aire;
       })[0] || 100;
       var menor = [1, 5, 10].filter(function (m) { return paso % m === 0 && m < paso && m * px >= 9; })[0];
       var linea = dk ? '#3A4549' : '#C9CDCE';
       return PM.mezclar({
-        type: 'value', min: a0, max: a1, interval: paso,
+        type: 'value', min: a0, max: a1, interval: paso, _util: util,
         axisLine: { show: true, onZero: false, lineStyle: { color: linea } },
         axisTick: { show: true, length: 4, lineStyle: { color: linea } },
         minorTick: { show: !!menor, splitNumber: menor ? paso / menor : 1, length: 2, lineStyle: { color: linea } },
