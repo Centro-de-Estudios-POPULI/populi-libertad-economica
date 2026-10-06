@@ -262,7 +262,7 @@
       grafico.chart.on('georoam', function () { document.getElementById('vista').classList.add('ver'); });
       PM.alCambiarTema(function () { leyenda(); textos(); pintarPista(); });
       PM.preguntas(document.getElementById('preguntas'), preguntas());
-      document.getElementById('fuente').innerHTML = 'Fuente: <a href="https://www.fraserinstitute.org/economic-freedom" target="_blank" rel="noopener">Fraser Institute</a>, Economic Freedom of the World 2025 · Elaboración: Centro de Estudios POPULI';
+      document.getElementById('fuente').innerHTML = 'Fuente: <a href="https://www.fraserinstitute.org/economic-freedom" target="_blank" rel="noopener">Fraser Institute</a>, Economic Freedom of the World ' + (ANIOS[ANIOS.length - 1] + 2) + ' · Elaboración: Centro de Estudios POPULI';
     }).catch(function (e) { console.error(e); PM.error(document.getElementById('chart')); });
 
     // ── Año en pantalla: cifras, panel, bajada y colores del mapa (sin perder el acercamiento) ──

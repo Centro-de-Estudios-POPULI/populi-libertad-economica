@@ -113,7 +113,7 @@
       grafico = PM.montar(el, opciones);
       PM.alCambiarTema(textos);
       PM.preguntas(document.getElementById('preguntas'), preguntas());
-      document.getElementById('fuente').innerHTML = 'Fuente: <a href="https://www.fraserinstitute.org/economic-freedom" target="_blank" rel="noopener">Fraser Institute</a>, Economic Freedom of the World 2025 · Elaboración: Centro de Estudios POPULI';
+      document.getElementById('fuente').innerHTML = 'Fuente: <a href="https://www.fraserinstitute.org/economic-freedom" target="_blank" rel="noopener">Fraser Institute</a>, Economic Freedom of the World ' + (ULT + 2) + ' · Elaboración: Centro de Estudios POPULI';
     }).catch(function (e) { console.error(e); PM.error(document.getElementById('chart')); });
 
     function textos() {

@@ -15,7 +15,7 @@
   <div class="wrap">
     <div class="sec-hd">
       <div class="sec-title"><span class="accent-bar"></span>Libertad Económica y Horas Trabajadas</div>
-      <div class="sec-sub">Promedio EFW 2000–2023 vs Horas trabajadas anuales por trabajador</div>
+      <div class="sec-sub">Promedio EFW 2000–2024 vs Horas trabajadas anuales por trabajador</div>
     </div>
 
     <div class="hz-bar">
@@ -33,7 +33,7 @@
         <div class="grafico" id="chart"><div class="loading"><div class="spinner"></div><span>Cargando datos…</span></div></div>
       </div>
       <div class="panel">
-        <div class="panel-hd"><span class="panel-hd-t">Lectura del indicador</span><span class="panel-hd-d">EFW 2000–2023</span></div>
+        <div class="panel-hd"><span class="panel-hd-t">Lectura del indicador</span><span class="panel-hd-d">EFW 2000–2024</span></div>
         <div class="panel-body" id="panel"></div>
       </div>
     </div>
@@ -48,7 +48,7 @@
     var VAR = 'hours_worked', Y_CORTO = 'Horas trabajadas al año', LOG = false, Y_MIN = null, Y_MAX = null;
     var REG_TIPO = 'poly', REG_ORDEN = 1, ACENTO = '#9B2226';
     var FMT = function (v) { return PM.num(v, 0); }, FMT_EJE = PM.tick, FMT_EJE_M = PM.tick, Y_CORTO_M = 'Horas trabajadas al año';
-    var RELACION = "Los países más libres tienden a trabajar <strong>menos horas</strong> por año. Mayor productividad por hora permite alcanzar el mismo (o mayor) ingreso con menos tiempo de trabajo, liberando tiempo para ocio y familia.", TEORIA = "La <strong>alta productividad</strong> de economías libres (capital abundante, tecnología, eficiencia institucional) permite la <strong>reducción gradual de jornada</strong> sin sacrificar ingreso — el \\\"dividendo de la libertad\\\" en forma de tiempo.", BOL_TXT = "Bolivia (EFW: <strong>{efw}</strong>) tiene un promedio de <strong>{yval}</strong> horas trabajadas al año por trabajador, por encima del promedio latinoamericano ({lat}). La baja productividad obliga a jornadas extensas para subsistir.", FUENTE_DET = "Fraser Institute EFW 2025, Penn World Table 11.0";
+    var RELACION = "Los países más libres tienden a trabajar <strong>menos horas</strong> por año. Mayor productividad por hora permite alcanzar el mismo (o mayor) ingreso con menos tiempo de trabajo, liberando tiempo para ocio y familia.", TEORIA = "La <strong>alta productividad</strong> de economías libres (capital abundante, tecnología, eficiencia institucional) permite la <strong>reducción gradual de jornada</strong> sin sacrificar ingreso — el \\\"dividendo de la libertad\\\" en forma de tiempo.", BOL_TXT = "Bolivia (EFW: <strong>{efw}</strong>) tiene un promedio de <strong>{yval}</strong> horas trabajadas al año por trabajador, por encima del promedio latinoamericano ({lat}). La baja productividad obliga a jornadas extensas para subsistir.", FUENTE_DET = "Fraser Institute EFW 2026, Penn World Table 11.0";
     // Cuartiles del índice: escala ORDINAL de la marca (la misma del mapa), del más libre (turquesa)
     // al menos libre (rojo). Por región: modo Foco (la región elegida en rojo, el resto en gris tenue):
     // siete colores no se distinguen entre sí cuando las burbujas se mezclan.
@@ -151,7 +151,7 @@
       };
       PM.tablaDatos = function () {
         return {
-          cols: ['País', 'ISO3', 'Región', 'Cuartil EFW', 'EFW promedio 2000-2023', Y_CORTO, 'Población'],
+          cols: ['País', 'ISO3', 'Región', 'Cuartil EFW', 'EFW promedio 2000–2024', Y_CORTO, 'Población'],
           filas: PTS.slice().sort(function (a, b) { return b.efw_avg - a.efw_avg; }).map(function (x) {
             return [nombre(x), x.iso, REGION[x.region] || x.region, x.efw_quartile, x.efw_avg, x[VAR], x.population];
           })
@@ -254,7 +254,7 @@
         grid: PM.grid({ top: 28, bottom: chico ? 24 : 28 }),
         xAxis: PM.ejeY({ fmt: PM.tick, extra: {
           type: 'value', min: 3, max: 9, interval: 1, splitNumber: 6,
-          name: chico ? 'Libertad económica (EFW, 0 a 10)' : 'Libertad económica · índice EFW, promedio 2000–2023 (0 a 10)',
+          name: chico ? 'Libertad económica (EFW, 0 a 10)' : 'Libertad económica · índice EFW, promedio 2000–2024 (0 a 10)',
           nameLocation: 'middle', nameGap: 26, nameTextStyle: { align: 'center' },
           splitLine: { show: false }, axisLine: { show: true, lineStyle: { color: linea } }, axisTick: { show: true, length: 4, lineStyle: { color: linea } }
         } }),
@@ -282,7 +282,7 @@
     }
 
     var PREGUNTAS = [
-      ['¿Qué mide el índice de libertad económica?', 'El índice <strong>Economic Freedom of the World</strong> (EFW) del Fraser Institute califica de 0 a 10 a 165 jurisdicciones en cinco áreas: tamaño del gobierno, sistema legal y derechos de propiedad, moneda sana, libertad para comerciar internacionalmente y regulación. Este gráfico usa el <strong>promedio 2000–2023</strong> de cada país, que resume dos décadas y no un año suelto.'],
+      ['¿Qué mide el índice de libertad económica?', 'El índice <strong>Economic Freedom of the World</strong> (EFW) del Fraser Institute califica de 0 a 10 a 165 jurisdicciones en cinco áreas: tamaño del gobierno, sistema legal y derechos de propiedad, moneda sana, libertad para comerciar internacionalmente y regulación. Este gráfico usa el <strong>promedio 2000–2024</strong> de cada país, que resume 25 años y no uno suelto.'],
       ['¿Cómo se lee este gráfico?', 'Cada burbuja es un país: cuanto más a la derecha, más libertad económica; la altura es el indicador y el tamaño, la población. Las franjas del fondo marcan los <strong>cuartiles</strong> del índice (cada uno reúne a una cuarta parte de los países) y la línea punteada es la <strong>tendencia ajustada</strong>: su R² dice qué parte de las diferencias entre países acompaña a la libertad económica.'],
       ['¿Correlación es causalidad?', 'No necesariamente. El gráfico muestra una <strong>asociación entre países</strong>. Otros factores —instituciones, geografía, historia, capital humano— también influyen, y la relación puede operar en ambos sentidos. Se lee como evidencia de una regularidad, no como prueba de una causa única.']
     ];

@@ -4,3 +4,7 @@
 !.dev.vars.example
 .env*
 !.env.example
+
+# fuentes pesadas que se descargan (actualizar_efw.py, maddison_poblacion.py): no se publican
+data/*.xlsx
+__pycache__/

@@ -11,12 +11,21 @@ import json, os
 
 EMBED_DIR = 'embed'
 
+# El período del promedio, la edición del informe y el número de jurisdicciones salen del dato (actualizar_efw.py
+# arma data/), no se escriben a mano: el informe sale con dos años de rezago (2026 → datos de 2024)
+with open(os.path.join('data', 'efw_panel_map.json'), encoding='utf-8') as _f:
+    _panel = json.load(_f)
+ULT = max(int(a) for a in _panel)
+N_JUR = sum(1 for d in _panel[str(ULT)].values() if d.get('s') is not None)
+DESDE = 2000
+PERIODO = f'{DESDE}–{ULT}'
+
 scatters = [
     {
         'file': 'scatter_gdp.html',
         'var': 'gdp_pc_ppp',
         'title': 'Libertad Económica y Renta per Cápita',
-        'subtitle': 'Promedio EFW 2000–2023 vs PIB per cápita PPP (USD constantes)',
+        'subtitle': 'Promedio EFW @@PERIODO@@ vs PIB per cápita PPP (USD constantes)',
         'y_label': 'PIB per cápita PPP (USD)',
         'y_format': "v => '$' + (v >= 1000 ? Math.round(v).toLocaleString('es-BO') : v.toFixed(0))",
         'y_axis_fmt': "v => v >= 1000 ? '$'+(v/1000).toFixed(0)+'k' : '$'+v",
@@ -27,14 +36,14 @@ scatters = [
         'panel_hd_bg': '#C71E1D', 'panel_hd_bg_dark': '#2A1211',
         'relation': 'Los países con <strong>mayor libertad económica sostenida</strong> muestran niveles de ingreso per cápita significativamente más altos. El cuartil más libre (EFW de {corte} o más) tiene un PIB per cápita promedio <strong>{razon} veces mayor</strong> que el menos libre.',
         'theory': 'La libertad económica —derechos de propiedad, moneda sana, libre comercio, regulación eficiente y gobierno limitado— facilita la <strong>acumulación de capital</strong>, la <strong>innovación</strong> y la <strong>asignación eficiente de recursos</strong>, motores fundamentales del crecimiento a largo plazo.',
-        'source_detail': 'Fraser Institute EFW 2025, World Bank WDI 2023',
+        'source_detail': 'Fraser Institute EFW @@EDICION@@, World Bank WDI 2023',
         'bol_text': "Bolivia (EFW promedio: <strong>{efw}</strong>, cuartil {q}) tiene un PIB per cápita PPP de <strong>{yval}</strong>. Se ubica en el rango medio-bajo de libertad económica, y su ingreso está por debajo del promedio latinoamericano ({lat}).",
     },
     {
         'file': 'scatter_poverty.html',
         'var': 'poverty_365',
         'title': 'Libertad Económica y Pobreza',
-        'subtitle': 'Promedio EFW 2000–2023 vs tasa de pobreza (menos de US$ 4,20 al día, PPA 2021)',
+        'subtitle': 'Promedio EFW @@PERIODO@@ vs tasa de pobreza (menos de US$ 4,20 al día, PPA 2021)',
         'y_label': 'Pobreza (% de la población, < US$ 4,20 al día)',
         'y_format': "v => v.toFixed(1) + '%'",
         'y_axis_fmt': "v => v.toFixed(0) + '%'",
@@ -46,14 +55,14 @@ scatters = [
         'panel_hd_bg': '#005F73', 'panel_hd_bg_dark': '#0A2429',
         'relation': 'Existe una <strong>relación inversa</strong> entre libertad económica y pobreza. El cuartil más libre tiene tasas cercanas a cero (<strong>{q1}</strong> en promedio), mientras que el menos libre concentra las mayores (<strong>{q4}</strong>).',
         'theory': 'La apertura comercial, los derechos de propiedad seguros y la estabilidad monetaria generan <strong>empleos formales</strong>, <strong>inversión productiva</strong> y <strong>acceso a bienes importados baratos</strong>, reduciendo la pobreza absoluta a través del crecimiento inclusivo.',
-        'source_detail': 'Fraser Institute EFW 2025, World Bank Poverty & Inequality Platform',
+        'source_detail': 'Fraser Institute EFW @@EDICION@@, World Bank Poverty & Inequality Platform',
         'bol_text': "En Bolivia (EFW: <strong>{efw}</strong>), el <strong>{yval}</strong> de la población vive con menos de US$ 4,20 al día (PPA 2021). A pesar del crecimiento del PIB, el nivel limitado de libertad económica frena una reducción más rápida de la pobreza.",
     },
     {
         'file': 'scatter_life_exp.html',
         'var': 'life_exp',
         'title': 'Libertad Económica y Esperanza de Vida',
-        'subtitle': 'Promedio EFW 2000–2023 vs Esperanza de vida al nacer (años)',
+        'subtitle': 'Promedio EFW @@PERIODO@@ vs Esperanza de vida al nacer (años)',
         'y_label': 'Esperanza de vida (años)',
         'y_format': "v => v.toFixed(1)",
         'y_axis_fmt': "v => v.toFixed(0)",
@@ -64,14 +73,14 @@ scatters = [
         'panel_hd_bg': '#A86E00', 'panel_hd_bg_dark': '#2A1F08',
         'relation': 'En los países del cuartil más libre se vive en promedio <strong>{dif} años más</strong> que en los del menos libre. La relación se concentra en el rango medio y alto del índice: con un EFW de 6 o más, cada punto adicional se asocia a <strong>{pend} años</strong> más de vida; por debajo de 6 no se observa una relación clara.',
         'theory': 'Mayor ingreso per cápita permite <strong>mejor nutrición, saneamiento e infraestructura médica</strong>. La libertad de comercio facilita el acceso a medicamentos e insumos. La competencia en servicios de salud mejora la calidad y reduce costos.',
-        'source_detail': 'Fraser Institute EFW 2025, World Bank WDI 2023',
+        'source_detail': 'Fraser Institute EFW @@EDICION@@, World Bank WDI 2023',
         'bol_text': "Bolivia (EFW: <strong>{efw}</strong>) tiene una esperanza de vida de <strong>{yval}</strong> años, por debajo del promedio latinoamericano ({lat} años). Restricciones a la competencia en salud y bajo ingreso limitan el progreso sanitario.",
     },
     {
         'file': 'scatter_infant_mort.html',
         'var': 'infant_mort',
         'title': 'Libertad Económica y Mortalidad Infantil',
-        'subtitle': 'Promedio EFW 2000–2023 vs Mortalidad infantil (por 1000 nacidos vivos)',
+        'subtitle': 'Promedio EFW @@PERIODO@@ vs Mortalidad infantil (por 1000 nacidos vivos)',
         'y_label': 'Mortalidad infantil (por 1000)',
         'y_format': "v => v.toFixed(1)",
         'y_axis_fmt': "v => v.toFixed(0)",
@@ -83,14 +92,14 @@ scatters = [
         'panel_hd_bg': '#00323D', 'panel_hd_bg_dark': '#08191E',
         'relation': 'La mortalidad infantil <strong>cae drásticamente</strong> conforme aumenta la libertad económica. El cuartil más libre tiene tasas de mortalidad infantil <strong>{razon} veces menores</strong> que el cuartil menos libre.',
         'theory': 'El mecanismo opera a través de <strong>mayor ingreso familiar</strong> (mejor nutrición materna), <strong>inversión en salud pública</strong> financiada por crecimiento, y <strong>acceso a tecnología médica</strong> facilitado por la apertura comercial.',
-        'source_detail': 'Fraser Institute EFW 2025, World Bank WDI 2023',
+        'source_detail': 'Fraser Institute EFW @@EDICION@@, World Bank WDI 2023',
         'bol_text': "Bolivia (EFW: <strong>{efw}</strong>) tiene una mortalidad infantil de <strong>{yval} por mil</strong>. Aunque ha mejorado significativamente, sigue por encima del promedio latinoamericano ({lat}), reflejando limitaciones en acceso a salud y nutrición.",
     },
     {
         'file': 'scatter_satisfaction.html',
         'var': 'life_satisfaction',
         'title': 'Libertad Económica y Satisfacción de Vida',
-        'subtitle': 'Promedio EFW 2000–2023 vs Evaluación de vida (Cantril Ladder 0-10)',
+        'subtitle': 'Promedio EFW @@PERIODO@@ vs Evaluación de vida (Cantril Ladder 0-10)',
         'y_label': 'Satisfacción de vida (0-10)',
         'y_format': "v => v.toFixed(2)",
         'y_axis_fmt': "v => v.toFixed(1)",
@@ -101,14 +110,14 @@ scatters = [
         'panel_hd_bg': '#9B2226', 'panel_hd_bg_dark': '#2A1410',
         'relation': 'Las personas en países económicamente libres reportan <strong>mayor satisfacción vital</strong>. La relación es robusta incluso controlando por ingreso, sugiriendo que la libertad económica contribuye al bienestar subjetivo por vías adicionales al ingreso.',
         'theory': 'La libertad económica aporta bienestar subjetivo a través de: <strong>sentido de autonomía</strong> sobre decisiones económicas propias, <strong>oportunidades de emprendimiento</strong>, <strong>menor corrupción</strong> y <strong>mayor confianza institucional</strong>.',
-        'source_detail': 'Fraser Institute EFW 2025, World Happiness Report 2026 (Cantril Ladder)',
+        'source_detail': 'Fraser Institute EFW @@EDICION@@, World Happiness Report 2026 (Cantril Ladder)',
         'bol_text': "Bolivia (EFW: <strong>{efw}</strong>) tiene una satisfacción de vida de <strong>{yval}</strong>/10. Se ubica por debajo del promedio latinoamericano, una región que tradicionalmente reporta alta satisfacción relativa a su ingreso.",
     },
     {
         'file': 'scatter_epi.html',
         'var': 'epi_score',
         'title': 'Libertad Económica y Desempeño Ambiental',
-        'subtitle': 'Promedio EFW 2000–2023 vs Environmental Performance Index 2024',
+        'subtitle': 'Promedio EFW @@PERIODO@@ vs Environmental Performance Index 2024',
         'y_label': 'EPI Score (0-100)',
         'y_format': "v => v.toFixed(1)",
         'y_axis_fmt': "v => v.toFixed(0)",
@@ -119,14 +128,14 @@ scatters = [
         'panel_hd_bg': '#0A9396', 'panel_hd_bg_dark': '#10262B',
         'relation': 'Los países más libres tienen <strong>mejor desempeño ambiental</strong>, contradiciendo la narrativa de que la liberalización económica destruye el medio ambiente. Los países del cuartil más libre puntúan en promedio <strong>{dif} puntos más</strong> en el EPI.',
         'theory': 'La <strong>Curva de Kuznets Ambiental</strong>: mayor ingreso permite invertir en tecnología limpia y regulación ambiental efectiva. Los <strong>derechos de propiedad claros</strong> internalizan externalidades. La <strong>apertura comercial</strong> difunde tecnologías limpias.',
-        'source_detail': 'Fraser Institute EFW 2025, Yale Environmental Performance Index 2024',
+        'source_detail': 'Fraser Institute EFW @@EDICION@@, Yale Environmental Performance Index 2024',
         'bol_text': "Bolivia (EFW: <strong>{efw}</strong>) tiene un EPI de <strong>{yval}</strong>/100. El bajo puntaje refleja desafíos en protección de ecosistemas y calidad del aire, áreas donde la inseguridad jurídica y la falta de derechos de propiedad claros son factores clave.",
     },
     {
         'file': 'scatter_corruption.html',
         'var': 'cpi_score',
         'title': 'Libertad Económica y Ausencia de Corrupción',
-        'subtitle': 'Promedio EFW 2000–2023 vs Corruption Perceptions Index 2024',
+        'subtitle': 'Promedio EFW @@PERIODO@@ vs Corruption Perceptions Index 2024',
         'y_label': 'CPI Score (0-100, mayor = menos corrupto)',
         'y_format': "v => v.toFixed(0)",
         'y_axis_fmt': "v => v.toFixed(0)",
@@ -137,14 +146,14 @@ scatters = [
         'panel_hd_bg': '#6B1A1D', 'panel_hd_bg_dark': '#24100F',
         'relation': 'La correlación entre libertad económica y transparencia es de las <strong>más fuertes del análisis</strong>. El cuartil más libre promedia un CPI de <strong>{q1}</strong>, contra <strong>{q4}</strong> en el menos libre.',
         'theory': 'La libertad económica reduce la corrupción al <strong>limitar el poder discrecional</strong> de funcionarios. Menos regulaciones = menos oportunidades de soborno. <strong>Estado de derecho</strong> y <strong>derechos de propiedad</strong> refuerzan instituciones transparentes.',
-        'source_detail': 'Fraser Institute EFW 2025, Transparency International CPI 2024',
+        'source_detail': 'Fraser Institute EFW @@EDICION@@, Transparency International CPI 2024',
         'bol_text': "Bolivia (EFW: <strong>{efw}</strong>) tiene un CPI de <strong>{yval}</strong>/100, en el tercio inferior mundial. La concentración de poder estatal en la economía y la debilidad del Estado de derecho facilitan la corrupción sistémica.",
     },
     {
         'file': 'scatter_personal_freedom.html',
         'var': 'pf_score',
         'title': 'Libertad Económica y Libertad Personal',
-        'subtitle': 'Promedio EFW 2000–2023 vs Personal Freedom Score (HFI 2024)',
+        'subtitle': 'Promedio EFW @@PERIODO@@ vs Personal Freedom Score (HFI 2024)',
         'y_label': 'Libertad Personal (0-10)',
         'y_format': "v => v.toFixed(2)",
         'y_axis_fmt': "v => v.toFixed(0)",
@@ -155,14 +164,14 @@ scatters = [
         'panel_hd_bg': '#0C4A6E', 'panel_hd_bg_dark': '#082F49',
         'relation': 'Las libertades económica y personal están <strong>positivamente correlacionadas</strong>. Los países que protegen la propiedad privada y el comercio libre tienden a proteger también la libertad de expresión, religión y asociación.',
         'theory': '<strong>Hayek y Friedman</strong> argumentaron que la libertad económica es <strong>condición necesaria</strong> (aunque no suficiente) para la libertad política. La independencia económica del Estado reduce la capacidad del gobierno de reprimir la disidencia.',
-        'source_detail': 'Fraser Institute EFW 2025, Human Freedom Index (Cato/Fraser) 2024',
+        'source_detail': 'Fraser Institute EFW @@EDICION@@, Human Freedom Index (Cato/Fraser) 2024',
         'bol_text': "Bolivia (EFW: <strong>{efw}</strong>) tiene un índice de libertad personal de <strong>{yval}</strong>/10. La libertad de prensa y la independencia judicial son áreas de preocupación, correlacionadas con el bajo puntaje de libertad económica.",
     },
     {
         'file': 'scatter_hours.html',
         'var': 'hours_worked',
         'title': 'Libertad Económica y Horas Trabajadas',
-        'subtitle': 'Promedio EFW 2000–2023 vs Horas trabajadas anuales por trabajador',
+        'subtitle': 'Promedio EFW @@PERIODO@@ vs Horas trabajadas anuales por trabajador',
         'y_label': 'Horas trabajadas/año',
         'y_format': "v => Math.round(v).toLocaleString('es-BO')",
         'y_axis_fmt': "v => Math.round(v).toLocaleString('es-BO')",
@@ -173,14 +182,14 @@ scatters = [
         'panel_hd_bg': '#701A75', 'panel_hd_bg_dark': '#4A044E',
         'relation': 'Los países más libres tienden a trabajar <strong>menos horas</strong> por año. Mayor productividad por hora permite alcanzar el mismo (o mayor) ingreso con menos tiempo de trabajo, liberando tiempo para ocio y familia.',
         'theory': 'La <strong>alta productividad</strong> de economías libres (capital abundante, tecnología, eficiencia institucional) permite la <strong>reducción gradual de jornada</strong> sin sacrificar ingreso — el \\"dividendo de la libertad\\" en forma de tiempo.',
-        'source_detail': 'Fraser Institute EFW 2025, Penn World Table 11.0',
+        'source_detail': 'Fraser Institute EFW @@EDICION@@, Penn World Table 11.0',
         'bol_text': "Bolivia (EFW: <strong>{efw}</strong>) tiene un promedio de <strong>{yval}</strong> horas trabajadas al año por trabajador, por encima del promedio latinoamericano ({lat}). La baja productividad obliga a jornadas extensas para subsistir.",
     },
     {
         'file': 'scatter_income_bottom10.html',
         'var': 'income_bottom10',
         'title': 'Libertad Económica e Ingreso del 10% más Pobre',
-        'subtitle': 'Promedio EFW 2000–2023 vs Participación del decil inferior en el ingreso',
+        'subtitle': 'Promedio EFW @@PERIODO@@ vs Participación del decil inferior en el ingreso',
         'y_label': 'Ingreso del 10% más pobre (% del total)',
         'y_format': "v => v.toFixed(1) + '%'",
         'y_axis_fmt': "v => v.toFixed(1) + '%'",
@@ -191,14 +200,14 @@ scatters = [
         'panel_hd_bg': '#115E59', 'panel_hd_bg_dark': '#0D3D3B',
         'relation': 'La participación del decil más pobre en el ingreso nacional es <strong>similar</strong> independientemente del nivel de libertad económica. Sin embargo, dado que el PIB per cápita es mucho mayor en países libres, el <strong>ingreso absoluto</strong> de los más pobres es muy superior.',
         'theory': 'Los pobres en países libres tienen <strong>mayor ingreso absoluto</strong> (PIB per cápita alto × participación estable). La movilidad social y el acceso a mercados competitivos permiten que los ingresos bajos crezcan con la economía.',
-        'source_detail': 'Fraser Institute EFW 2025, World Bank WDI',
+        'source_detail': 'Fraser Institute EFW @@EDICION@@, World Bank WDI',
         'bol_text': "En Bolivia (EFW: <strong>{efw}</strong>), el 10% más pobre recibe el <strong>{yval}</strong> del ingreso, en línea con el promedio latinoamericano ({lat}), una de las regiones más desiguales del mundo. Con un ingreso per cápita bajo, ese decil sigue siendo muy pobre en términos absolutos.",
     },
     {
         'file': 'scatter_democracy.html',
         'var': 'democracy',
         'title': 'Libertad Económica y Democracia',
-        'subtitle': 'Promedio EFW 2000–2023 vs Índice de Democracia Electoral (V-Dem v16)',
+        'subtitle': 'Promedio EFW @@PERIODO@@ vs Índice de Democracia Electoral (V-Dem v16)',
         'y_label': 'Democracia Electoral (0-1)',
         'y_format': "v => v.toFixed(2)",
         'y_axis_fmt': "v => v.toFixed(1)",
@@ -209,7 +218,7 @@ scatters = [
         'panel_hd_bg': '#7C2D12', 'panel_hd_bg_dark': '#431407',
         'relation': 'La relación es <strong>positiva pero con excepciones notables</strong>: países como Singapur (alta libertad económica, democracia limitada) y otros con democracias formales pero baja libertad económica. La correlación sugiere complementariedad, no causalidad directa.',
         'theory': 'La libertad económica crea una <strong>clase media independiente</strong> que demanda participación política. La <strong>descentralización del poder económico</strong> dificulta la consolidación autocrática. Sin embargo, la causalidad puede operar en ambas direcciones.',
-        'source_detail': 'Fraser Institute EFW 2025, V-Dem v16 (2025)',
+        'source_detail': 'Fraser Institute EFW @@EDICION@@, V-Dem v16 (2025)',
         'bol_text': "Bolivia (EFW: <strong>{efw}</strong>) tiene un índice de democracia electoral de <strong>{yval}</strong>. A pesar de elecciones regulares, la concentración de poder económico en el Estado debilita los contrapesos democráticos.",
     },
 ]
@@ -285,7 +294,7 @@ TEMPLATE = r"""<!DOCTYPE html>
         <div class="grafico" id="chart"><div class="loading"><div class="spinner"></div><span>Cargando datos…</span></div></div>
       </div>
       <div class="panel">
-        <div class="panel-hd"><span class="panel-hd-t">Lectura del indicador</span><span class="panel-hd-d">EFW 2000–2023</span></div>
+        <div class="panel-hd"><span class="panel-hd-t">Lectura del indicador</span><span class="panel-hd-d">EFW @@PERIODO@@</span></div>
         <div class="panel-body" id="panel"></div>
       </div>
     </div>
@@ -403,7 +412,7 @@ TEMPLATE = r"""<!DOCTYPE html>
       };
       PM.tablaDatos = function () {
         return {
-          cols: ['País', 'ISO3', 'Región', 'Cuartil EFW', 'EFW promedio 2000-2023', Y_CORTO, 'Población'],
+          cols: ['País', 'ISO3', 'Región', 'Cuartil EFW', 'EFW promedio @@PERIODO@@', Y_CORTO, 'Población'],
           filas: PTS.slice().sort(function (a, b) { return b.efw_avg - a.efw_avg; }).map(function (x) {
             return [nombre(x), x.iso, REGION[x.region] || x.region, x.efw_quartile, x.efw_avg, x[VAR], x.population];
           })
@@ -506,7 +515,7 @@ TEMPLATE = r"""<!DOCTYPE html>
         grid: PM.grid({ top: 28, bottom: chico ? 24 : 28 }),
         xAxis: PM.ejeY({ fmt: PM.tick, extra: {
           type: 'value', min: 3, max: 9, interval: 1, splitNumber: 6,
-          name: chico ? 'Libertad económica (EFW, 0 a 10)' : 'Libertad económica · índice EFW, promedio 2000–2023 (0 a 10)',
+          name: chico ? 'Libertad económica (EFW, 0 a 10)' : 'Libertad económica · índice EFW, promedio @@PERIODO@@ (0 a 10)',
           nameLocation: 'middle', nameGap: 26, nameTextStyle: { align: 'center' },
           splitLine: { show: false }, axisLine: { show: true, lineStyle: { color: linea } }, axisTick: { show: true, length: 4, lineStyle: { color: linea } }
         } }),
@@ -534,7 +543,7 @@ TEMPLATE = r"""<!DOCTYPE html>
     }
 
     var PREGUNTAS = [
-      ['¿Qué mide el índice de libertad económica?', 'El índice <strong>Economic Freedom of the World</strong> (EFW) del Fraser Institute califica de 0 a 10 a 165 jurisdicciones en cinco áreas: tamaño del gobierno, sistema legal y derechos de propiedad, moneda sana, libertad para comerciar internacionalmente y regulación. Este gráfico usa el <strong>promedio 2000–2023</strong> de cada país, que resume dos décadas y no un año suelto.'],
+      ['¿Qué mide el índice de libertad económica?', 'El índice <strong>Economic Freedom of the World</strong> (EFW) del Fraser Institute califica de 0 a 10 a @@N_JUR@@ jurisdicciones en cinco áreas: tamaño del gobierno, sistema legal y derechos de propiedad, moneda sana, libertad para comerciar internacionalmente y regulación. Este gráfico usa el <strong>promedio @@PERIODO@@</strong> de cada país, que resume @@N_ANIOS@@ años y no uno suelto.'],
       ['¿Cómo se lee este gráfico?', 'Cada burbuja es un país: cuanto más a la derecha, más libertad económica; la altura es el indicador y el tamaño, la población. Las franjas del fondo marcan los <strong>cuartiles</strong> del índice (cada uno reúne a una cuarta parte de los países) y la línea punteada es la <strong>tendencia ajustada</strong>: su R² dice qué parte de las diferencias entre países acompaña a la libertad económica.'],
       ['¿Correlación es causalidad?', 'No necesariamente. El gráfico muestra una <strong>asociación entre países</strong>. Otros factores —instituciones, geografía, historia, capital humano— también influyen, y la relación puede operar en ambos sentidos. Se lee como evidencia de una regularidad, no como prueba de una causa única.']
     ];
@@ -558,6 +567,8 @@ for s in scatters:
         '@@TEORIA@@': json.dumps(s['theory'], ensure_ascii=False),
         '@@BOL_TXT@@': json.dumps(s['bol_text'], ensure_ascii=False),
         '@@FUENTE_DET@@': json.dumps(s['source_detail'], ensure_ascii=False),
+        # al final: también se reemplazan dentro de los textos ya insertados (bajada, fuente)
+        '@@PERIODO@@': PERIODO, '@@EDICION@@': str(ULT + 2), '@@N_JUR@@': str(N_JUR), '@@N_ANIOS@@': str(ULT - DESDE + 1),
     }
     html = TEMPLATE
     for k, v in reemplazos.items():

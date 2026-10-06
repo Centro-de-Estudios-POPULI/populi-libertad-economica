@@ -2,11 +2,13 @@
 generate_charts.py — los cinco gráficos complementarios del Monitor de Libertad Económica, sobre el
 molde de monitores (embed/comun/, fuente única en populi-marca/monitor):
 
-  1. areas_regiones.html     — puntos: las cinco áreas del índice por región, 2023
-  2. evolucion_mundial.html  — líneas: promedio mundial del índice y de sus áreas, 1970–2023
+  1. areas_regiones.html     — puntos: las cinco áreas del índice por región, último año
+  2. evolucion_mundial.html  — líneas: promedio mundial del índice y de sus áreas, 1970 al último año
   3. bolivia_efw.html        — líneas: Bolivia frente al mundo y a América Latina, y sus áreas
-  4. comparativa_paises.html — buscador: índice EFW 1970–2023 de hasta seis países, con su cuartil
+  4. comparativa_paises.html — buscador: índice EFW 1970 al último año de hasta seis países, con su cuartil
   5. comparativa_pib.html    — buscador: PIB per cápita (Maddison) 1820–2022 de hasta seis países
+
+Los datos del índice salen de actualizar_efw.py (el archivo maestro del Fraser → data/).
 
 Cada página lleva incrustado lo que dibuja, calculado acá desde data/. Ninguna cifra de los textos
 se escribe a mano, y las frases del panel se verifican contra el dato al generar: si el dato deja
@@ -32,6 +34,7 @@ meta = cargar('efw_country_meta.json')        # {iso: {name, region}} de las 165
 gdp = cargar('gdp_pc_maddison.json')          # {iso: {año: PIB per cápita}}
 pob = cargar('poblacion_maddison.json')       # {iso: {año: población en miles}}, 2000–2022 (maddison_poblacion.py)
 cons = cargar('consolidated.json')            # población actual (WDI): peso de las jurisdicciones sin dato en Maddison
+COMP_BOL = cargar('efw_componentes_bol.json')['anios']   # {año: {componente: valor}} de Bolivia, hoja oficial
 _es = cargar('paises_es.json')
 NOMBRE = _es['iso']                           # ISO3 → nombre en español (incluye CSK/SUN/YUG)
 
@@ -77,12 +80,13 @@ EX_SOCIALISTAS = {'ALB', 'ARM', 'AZE', 'BGR', 'BIH', 'BLR', 'CZE', 'EST', 'GEO',
 ANIOS = [y for y in sorted(panel, key=int) if int(y) >= 1970]   # quinquenal hasta 1995, anual desde 2000
 ULTIMO = ANIOS[-1]
 ANUALES = [y for y in ANIOS if int(y) >= 2000]                   # minilíneas de las cifras: tramo anual
+INFORME = int(ULTIMO) + 2      # el informe sale con dos años de rezago (actualizar_efw.py lo comprueba con el archivo)
 
 FRASER = ('Fuente: <a href="https://www.fraserinstitute.org/economic-freedom" target="_blank" rel="noopener">Fraser Institute</a>, '
-          'Economic Freedom of the World: 2025 Annual Report · Elaboración: '
+          f'Economic Freedom of the World: {INFORME} Annual Report · Elaboración: '
           '<a href="https://populi.org.bo" target="_blank" rel="noopener">Centro de Estudios POPULI</a>')
 MADDISON = ('Fuente: <a href="https://www.rug.nl/ggdc/historicaldevelopment/maddison/" target="_blank" rel="noopener">Maddison Project Database 2023</a> '
-            '(Bolt y van Zanden, 2024); cuartil: Fraser Institute, EFW 2025 · Elaboración: '
+            f'(Bolt y van Zanden, 2024); cuartil: Fraser Institute, EFW {INFORME} · Elaboración: '
             '<a href="https://populi.org.bo" target="_blank" rel="noopener">Centro de Estudios POPULI</a>')
 EFW_QUE = ('El índice <strong>Economic Freedom of the World</strong> (EFW) del Fraser Institute califica de 0 a 10 a {n} '
            'jurisdicciones con 45 componentes agrupados en cinco áreas: tamaño del gobierno, sistema legal y derechos de '
@@ -436,7 +440,7 @@ def gen_areas_regiones():
          f'{CARDINAL[len(filas)]}. Su área más débil es <strong>{nom(lac_orden[0])}</strong> ({num(lac["a"][lac_orden[0]])}), '
          f'seguida de <strong>{nom(lac_orden[1])}</strong> ({num(lac["a"][lac_orden[1]])}); la mejor, '
          f'<strong>{nom(lac_orden[-1])}</strong> ({num(lac["a"][lac_orden[-1]])}).'],
-        ['ctx', f'<strong>Fuente:</strong> Fraser Institute, Economic Freedom of the World: 2025 Annual Report (datos de {anio}): '
+        ['ctx', f'<strong>Fuente:</strong> Fraser Institute, Economic Freedom of the World: {INFORME} Annual Report (datos de {anio}): '
          f'{n_total} jurisdicciones, 5 áreas y 45 componentes. Promedio simple de los países de cada región (regiones del '
          f'Banco Mundial); {na["nombre"]} son solo {na_paises[0]} y {na_paises[1]}.'],
     ]
@@ -588,10 +592,18 @@ def gen_evolucion_mundial():
     verificar(min(caidas)[1] == 2020, 'el COVID-19 provocó la mayor caída anual de la serie')
     verificar(all(v(area[k], 2020) < v(area[k], 2019) for k in ('a1', 'a4', 'a5')), 'en 2020 cayeron gasto, comercio y regulación')
     nivel = max(a for a in anios if a < 2020 and v(mundo, a) <= v(mundo, 2020))
-    verificar(ultimo < v(mundo, 2020), 'no hubo recuperación: el último dato sigue por debajo de 2020')
     m3 = {a: v(area['a3'], a) for a in anios if a >= 2019}
     a_m3 = min(m3, key=m3.get)
     verificar(a_m3 > 2020 and m3[2019] - m3[a_m3] > 0.5, 'la inflación de 2021–2022 hundió a Moneda sana')
+    # Después del COVID: el promedio tocó fondo con la inflación y se recupera en parte, de la mano de Moneda sana
+    post = {a: v(mundo, a) for a in anios if a >= 2020}
+    a_fondo = min(post, key=post.get)
+    verificar(a_fondo == a_m3 and a_fondo < a_ult, 'el promedio tocó fondo el mismo año que Moneda sana')
+    verificar(v(mundo, 2020) < ultimo < pico, 'en el último año el promedio supera al de 2020, pero no al máximo')
+    sube = {a['k']: v(area[a['k']], a_ult) - v(area[a['k']], a_fondo) for a in AREAS}
+    otra = max(x for k, x in sube.items() if k != 'a3')
+    verificar(sube['a3'] > 2 * otra and sube['a3'] / 5 > (ultimo - post[a_fondo]) / 2,
+              'la recuperación la explica sobre todo Moneda sana')
     mejora = max(range(5), key=lambda j: v(area[AREAS[j]['k']], a_ult) - v(area[AREAS[j]['k']], 1980))
     quieta = min(range(5), key=lambda j: max(area[AREAS[j]['k']]) - min(area[AREAS[j]['k']]))
     ka, kq = AREAS[mejora]['k'], AREAS[quieta]['k']
@@ -606,7 +618,8 @@ def gen_evolucion_mundial():
               'los países que entraron después puntúan más bajo')
     a_tot = min(a for a in anios if v(n, a) == n[-1])
     # Ponderado por población (desde 2000, cuando la serie es anual y la cobertura amplia): cada país pesa según
-    # su población de Maddison (la de 2022 para 2023, último año de esa base). Coincide con el informe Fraser.
+    # su población de Maddison (la de 2022, último año de esa base, para los años siguientes). Con el informe 2025
+    # coincidía con el de Fraser al centésimo (6,37 en 2023).
     def ponderado(y):
         a = str(min(int(y), 2022))
         pares = [(d['s'], pob[i][a]) for i, d in panel[y].items() if d.get('s') is not None and pob.get(i, {}).get(a)]
@@ -635,9 +648,10 @@ def gen_evolucion_mundial():
          f'en 2000. El máximo llegó en <strong>{a_pico}</strong> ({num(pico)}).'],
         ['Siglo XXI', f'La liberalización siguió a ritmo moderado hasta {a_pico}. El <strong>COVID-19</strong> provocó la mayor '
          f'caída anual de la serie (de {num(v(mundo, 2019))} a {num(v(mundo, 2020))}), con más gasto, regulación y trabas al '
-         f'comercio: el promedio volvió al nivel de {nivel}. <strong>No hubo recuperación</strong>: la inflación de 2021–2022 '
-         f'hundió a Moneda sana (de {num(m3[2019])} en 2019 a {num(m3[a_m3])} en {a_m3}) y en {a_ult} el promedio '
-         f'({num(ultimo)}) sigue por debajo del de 2020.'],
+         f'comercio: el promedio volvió al nivel de {nivel}. Después, la inflación de 2021–2022 hundió a Moneda sana (de '
+         f'{num(m3[2019])} en 2019 a {num(m3[a_m3])} en {a_m3}) y el promedio tocó fondo en {a_fondo} ({num(post[a_fondo])}). '
+         f'<strong>Desde entonces se recupera</strong>: en {a_ult} marca {num(ultimo)}, por encima de 2020 pero todavía '
+         f'{num(pico - ultimo)} por debajo del máximo de {a_pico}.'],
         ['Ponderado por población', f'Si cada país pesa según su población, el promedio es menor: <strong>{num(pond[-1])}</strong> '
          f'en {a_ult}, frente a {num(ultimo)} del promedio simple. Lo empuja hacia abajo <strong>{nom(grandes[0])}</strong>, el país '
          f'más poblado, con {num(panel[ULTIMO][grandes[0]]["s"])}, junto con {lista([nom(i) for i in bajo[1:]])}, también entre los '
@@ -646,7 +660,7 @@ def gen_evolucion_mundial():
         ['Áreas', f'<strong>{AREAS[mejora]["nombre"]}</strong> es el área que más mejoró desde 1980 (de {num(v(area[ka], 1980))} '
          f'a {num(v(area[ka], a_ult))}); <strong>{AREAS[quieta]["nombre"]}</strong>, la que menos cambió (entre '
          f'{num(min(area[kq]))} y {num(max(area[kq]))} en toda la serie). La vista <strong>Áreas</strong> las muestra una por una.'],
-        ['ctx', f'<strong>Fuente:</strong> Fraser Institute, Economic Freedom of the World: 2025 Annual Report. Promedio simple '
+        ['ctx', f'<strong>Fuente:</strong> Fraser Institute, Economic Freedom of the World: {INFORME} Annual Report. Promedio simple '
          f'de las jurisdicciones con dato cada año: {n[0]} en 1970, {v(n, 1995)} en 1995, {v(n, 2000)} en 2000 y {n[-1]} desde '
          f'{a_tot}; la línea de los mismos {len(fijos)} países descuenta la entrada de países nuevos. El ponderado usa la '
          f'población del Maddison Project Database 2023 (la de 2022 para {a_ult}); quedan fuera {len(sin_pob)} jurisdicciones '
@@ -662,10 +676,13 @@ def gen_evolucion_mundial():
          f'calificados desde 1970 sigue siempre al mismo grupo: marca {num(fijo[-1])} en {a_ult}, frente a {num(ultimo)} del '
          f'promedio de todos, y dibuja la misma historia. La punteada pondera por población: describe la libertad económica '
          f'que vive la persona promedio, no el país promedio ({num(pond[-1])} en {a_ult}).'],
-        ['¿Por qué no se recuperó después de 2020?',
-         f'Porque la inflación de 2021–2022 llevó a Moneda sana de {num(m3[2019])} en 2019 a {num(m3[a_m3])} en {a_m3}, y '
-         f'eso anuló la mejora de otras áreas: entre 2020 y {a_ult}, Libertad para comerciar internacionalmente subió '
-         f'{num(rec["a4"])} puntos y Tamaño del gobierno, {num(rec["a1"])}.'],
+        ['¿Se recuperó después de 2020?',
+         f'Sólo en parte. La inflación de 2021–2022 llevó a Moneda sana de {num(m3[2019])} en 2019 a {num(m3[a_m3])} en '
+         f'{a_m3} y anuló la mejora de otras áreas (entre 2020 y {a_ult}, Libertad para comerciar internacionalmente subió '
+         f'{num(rec["a4"])} puntos y Tamaño del gobierno, {num(rec["a1"])}). Con la inflación en baja, Moneda sana volvió a '
+         f'{num(m3[a_ult])} en {a_ult}: sube {num(sube["a3"])} puntos desde {a_fondo}, y ninguna otra área subió más de '
+         f'{num(otra)}. El promedio ({num(ultimo)}) ya supera al de 2020 ({num(v(mundo, 2020))}), pero no al de {a_pico} '
+         f'({num(pico)}).'],
     ]
     datos = {
         'anios': anios, 'unidad': 'Índice EFW (0 a 10)', 'unidadCorta': 'Índice EFW',
@@ -714,18 +731,38 @@ def gen_bolivia_efw():
     piso = min(bol); a_piso = anios[bol.index(piso)]
     p_pico, n_pico = pues[bol.index(pico)]
 
-    # Trayectoria: caída sin pausa hasta 1985, hiperinflación (Moneda sana casi en cero), giro del DS 21060
-    tramo = [v(bol, a) for a in anios if a <= 1985]
-    verificar(all(x > y for x, y in zip(tramo, tramo[1:])) and a_piso == 1985, 'Bolivia cayó sin pausa hasta 1985')
+    # Trayectoria: estancada en la franja baja en los 70, mínimo en 1985 (hiperinflación), giro del DS 21060
+    setenta = [v(bol, a) for a in anios if a < 1985]
+    verificar(a_piso == 1985 and min(setenta) > piso and max(setenta) - min(setenta) < 0.25,
+              'en los 70 Bolivia se estancó en la franja baja y tocó su mínimo en 1985')
     m85 = v(bola['a3'], 1985)
     verificar(m85 < 1, 'en 1985 Moneda sana quedó casi en cero')
     verificar(a_pico > 1985 and v(bol, 1985) < v(bol, 1990) < v(bol, 1995), 'el DS 21060 marcó el giro')
-    reciente = [v(bol, a) for a in anios if a >= 2008]
-    verificar(max(reciente) - min(reciente) < 0.5 and abs(media(reciente) - 6) < 0.25, 'desde 2008 oscila alrededor de 6')
+    a_prev = anios[-2]
+    meseta = [v(bol, a) for a in anios if 2008 <= a <= a_prev]
+    verificar(max(meseta) - min(meseta) < 0.5 and abs(media(meseta) - 6) < 0.25, f'entre 2008 y {a_prev} osciló alrededor de 6')
     verificar(v(bol, 2005) < pico and v(bol, 2008) < v(bol, 2005), 'tras el máximo, el puntaje retrocedió')
-    orden = sorted(range(5), key=lambda j: bola[AREAS[j]['k']][-1])
-    flojas, mejor = orden[:2], orden[-1]
-    verificar(AREAS[mejor]['k'] == 'a3', 'Moneda sana es la mejor área (por la estabilidad de precios)')
+    # El último año: la mayor caída anual de la serie, por debajo de la franja de los años anteriores
+    caida = bol[-2] - s_ult
+    anuales = [bol[i - 1] - bol[i] for i in range(1, len(anios)) if anios[i - 1] >= 2000]
+    verificar(caida == max(anuales) and s_ult < min(meseta), f'en {a_ult}, la mayor caída anual de la serie')
+    desde = max(a for a in anios[:-1] if v(bol, a) <= s_ult)
+    p_prev = pues[-2][0]
+    # Qué la movió: las áreas que más cayeron y, dentro de ellas, los componentes de la hoja oficial
+    baja = {a['k']: bola[a['k']][-2] - bola[a['k']][-1] for a in AREAS}
+    verificar(sorted(baja, key=baja.get)[-2:] == ['a3', 'a4'] and baja['a4'] / 5 > caida * 0.6,
+              'la caída vino sobre todo de Comercio internacional, y después de Moneda sana')
+    cb = lambda a, k: COMP_BOL[str(a)][k]
+    c4 = lambda a: cb(a, '4C Black market exchange rates')
+    infl = lambda a: cb(a, '3C Inflation · dato')
+    rk = lambda a, n: int(cb(a, f'Area {n} Rank'))
+    verificar(int(cb(a_ult, 'EFW RANK')) == p_ult, 'el puesto calculado es el oficial del informe')
+    verificar(c4(a_prev) == 10 and c4(a_ult) == 0 and abs((c4(a_prev) - c4(a_ult)) / 4 - baja['a4']) < 0.05,
+              'el componente de mercado negro de divisas pasó de 10 a 0 y explica la caída del área')
+    verificar(infl(a_ult) > infl(a_prev) and cb(a_ult, '3D Foreign currency bank accounts') == 10,
+              'subió la inflación; las cuentas en moneda extranjera siguen libres')
+    mejor = max(range(5), key=lambda j: bola[AREAS[j]['k']][-1])
+    verificar(AREAS[mejor]['k'] == 'a3', 'Moneda sana sigue siendo la mejor área')
     verificar(s_ult < mundo[-1] and s_ult < lac[-1], 'Bolivia está por debajo del promedio mundial y del latinoamericano')
     lac_a = {a['k']: media(valores(ULTIMO, a['k'], LAC)) for a in AREAS}
     dif = {a['k']: bola[a['k']][-1] - lac_a[a['k']] for a in AREAS}
@@ -733,25 +770,30 @@ def gen_bolivia_efw():
     brecha = min(AREAS, key=lambda a: dif[a['k']])
     verificar(len(sobre) == 1 and sobre[0]['k'] == 'a3', 'la única área en que Bolivia supera a la región es Moneda sana')
     n_lac = len(valores(ULTIMO, 's', LAC))
-    nom = lambda j: AREAS[j]['nombre']
-    val = lambda j: num(bola[AREAS[j]['k']][-1])
 
     p = [
-        ['Trayectoria histórica', f'Bolivia cayó sin pausa hasta <strong>1985</strong> (de {num(bol[0])} en {anios[0]} a '
-         f'{num(piso)}), entre dictaduras militares e hiperinflación: ese año Moneda sana marcó {num(m85)} de 10. El '
-         f'<strong>Plan de Estabilización de 1985</strong> (DS 21060) marcó el giro: el puntaje subió hasta su máximo en '
-         f'<strong>{a_pico}</strong> ({num(pico)}), cuando Bolivia ocupaba el puesto {p_pico} de {n_pico}.'],
+        ['Trayectoria histórica', f'Bolivia se estancó en la franja baja durante los años 70 (de {num(bol[0])} en {anios[0]} a '
+         f'{num(v(bol, 1980))} en 1980) y tocó su mínimo en <strong>1985</strong> ({num(piso)}), entre dictaduras militares e '
+         f'hiperinflación: ese año Moneda sana marcó {num(m85)} de 10. El <strong>Plan de Estabilización de 1985</strong> '
+         f'(DS 21060) marcó el giro: el puntaje subió hasta su máximo en <strong>{a_pico}</strong> ({num(pico)}), cuando '
+         f'Bolivia ocupaba el puesto {p_pico} de {n_pico}.'],
         ['Período reciente', f'Tras el máximo, el puntaje retrocedió: {num(v(bol, 2005))} en 2005 y {num(v(bol, 2008))} en 2008, '
-         f'ya con el modelo de mayor intervención estatal vigente desde 2006. Desde entonces oscila alrededor de 6 '
-         f'({num(s_ult)} en {a_ult}). Las áreas más débiles son <strong>{nom(flojas[0])}</strong> ({val(flojas[0])}) y '
-         f'<strong>{nom(flojas[1])}</strong> ({val(flojas[1])}); <strong>{nom(mejor)}</strong> ({val(mejor)}) se mantiene alta: '
-         f'el dato es de {a_ult}, con precios todavía estables y antes del salto inflacionario de 2024.'],
+         f'ya con el modelo de mayor intervención estatal vigente desde 2006. Entre 2008 y {a_prev} osciló alrededor de 6 '
+         f'(entre {num(min(meseta))} y {num(max(meseta))}). En <strong>{a_ult}</strong> cayó a <strong>{num(s_ult)}</strong>, '
+         f'la mayor caída anual de la serie y el puntaje más bajo desde {desde}: Bolivia pasó del puesto {p_prev} al '
+         f'<strong>{p_ult} de {n_ult}</strong>.'],
+        [f'Qué cayó en {a_ult}', f'De los {num(caida)} puntos que perdió el índice, {num(baja["a4"] / 5)} vienen de '
+         f'<strong>{AREAS[3]["nombre"]}</strong>, que se desplomó de {num(bola["a4"][-2])} a {num(bola["a4"][-1])} (puesto '
+         f'{rk(a_prev, 4)} → {rk(a_ult, 4)} en esa área): la brecha entre el dólar oficial y el paralelo llevó a '
+         f'<strong>cero</strong> el componente de mercado negro de divisas, que tuvo 10 de 10 hasta {a_prev}. '
+         f'<strong>Moneda sana</strong> bajó de {num(bola["a3"][-2])} a {num(bola["a3"][-1])} con la inflación '
+         f'({num(infl(a_prev), 1)} % en {a_prev}, {num(infl(a_ult), 1)} % en {a_ult}) y sigue siendo la mejor área.'],
         ['Comparativa', f'En {a_ult} Bolivia ({num(s_ult)}) está por debajo del promedio mundial ({num(mundo[-1])}) y del '
          f'latinoamericano ({num(lac[-1])}), y ocupa el puesto <strong>{p_ult} de {n_ult}</strong>. Frente a la región, la mayor '
          f'brecha está en <strong>{brecha["nombre"]}</strong> ({num(bola[brecha["k"]][-1])} frente a {num(lac_a[brecha["k"]])}) y '
          f'la única área en que Bolivia la supera es <strong>{sobre[0]["nombre"]}</strong> ({num(bola["a3"][-1])} frente a '
          f'{num(lac_a["a3"])}).'],
-        ['ctx', f'<strong>Fuente:</strong> Fraser Institute, Economic Freedom of the World: 2025 Annual Report. Promedios '
+        ['ctx', f'<strong>Fuente:</strong> Fraser Institute, Economic Freedom of the World: {INFORME} Annual Report. Promedios '
          f'simples: el latinoamericano reúne {n_lac} países en {a_ult}. Hasta 2000 los datos son quinquenales.'],
     ]
     preguntas = [
@@ -761,10 +803,17 @@ def gen_bolivia_efw():
          f'({num(piso)}). El DS 21060 liberó precios, tipo de cambio y comercio, y frenó la emisión: Moneda sana volvió a '
          f'{num(v(bola["a3"], 1990))} en 1990 y a {num(v(bola["a3"], 1995))} en 1995, y el índice pasó del puesto '
          f'{v(pues, 1985)[0]} de {v(pues, 1985)[1]} en 1985 al {v(pues, 1995)[0]} de {v(pues, 1995)[1]} en 1995.'],
+        ['¿Qué es el componente de mercado negro de divisas?',
+         'Mide la brecha entre el tipo de cambio oficial y el del mercado paralelo: sin brecha, 10 de 10; con una brecha '
+         'muy grande, 0. Es uno de los cuatro componentes de Libertad para comerciar internacionalmente, así que pasar de '
+         f'{num(c4(a_prev), 0)} a {num(c4(a_ult), 0)} le restó {num((c4(a_prev) - c4(a_ult)) / 4)} puntos a esa área y '
+         f'{num((c4(a_prev) - c4(a_ult)) / 20)} al índice general de Bolivia en {a_ult}.'],
         ['¿Por qué Moneda sana es la mejor área?',
          'El área mide el crecimiento del dinero, la inflación y su volatilidad, y la libertad para tener cuentas en moneda '
-         f'extranjera. Con inflación baja y tipo de cambio fijo, Bolivia marcó {num(bola["a3"][-1])} en {a_ult}. El índice '
-         'todavía no recoge la escasez de dólares ni la inflación de 2024 y 2025.'],
+         f'extranjera. Con inflación baja ({num(infl(a_prev), 1)} % en {a_prev}) y cuentas en dólares permitidas, Bolivia '
+         f'marcó {num(bola["a3"][-2])} en {a_prev}, puesto {rk(a_prev, 3)} del mundo en esa área. En {a_ult} bajó a '
+         f'{num(bola["a3"][-1])} (puesto {rk(a_ult, 3)}). El índice todavía no recoge la inflación de {a_ult + 1}: llegará '
+         f'con el informe {INFORME + 1}.'],
     ]
     datos = {
         'anios': anios, 'unidad': 'Índice EFW (0 a 10)', 'unidadCorta': 'Índice EFW',
@@ -781,7 +830,8 @@ def gen_bolivia_efw():
         'hitos': [{'anio': 1985, 'largo': '1985 · DS 21060', 'corto': '1985', 'alinear': 'left'},
                   {'anio': 2006, 'largo': '2006 · nuevo modelo económico', 'corto': '2006', 'alinear': 'left'}],
         'cifras': [
-            {'color': '#C71E1D', 'rotulo': f'Bolivia · {a_ult}', 'valor': s_ult, 'delta': f'puesto {p_ult} de {n_ult}',
+            {'color': '#C71E1D', 'rotulo': f'Bolivia · {a_ult}', 'valor': s_ult,
+             'delta': f'▼ {num(caida)} en un año · puesto {p_ult} de {n_ult}', 'tono': 'malo',
              'serie': [v(bol, int(y)) for y in ANUALES]},
             {'color': '#005F73', 'rotulo': 'Máximo', 'valor': pico, 'delta': f'{a_pico} · puesto {p_pico}'},
             {'color': '#9B2226', 'rotulo': 'Mínimo', 'valor': piso, 'delta': f'en {a_piso}'},
@@ -1154,7 +1204,7 @@ def gen_comparativa_paises():
         ['Bolivia en contexto', f'Bolivia estuvo en la <strong>mitad superior</strong> del ranking entre {arriba[0]} y '
          f'{arriba[-1]}, tras las reformas de 1985 (puesto {p00} de {n00} en 2000); después volvió a la mitad inferior: '
          f'puesto <strong>{p_bol} de {n}</strong> en {ULTIMO}.'],
-        ['ctx', f'<strong>Fuente:</strong> Fraser Institute, Economic Freedom of the World: 2025 Annual Report. El cuartil es el '
+        ['ctx', f'<strong>Fuente:</strong> Fraser Institute, Economic Freedom of the World: {INFORME} Annual Report. El cuartil es el '
          f'de {ULTIMO}, por puesto (con el puntaje a dos decimales, los empates comparten puesto). Hasta 2000 los datos son '
          'quinquenales; cada serie empieza cuando el país entra en el índice.'],
     ]
