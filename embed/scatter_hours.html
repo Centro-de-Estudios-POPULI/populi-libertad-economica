@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Libertad Económica y Horas Trabajadas · Populi</title>
+  <title data-en="Hours Worked and Economic Freedom · Populi">Libertad Económica y Horas Trabajadas · Populi</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,400&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet" />
@@ -14,12 +14,12 @@
 <body>
   <div class="wrap">
     <div class="sec-hd">
-      <div class="sec-title"><span class="accent-bar"></span>Libertad Económica y Horas Trabajadas</div>
-      <div class="sec-sub">Promedio EFW 2000–2024 vs Horas trabajadas anuales por trabajador</div>
+      <div class="sec-title" data-en='<span class="accent-bar"></span>Hours Worked and Economic Freedom'><span class="accent-bar"></span>Libertad Económica y Horas Trabajadas</div>
+      <div class="sec-sub" data-en="EFW average 2000–2024 vs. Annual hours worked per worker">Promedio EFW 2000–2024 vs Horas trabajadas anuales por trabajador</div>
     </div>
 
     <div class="hz-bar">
-      <div class="hz-item"><span class="hz-lbl">Color</span><div class="hz-grp" id="b-color"></div></div>
+      <div class="hz-item"><span class="hz-lbl" data-en="Color">Color</span><div class="hz-grp" id="b-color"></div></div>
     </div>
 
     <div class="kpi-grid" id="kpis"></div>
@@ -30,10 +30,10 @@
           <div class="ley" id="leyenda"></div>
           <div class="tog-grp" id="regiones" style="display:none"></div>
         </div>
-        <div class="grafico" id="chart"><div class="loading"><div class="spinner"></div><span>Cargando datos…</span></div></div>
+        <div class="grafico" id="chart"><div class="loading"><div class="spinner"></div><span data-en="Loading data…">Cargando datos…</span></div></div>
       </div>
       <div class="panel">
-        <div class="panel-hd"><span class="panel-hd-t">Lectura del indicador</span><span class="panel-hd-d">EFW 2000–2024</span></div>
+        <div class="panel-hd"><span class="panel-hd-t" data-en="Reading the indicator">Lectura del indicador</span><span class="panel-hd-d" data-en="EFW 2000–2024">EFW 2000–2024</span></div>
         <div class="panel-body" id="panel"></div>
       </div>
     </div>
@@ -44,34 +44,34 @@
 
   <script>
   (function () {
-    var C = PM.C;
-    var VAR = 'hours_worked', Y_CORTO = 'Horas trabajadas al año', LOG = false, Y_MIN = null, Y_MAX = null;
+    var C = PM.C, T = PM.t;   // T('castellano', 'inglés'): con ?lang=en el gráfico sale en inglés
+    var VAR = 'hours_worked', Y_CORTO = T('Horas trabajadas al año', 'Hours worked per year'), LOG = false, Y_MIN = null, Y_MAX = null;
     var REG_TIPO = 'poly', REG_ORDEN = 1, ACENTO = '#9B2226';
-    var FMT = function (v) { return PM.num(v, 0); }, FMT_EJE = PM.tick, FMT_EJE_M = PM.tick, Y_CORTO_M = 'Horas trabajadas al año';
-    var RELACION = "Los países más libres tienden a trabajar <strong>menos horas</strong> por año. Mayor productividad por hora permite alcanzar el mismo (o mayor) ingreso con menos tiempo de trabajo, liberando tiempo para ocio y familia.", TEORIA = "La <strong>alta productividad</strong> de economías libres (capital abundante, tecnología, eficiencia institucional) permite la <strong>reducción gradual de jornada</strong> sin sacrificar ingreso — el \\\"dividendo de la libertad\\\" en forma de tiempo.", BOL_TXT = "Bolivia (EFW: <strong>{efw}</strong>) tiene un promedio de <strong>{yval}</strong> horas trabajadas al año por trabajador, por encima del promedio latinoamericano ({lat}). La baja productividad obliga a jornadas extensas para subsistir.", FUENTE_DET = "Fraser Institute EFW 2026, Penn World Table 11.0";
+    var FMT = function (v) { return PM.num(v, 0); }, FMT_EJE = PM.tick, FMT_EJE_M = PM.tick, Y_CORTO_M = T('Horas trabajadas al año', 'Hours worked per year');
+    var RELACION = T("Los países más libres tienden a trabajar <strong>menos horas</strong> por año. Mayor productividad por hora permite alcanzar el mismo (o mayor) ingreso con menos tiempo de trabajo, liberando tiempo para ocio y familia.", "The freest countries tend to work <strong>fewer hours</strong> per year. Higher productivity per hour makes it possible to reach the same (or higher) income with less working time, freeing up time for leisure and family."), TEORIA = T("La <strong>alta productividad</strong> de economías libres (capital abundante, tecnología, eficiencia institucional) permite la <strong>reducción gradual de jornada</strong> sin sacrificar ingreso — el \\\"dividendo de la libertad\\\" en forma de tiempo.", "The <strong>high productivity</strong> of free economies (abundant capital, technology, institutional efficiency) allows the <strong>gradual reduction of working hours</strong> without sacrificing income — the \"freedom dividend\" in the form of time."), BOL_TXT = T("Bolivia (EFW: <strong>{efw}</strong>) tiene un promedio de <strong>{yval}</strong> horas trabajadas al año por trabajador, por encima del promedio latinoamericano ({lat}). La baja productividad obliga a jornadas extensas para subsistir.", "Bolivia (EFW: <strong>{efw}</strong>) averages <strong>{yval}</strong> hours worked per year per worker, above the Latin American average ({lat}). Low productivity forces long working hours in order to subsist."), FUENTE_DET = "Fraser Institute EFW 2026, Penn World Table 11.0";
     // Cuartiles del índice: escala ORDINAL de la marca (la misma del mapa), del más libre (turquesa)
     // al menos libre (rojo). Por región: modo Foco (la región elegida en rojo, el resto en gris tenue):
     // siete colores no se distinguen entre sí cuando las burbujas se mezclan.
     var QC = { 1: C.turquesa, 2: C.menta, 3: C.oro, 4: C.rojo };
-    var QN = { 1: 'Cuartil 1 · más libre', 2: 'Cuartil 2', 3: 'Cuartil 3', 4: 'Cuartil 4 · menos libre' };
-    var REGIONES = [['Latin America & the Caribbean', 'América Latina y el Caribe'], ['North America', 'Norteamérica'],
-      ['Europe & Central Asia', 'Europa y Asia Central'], ['East Asia & Pacific', 'Asia Oriental y Pacífico'],
-      ['South Asia', 'Asia del Sur'], ['Middle East & North Africa', 'Medio Oriente y Norte de África'],
-      ['Sub-Saharan Africa', 'África Subsahariana']];
+    var QN = { 1: T('Cuartil 1 · más libre', 'Quartile 1 · most free'), 2: T('Cuartil 2', 'Quartile 2'), 3: T('Cuartil 3', 'Quartile 3'), 4: T('Cuartil 4 · menos libre', 'Quartile 4 · least free') };
+    var REGIONES = [['Latin America & the Caribbean', T('América Latina y el Caribe', 'Latin America & the Caribbean')], ['North America', T('Norteamérica', 'North America')],
+      ['Europe & Central Asia', T('Europa y Asia Central', 'Europe & Central Asia')], ['East Asia & Pacific', T('Asia Oriental y Pacífico', 'East Asia & Pacific')],
+      ['South Asia', T('Asia del Sur', 'South Asia')], ['Middle East & North Africa', T('Medio Oriente y Norte de África', 'Middle East & North Africa')],
+      ['Sub-Saharan Africa', T('África Subsahariana', 'Sub-Saharan Africa')]];
     var REGION = {};
     REGIONES.forEach(function (r) { REGION[r[0]] = r[1]; });
     var estado = { color: 'cuartil', region: 'Latin America & the Caribbean' };
     var PTS, BOL, AJ, CORTES, CORTE_Q1, NOMBRE = {}, grafico;
-    var nombre = function (x) { return NOMBRE[x.iso] || x.country; };
+    var nombre = function (x) { return T(NOMBRE[x.iso] || x.country, x.country); };
 
     var media = function (a) { return a.length ? a.reduce(function (s, v) { return s + v; }, 0) / a.length : null; };
     var valores = function (f) { return PTS.filter(f).map(function (x) { return x[VAR]; }); };
     var tenue = function () { return PM.dk() ? '#3A4549' : '#C9CDCE'; };
-    var tipoAjuste = function (masc) { return REG_TIPO === 'exp' ? 'exponencial' : REG_ORDEN === 2 ? (masc ? 'cuadrático' : 'cuadrática') : 'lineal'; };
+    var tipoAjuste = function (masc) { return REG_TIPO === 'exp' ? T('exponencial', 'Exponential') : REG_ORDEN === 2 ? (masc ? T('cuadrático', 'Quadratic') : T('cuadrática', 'Quadratic')) : T('lineal', 'Linear'); };
     function poblacion(n) {
-      if (n >= 1e9) return PM.num(n / 1e9, 2) + ' mil millones';
-      if (n >= 1e6) return PM.num(n / 1e6, 1) + ' millones';
-      return PM.num(n / 1e3, 0) + ' mil';
+      if (n >= 1e9) return T(PM.num(n / 1e9, 2) + ' mil millones', PM.num(n / 1e9, 2) + ' billion');
+      if (n >= 1e6) return T(PM.num(n / 1e6, 1) + ' millones', PM.num(n / 1e6, 1) + ' million');
+      return T(PM.num(n / 1e3, 0) + ' mil', PM.num(n / 1e3, 0) + ' thousand');
     }
 
     // ── tendencia: polinómica (sobre log10 si el eje es logarítmico) o exponencial ────────────
@@ -130,7 +130,7 @@
       var lim = function (q, f) { return f.apply(null, todos.filter(function (x) { return x.efw_quartile === q; }).map(function (x) { return x.efw_avg; })); };
       CORTES = [(lim(4, Math.max) + lim(3, Math.min)) / 2, (lim(3, Math.max) + lim(2, Math.min)) / 2, (lim(2, Math.max) + lim(1, Math.min)) / 2];
       CORTE_Q1 = lim(1, Math.min);
-      PM.botonera(document.getElementById('b-color'), [['cuartil', 'Cuartil EFW'], ['region', 'Región']], estado.color, function (v) {
+      PM.botonera(document.getElementById('b-color'), [['cuartil', T('Cuartil EFW', 'EFW quartile')], ['region', T('Región', 'Region')]], estado.color, function (v) {
         estado.color = v; document.getElementById('regiones').style.display = v === 'region' ? '' : 'none'; leyenda(); grafico.redibujar();
       });
       pastillasRegion();
@@ -145,19 +145,20 @@
       PM.leyendaImagen = function () {
         var it = estado.color === 'cuartil'
           ? [1, 2, 3, 4].map(function (q) { return { name: QN[q], color: PM.col(QC[q]), forma: 'punto' }; })
-          : [{ name: REGION[estado.region], color: C.rojo, forma: 'punto' }, { name: 'Resto del mundo', color: tenue(), forma: 'punto' }];
-        it.push({ name: 'Tendencia ' + tipoAjuste() + ' · R² ' + PM.num(AJ.r2, 2), color: PM.dk() ? '#C9CDCE' : '#5C6B70', forma: 'punteada' });
+          : [{ name: REGION[estado.region], color: C.rojo, forma: 'punto' }, { name: T('Resto del mundo', 'Rest of the world'), color: tenue(), forma: 'punto' }];
+        it.push({ name: T('Tendencia ' + tipoAjuste() + ' · R² ' + PM.num(AJ.r2, 2), tipoAjuste() + ' trend · R² ' + PM.num(AJ.r2, 2)), color: PM.dk() ? '#C9CDCE' : '#5C6B70', forma: 'punteada' });
         return it;
       };
       PM.tablaDatos = function () {
         return {
-          cols: ['País', 'ISO3', 'Región', 'Cuartil EFW', 'EFW promedio 2000–2024', Y_CORTO, 'Población'],
+          cols: [T('País', 'Country'), 'ISO3', T('Región', 'Region'), T('Cuartil EFW', 'EFW quartile'), T('EFW promedio 2000–2024', 'EFW average 2000–2024'), Y_CORTO, T('Población', 'Population')],
           filas: PTS.slice().sort(function (a, b) { return b.efw_avg - a.efw_avg; }).map(function (x) {
             return [nombre(x), x.iso, REGION[x.region] || x.region, x.efw_quartile, x.efw_avg, x[VAR], x.population];
           })
         };
       };
-      document.getElementById('fuente').innerHTML = 'Fuente: ' + FUENTE_DET.replace('Fraser Institute', '<a href="https://www.fraserinstitute.org/economic-freedom" target="_blank" rel="noopener">Fraser Institute</a>') + ' · Elaboración: Centro de Estudios POPULI';
+      document.getElementById('fuente').innerHTML = T('Fuente: ' + FUENTE_DET.replace('Fraser Institute', '<a href="https://www.fraserinstitute.org/economic-freedom" target="_blank" rel="noopener">Fraser Institute</a>') + ' · Elaboración: Centro de Estudios POPULI',
+        'Source: ' + FUENTE_DET.replace('Fraser Institute', '<a href="https://www.fraserinstitute.org/economic-freedom" target="_blank" rel="noopener">Fraser Institute</a>') + ' · Analysis: Centro de Estudios POPULI');
     }).catch(function (e) { console.error(e); PM.error(document.getElementById('chart')); });
 
     function pastillasRegion() {
@@ -183,19 +184,20 @@
     function leyenda() {
       var items = estado.color === 'cuartil'
         ? [1, 2, 3, 4].map(function (q) { return [PM.col(QC[q]), QN[q]]; })
-        : [[C.rojo, REGION[estado.region]], [tenue(), 'Resto del mundo']];
+        : [[C.rojo, REGION[estado.region]], [tenue(), T('Resto del mundo', 'Rest of the world')]];
       document.getElementById('leyenda').innerHTML = items.map(function (it) {
         return '<span class="ley-i"><span class="ley-d" style="background:' + it[0] + '"></span>' + it[1] + '</span>';
-      }).join('') + '<span class="ley-i"><span class="ley-l"></span>Tendencia ' + tipoAjuste() + ' · <span class="ley-r2">R² ' + PM.num(AJ.r2, 2) + '</span></span>';
+      }).join('') + T('<span class="ley-i"><span class="ley-l"></span>Tendencia ' + tipoAjuste() + ' · <span class="ley-r2">R² ' + PM.num(AJ.r2, 2) + '</span></span>',
+        '<span class="ley-i"><span class="ley-l"></span>' + tipoAjuste() + ' trend · <span class="ley-r2">R² ' + PM.num(AJ.r2, 2) + '</span></span>');
     }
 
     function cifras() {
       var q1 = valores(function (x) { return x.efw_quartile === 1; }), q4 = valores(function (x) { return x.efw_quartile === 4; });
       document.getElementById('kpis').innerHTML =
-        PM.kpi({ color: C.turquesa, rotulo: 'Cuartil más libre', valor: FMT(media(q1)), delta: 'promedio · ' + q1.length + ' países', tono: 'neutro' }) +
-        PM.kpi({ color: C.rojo, rotulo: 'Cuartil menos libre', valor: FMT(media(q4)), delta: 'promedio · ' + q4.length + ' países', tono: 'neutro' }) +
-        PM.kpi({ color: C.tinta, rotulo: 'Bolivia', valor: BOL ? FMT(BOL[VAR]) : '—', delta: BOL ? 'EFW ' + PM.num(BOL.efw_avg, 2) + ' · cuartil ' + BOL.efw_quartile : 'sin dato', tono: 'neutro' }) +
-        PM.kpi({ color: C.pizarra, rotulo: 'Tendencia', valor: 'R² ' + PM.num(AJ.r2, 2), delta: 'ajuste ' + tipoAjuste(true), tono: 'neutro' });
+        PM.kpi({ color: C.turquesa, rotulo: T('Cuartil más libre', 'Most free quartile'), valor: FMT(media(q1)), delta: T('promedio · ' + q1.length + ' países', 'average · ' + q1.length + ' countries'), tono: 'neutro' }) +
+        PM.kpi({ color: C.rojo, rotulo: T('Cuartil menos libre', 'Least free quartile'), valor: FMT(media(q4)), delta: T('promedio · ' + q4.length + ' países', 'average · ' + q4.length + ' countries'), tono: 'neutro' }) +
+        PM.kpi({ color: C.tinta, rotulo: 'Bolivia', valor: BOL ? FMT(BOL[VAR]) : '—', delta: BOL ? T('EFW ' + PM.num(BOL.efw_avg, 2) + ' · cuartil ' + BOL.efw_quartile, 'EFW ' + PM.num(BOL.efw_avg, 2) + ' · quartile ' + BOL.efw_quartile) : T('sin dato', 'no data'), tono: 'neutro' }) +
+        PM.kpi({ color: C.pizarra, rotulo: T('Tendencia', 'Trend'), valor: 'R² ' + PM.num(AJ.r2, 2), delta: T('ajuste ' + tipoAjuste(true), tipoAjuste(true).toLowerCase() + ' fit'), tono: 'neutro' });
     }
 
     // Cifras del texto que dependen del dato: {q1} y {q4} (promedio de los cuartiles extremos), {razon}
@@ -217,10 +219,10 @@
     }
     function panel() {
       document.getElementById('panel').innerHTML =
-        PM.pb(ACENTO, 'Relación observada', null, conDatos(RELACION)) +
-        PM.pb(ACENTO, 'Marco teórico', null, TEORIA) +
-        PM.pb(ACENTO, 'Bolivia', null, BOL ? conDatos(BOL_TXT) : 'Sin dato para Bolivia en este indicador.') +
-        PM.ctx('<strong>Fuente:</strong> ' + FUENTE_DET + '. El tamaño de cada burbuja es la población del país.');
+        PM.pb(ACENTO, T('Relación observada', 'Observed relationship'), null, conDatos(RELACION)) +
+        PM.pb(ACENTO, T('Marco teórico', 'Theoretical framework'), null, TEORIA) +
+        PM.pb(ACENTO, 'Bolivia', null, BOL ? conDatos(BOL_TXT) : T('Sin dato para Bolivia en este indicador.', 'No data for Bolivia on this indicator.')) +
+        PM.ctx(T('<strong>Fuente:</strong> ' + FUENTE_DET + '. El tamaño de cada burbuja es la población del país.', '<strong>Source:</strong> ' + FUENTE_DET + '. The size of each bubble is the population of the country.'));
     }
 
     function opciones() {
@@ -254,7 +256,7 @@
         grid: PM.grid({ top: 28, bottom: chico ? 24 : 28 }),
         xAxis: PM.ejeY({ fmt: PM.tick, extra: {
           type: 'value', min: 3, max: 9, interval: 1, splitNumber: 6,
-          name: chico ? 'Libertad económica (EFW, 0 a 10)' : 'Libertad económica · índice EFW, promedio 2000–2024 (0 a 10)',
+          name: chico ? T('Libertad económica (EFW, 0 a 10)', 'Economic freedom (EFW, 0 to 10)') : T('Libertad económica · índice EFW, promedio 2000–2024 (0 a 10)', 'Economic freedom · EFW index, 2000–2024 average (0 to 10)'),
           nameLocation: 'middle', nameGap: 26, nameTextStyle: { align: 'center' },
           splitLine: { show: false }, axisLine: { show: true, lineStyle: { color: linea } }, axisTick: { show: true, length: 4, lineStyle: { color: linea } }
         } }),
@@ -267,11 +269,11 @@
           // las tres filas describen la misma burbuja: sin claves; el cuartil, con su color, en el pie
           var v = p.value;
           return PM.ttTitulo(v[3] + ' · ' + v[4], REGION[v[6]] || v[6]) +
-            PM.ttFila(null, 'Libertad económica (EFW)', PM.num(v[0], 2)) +
+            PM.ttFila(null, T('Libertad económica (EFW)', 'Economic freedom (EFW)'), PM.num(v[0], 2)) +
             PM.ttFila(null, Y_CORTO, FMT(v[1])) +
-            PM.ttFila(null, 'Población', poblacion(v[2])) +
+            PM.ttFila(null, T('Población', 'Population'), poblacion(v[2])) +
             PM.ttPie('<span style="display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;background:' +
-              PM.col(QC[v[5]]) + '"></span>' + QN[v[5]] + ' de libertad económica');
+              PM.col(QC[v[5]]) + '"></span>' + T(QN[v[5]] + ' de libertad económica', 'Economic freedom: ' + QN[v[5]]));
         }, { trigger: 'item' }),
         series: [
           { type: 'scatter', data: datos, markArea: { silent: true, data: franjas }, emphasis: { focus: 'self', itemStyle: { opacity: 1 } } },
@@ -282,9 +284,12 @@
     }
 
     var PREGUNTAS = [
-      ['¿Qué mide el índice de libertad económica?', 'El índice <strong>Economic Freedom of the World</strong> (EFW) del Fraser Institute califica de 0 a 10 a 165 jurisdicciones en cinco áreas: tamaño del gobierno, sistema legal y derechos de propiedad, moneda sana, libertad para comerciar internacionalmente y regulación. Este gráfico usa el <strong>promedio 2000–2024</strong> de cada país, que resume 25 años y no uno suelto.'],
-      ['¿Cómo se lee este gráfico?', 'Cada burbuja es un país: cuanto más a la derecha, más libertad económica; la altura es el indicador y el tamaño, la población. Las franjas del fondo marcan los <strong>cuartiles</strong> del índice (cada uno reúne a una cuarta parte de los países) y la línea punteada es la <strong>tendencia ajustada</strong>: su R² dice qué parte de las diferencias entre países acompaña a la libertad económica.'],
-      ['¿Correlación es causalidad?', 'No necesariamente. El gráfico muestra una <strong>asociación entre países</strong>. Otros factores —instituciones, geografía, historia, capital humano— también influyen, y la relación puede operar en ambos sentidos. Se lee como evidencia de una regularidad, no como prueba de una causa única.']
+      [T('¿Qué mide el índice de libertad económica?', 'What does the economic freedom index measure?'), T('El índice <strong>Economic Freedom of the World</strong> (EFW) del Fraser Institute califica de 0 a 10 a 165 jurisdicciones en cinco áreas: tamaño del gobierno, sistema legal y derechos de propiedad, moneda sana, libertad para comerciar internacionalmente y regulación. Este gráfico usa el <strong>promedio 2000–2024</strong> de cada país, que resume 25 años y no uno suelto.',
+        'The <strong>Economic Freedom of the World</strong> (EFW) index of the Fraser Institute rates 165 jurisdictions from 0 to 10 in five areas: Size of Government, Legal System and Property Rights, Sound Money, Freedom to Trade Internationally, and Regulation. This chart uses the <strong>2000–2024 average</strong> of each country, which summarizes 25 years rather than a single one.')],
+      [T('¿Cómo se lee este gráfico?', 'How do you read this chart?'), T('Cada burbuja es un país: cuanto más a la derecha, más libertad económica; la altura es el indicador y el tamaño, la población. Las franjas del fondo marcan los <strong>cuartiles</strong> del índice (cada uno reúne a una cuarta parte de los países) y la línea punteada es la <strong>tendencia ajustada</strong>: su R² dice qué parte de las diferencias entre países acompaña a la libertad económica.',
+        'Each bubble is a country: the farther to the right, the more economic freedom; the height is the indicator and the size is the population. The bands in the background mark the <strong>quartiles</strong> of the index (each one groups a quarter of the countries) and the dashed line is the <strong>fitted trend</strong>: its R² tells what share of the differences between countries goes along with economic freedom.')],
+      [T('¿Correlación es causalidad?', 'Is correlation causation?'), T('No necesariamente. El gráfico muestra una <strong>asociación entre países</strong>. Otros factores —instituciones, geografía, historia, capital humano— también influyen, y la relación puede operar en ambos sentidos. Se lee como evidencia de una regularidad, no como prueba de una causa única.',
+        'Not necessarily. The chart shows an <strong>association across countries</strong>. Other factors—institutions, geography, history, human capital—also play a role, and the relationship may run in both directions. It should be read as evidence of a regularity, not as proof of a single cause.')]
     ];
   })();
   </script>

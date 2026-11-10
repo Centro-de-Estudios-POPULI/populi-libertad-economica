@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Mapa Mundial de Libertad Económica · Populi</title>
+  <title data-en="World Map of Economic Freedom · Populi">Mapa Mundial de Libertad Económica · Populi</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,400&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet" />
@@ -104,8 +104,8 @@
 <body>
   <div class="wrap">
     <div class="sec-hd">
-      <div class="sec-title"><span class="accent-bar"></span>Mapa Mundial de Libertad Económica</div>
-      <div class="sec-sub" id="bajada">Índice Economic Freedom of the World (EFW) del Fraser Institute, de 0 (menos libre) a 10 (más libre)</div>
+      <div class="sec-title" data-en='<span class="accent-bar"></span>World Map of Economic Freedom'><span class="accent-bar"></span>Mapa Mundial de Libertad Económica</div>
+      <div class="sec-sub" id="bajada" data-en="The Fraser Institute's Economic Freedom of the World (EFW) index, from 0 (least free) to 10 (most free)">Índice Economic Freedom of the World (EFW) del Fraser Institute, de 0 (menos libre) a 10 (más libre)</div>
     </div>
 
     <div class="kpi-grid" id="kpis"></div>
@@ -114,23 +114,23 @@
       <div class="chart-card">
         <div class="chart-ctrl"><div class="ley" id="leyenda"></div></div>
         <div class="mapa-caja">
-          <div class="grafico mapa" id="chart"><div class="loading"><div class="spinner"></div><span>Cargando el mapa…</span></div></div>
-          <button type="button" class="vista" id="vista" title="Volver al mapa completo">
+          <div class="grafico mapa" id="chart"><div class="loading"><div class="spinner"></div><span data-en="Loading the map…">Cargando el mapa…</span></div></div>
+          <button type="button" class="vista" id="vista" title="Volver al mapa completo" data-en-title="Back to the full map" data-en='<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 8a5.5 5.5 0 1 0 1.6-3.9M2.5 2.5v3h3" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>Full view'>
             <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 8a5.5 5.5 0 1 0 1.6-3.9M2.5 2.5v3h3" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>Vista completa
           </button>
-          <div class="aviso" id="aviso" aria-hidden="true">Ctrl + rueda para acercar el mapa (⌘ en Mac)</div>
+          <div class="aviso" id="aviso" aria-hidden="true" data-en="Ctrl + scroll wheel to zoom the map (⌘ on Mac)">Ctrl + rueda para acercar el mapa (⌘ en Mac)</div>
         </div>
         <div class="linea-t">
-          <button type="button" class="play" id="play" aria-label="Animar de 1950 a 2023"></button>
+          <button type="button" class="play" id="play" aria-label="Animar de 1950 a 2023" data-en-aria-label="Animate from 1950 to 2023"></button>
           <div class="anio" id="anio" aria-live="polite"></div>
           <div class="pista">
-            <input type="range" id="rango" min="0" max="1" step="1" value="1" aria-label="Año del mapa" />
+            <input type="range" id="rango" min="0" max="1" step="1" value="1" aria-label="Año del mapa" data-en-aria-label="Map year" />
             <div class="marcas" id="marcas"></div>
           </div>
         </div>
       </div>
       <div class="panel">
-        <div class="panel-hd"><span class="panel-hd-t">Ranking del año</span><span class="panel-hd-d" id="panel-fecha"></span></div>
+        <div class="panel-hd"><span class="panel-hd-t" data-en="Ranking for the year">Ranking del año</span><span class="panel-hd-d" id="panel-fecha"></span></div>
         <div class="panel-body" id="panel"></div>
       </div>
     </div>
@@ -141,16 +141,24 @@
 
   <script>
   (function () {
-    var C = PM.C;
+    var C = PM.C, T = PM.t;   // T('castellano', 'inglés'): con ?lang=en el gráfico sale en inglés
+    // El marcado se traduce ya, sin esperar al fin de la carga de la página: la bajada y el botón de animar llevan su
+    // pareja fija en el marcado y después los reescribe este guion (con el año y la cuenta); así la fija nunca pisa a la viva.
+    PM.traducir();
     // Cuartiles DE CADA AÑO (cuatro grupos de igual tamaño según el puesto, los cortes salen del dato
     // de ese año): escala ORDINAL de la marca, la misma de las dispersiones
     var QC = { 1: C.turquesa, 2: C.menta, 3: C.oro, 4: C.rojo };
-    var QN = { 1: 'Cuartil 1 · más libre', 2: 'Cuartil 2', 3: 'Cuartil 3', 4: 'Cuartil 4 · menos libre' };
-    var AREAS = [['Tamaño del gobierno', 'Tamaño del gobierno'], ['Sistema legal y derechos de propiedad', 'Sistema legal y propiedad'],
-      ['Moneda sana', 'Moneda sana'], ['Libertad para comerciar internacionalmente', 'Comercio internacional'], ['Regulación', 'Regulación']];
-    var REGION = { 'Latin America & the Caribbean': 'América Latina y el Caribe', 'North America': 'Norteamérica',
-      'Europe & Central Asia': 'Europa y Asia Central', 'East Asia & Pacific': 'Asia Oriental y Pacífico', 'South Asia': 'Asia del Sur',
-      'Middle East & North Africa': 'Medio Oriente y Norte de África', 'Sub-Saharan Africa': 'África Subsahariana' };
+    var QN = { 1: T('Cuartil 1 · más libre', 'Quartile 1 · most free'), 2: T('Cuartil 2', 'Quartile 2'), 3: T('Cuartil 3', 'Quartile 3'), 4: T('Cuartil 4 · menos libre', 'Quartile 4 · least free') };
+    // Áreas: [nombre, nombre corto para la ficha en el teléfono]; en inglés, el nombre oficial del informe EFW
+    var AREAS = [[T('Tamaño del gobierno', 'Size of Government'), T('Tamaño del gobierno', 'Size of Government')],
+      [T('Sistema legal y derechos de propiedad', 'Legal System and Property Rights'), T('Sistema legal y propiedad', 'Legal System and Property')],
+      [T('Moneda sana', 'Sound Money'), T('Moneda sana', 'Sound Money')],
+      [T('Libertad para comerciar internacionalmente', 'Freedom to Trade Internationally'), T('Comercio internacional', 'International Trade')],
+      [T('Regulación', 'Regulation'), T('Regulación', 'Regulation')]];
+    // Regiones: la clave es el nombre de la fuente (efw_country_meta.json); en inglés se muestra ese mismo nombre original
+    var REGION = { 'Latin America & the Caribbean': T('América Latina y el Caribe', 'Latin America & the Caribbean'), 'North America': T('Norteamérica', 'North America'),
+      'Europe & Central Asia': T('Europa y Asia Central', 'Europe & Central Asia'), 'East Asia & Pacific': T('Asia Oriental y Pacífico', 'East Asia & Pacific'), 'South Asia': T('Asia del Sur', 'South Asia'),
+      'Middle East & North Africa': T('Medio Oriente y Norte de África', 'Middle East & North Africa'), 'Sub-Saharan Africa': T('África Subsahariana', 'Sub-Saharan Africa') };
     // El mapa base (world.json) no dibuja aparte a Hong Kong ni a Taiwán: van como punto en estas coordenadas
     var SIN_POLIGONO = { HKG: [114.17, 22.32], TWN: [120.96, 23.7] };
     var CHICO = 0.5;            // área proyectada (grados²) bajo la cual un país no se distingue: va como punto
@@ -179,7 +187,8 @@
     var PANEL, META, ES, EN, MAPA_ISO, ANIOS, ISO_GEO = {}, PUNTOS = [], ASPECTO = 2.2, cache = {};
     var estado = { anio: null, jugando: false }, reloj = 0, grafico, aviso = 0;
 
-    var nombre = function (iso) { return ES[iso] || (META[iso] && META[iso].name) || iso; };
+    // en castellano, el nombre del diccionario (paises_es.json); en inglés, el nombre ORIGINAL de la fuente (efw_country_meta.json)
+    var nombre = function (iso) { return (!PM.en && ES[iso]) || (META[iso] && META[iso].name) || iso; };
     // «sin dato»: en claro, un gris más claro que la niebla #DFE5EA, que se confundía con el cuartil 2
     // (menta: ΔE 12,3 con visión normal; con #ECEFF1, 15,1 y 11,5 en protanopía, validate_palette.js)
     var niebla = function () { return PM.dk() ? '#242C30' : '#ECEFF1'; };
@@ -262,7 +271,9 @@
       grafico.chart.on('georoam', function () { document.getElementById('vista').classList.add('ver'); });
       PM.alCambiarTema(function () { leyenda(); textos(); pintarPista(); });
       PM.preguntas(document.getElementById('preguntas'), preguntas());
-      document.getElementById('fuente').innerHTML = 'Fuente: <a href="https://www.fraserinstitute.org/economic-freedom" target="_blank" rel="noopener">Fraser Institute</a>, Economic Freedom of the World ' + (ANIOS[ANIOS.length - 1] + 2) + ' · Elaboración: Centro de Estudios POPULI';
+      document.getElementById('fuente').innerHTML = T(
+        'Fuente: <a href="https://www.fraserinstitute.org/economic-freedom" target="_blank" rel="noopener">Fraser Institute</a>, Economic Freedom of the World ' + (ANIOS[ANIOS.length - 1] + 2) + ' · Elaboración: Centro de Estudios POPULI',
+        'Source: <a href="https://www.fraserinstitute.org/economic-freedom" target="_blank" rel="noopener">Fraser Institute</a>, Economic Freedom of the World ' + (ANIOS[ANIOS.length - 1] + 2) + ' · Analysis: Centro de Estudios POPULI');
     }).catch(function (e) { console.error(e); PM.error(document.getElementById('chart')); });
 
     // ── Año en pantalla: cifras, panel, bajada y colores del mapa (sin perder el acercamiento) ──
@@ -280,15 +291,18 @@
       var D = datos(estado.anio);
       document.getElementById('anio').textContent = estado.anio;
       document.getElementById('panel-fecha').textContent = estado.anio;
-      document.getElementById('bajada').textContent = 'Índice Economic Freedom of the World (EFW) del Fraser Institute en ' + estado.anio +
-        ', de 0 (menos libre) a 10 (más libre) · ' + D.n + ' jurisdicciones';
+      document.getElementById('bajada').textContent = T(
+        'Índice Economic Freedom of the World (EFW) del Fraser Institute en ' + estado.anio +
+        ', de 0 (menos libre) a 10 (más libre) · ' + D.n + ' jurisdicciones',
+        'The Fraser Institute\'s Economic Freedom of the World (EFW) index in ' + estado.anio +
+        ', from 0 (least free) to 10 (most free) · ' + D.n + ' jurisdictions');
       cifras(D); panel(D);
     }
 
     function leyenda() {
       document.getElementById('leyenda').innerHTML = [1, 2, 3, 4].map(function (q) {
         return '<span class="ley-i"><span class="lp area" style="--k:' + PM.col(QC[q]) + '"></span>' + QN[q] + '</span>';
-      }).join('') + '<span class="ley-i"><span class="lp area" style="--k:' + niebla() + '"></span>Sin dato</span>';
+      }).join('') + '<span class="ley-i"><span class="lp area" style="--k:' + niebla() + '"></span>' + T('Sin dato', 'No data') + '</span>';
     }
 
     function cifras(D) {
@@ -296,14 +310,14 @@
       var top = D.filas[0], bot = D.filas[D.n - 1], bol = D.porIso.BOL;
       var empate = D.filas[1] && D.filas[1].puesto === 1;
       document.getElementById('kpis').innerHTML =
-        PM.kpi({ color: C.pizarra, rotulo: 'Promedio mundial', valor: PM.num(r2(D.media), 2), delta: D.n + ' jurisdicciones', tono: 'neutro',
+        PM.kpi({ color: C.pizarra, rotulo: T('Promedio mundial', 'World average'), valor: PM.num(r2(D.media), 2), delta: T(D.n + ' jurisdicciones', D.n + ' jurisdictions'), tono: 'neutro',
           serie: hasta.map(function (a) { return datos(a).media; }) }) +
-        PM.kpi({ color: C.turquesa, rotulo: 'Más libre', valor: '<span class="kv-nom">' + nombre(top.iso) + '</span>',
-          delta: PM.num(top.s, 2) + (empate ? ' · empate en el 1.º' : ' · puesto 1'), tono: 'neutro' }) +
-        PM.kpi({ color: C.rojo, rotulo: 'Menos libre', valor: '<span class="kv-nom">' + nombre(bot.iso) + '</span>',
-          delta: PM.num(bot.s, 2) + ' · puesto ' + bot.puesto, tono: 'neutro' }) +
+        PM.kpi({ color: C.turquesa, rotulo: T('Más libre', 'Most free'), valor: '<span class="kv-nom">' + nombre(top.iso) + '</span>',
+          delta: PM.num(top.s, 2) + (empate ? T(' · empate en el 1.º', ' · tied for 1st') : T(' · puesto 1', ' · rank 1')), tono: 'neutro' }) +
+        PM.kpi({ color: C.rojo, rotulo: T('Menos libre', 'Least free'), valor: '<span class="kv-nom">' + nombre(bot.iso) + '</span>',
+          delta: PM.num(bot.s, 2) + T(' · puesto ', ' · rank ') + bot.puesto, tono: 'neutro' }) +
         PM.kpi({ color: bol ? QC[bol.q] : C.gris, rotulo: 'Bolivia', valor: bol ? PM.num(bol.s, 2) : '—',
-          delta: bol ? 'puesto ' + bol.puesto + ' de ' + D.n : 'sin dato en ' + estado.anio, tono: 'neutro',
+          delta: bol ? T('puesto ' + bol.puesto + ' de ' + D.n, 'rank ' + bol.puesto + ' of ' + D.n) : T('sin dato en ' + estado.anio, 'no data in ' + estado.anio), tono: 'neutro',
           serie: hasta.map(function (a) { var f = datos(a).porIso.BOL; return f ? f.s : null; }) });
     }
 
@@ -318,24 +332,31 @@
       }).join('') + '</ol>';
     }
     function panel(D) {
-      var bol = D.porIso.BOL, html = '<div class="pb"><div class="rk"><div>' + rotulo(C.turquesa, 'Las 10 más libres') + lista(D.filas.slice(0, 10)) +
-        '</div><div>' + rotulo(C.rojo, 'Las 10 menos libres') + lista(D.filas.slice(-10)) + '</div></div></div>';
+      var bol = D.porIso.BOL, html = '<div class="pb"><div class="rk"><div>' + rotulo(C.turquesa, T('Las 10 más libres', 'The 10 freest')) + lista(D.filas.slice(0, 10)) +
+        '</div><div>' + rotulo(C.rojo, T('Las 10 menos libres', 'The 10 least free')) + lista(D.filas.slice(-10)) + '</div></div></div>';
       if (bol) {
         var c = QC[bol.q], r = D.rq[bol.q];
-        var desc = 'Puesto <strong>' + bol.puesto + ' de ' + D.n + '</strong>, en el cuartil ' + bol.q + ' (de ' + PM.num(r[0], 2) + ' a ' + PM.num(r[1], 2) + ').';
+        var desc = T(
+          'Puesto <strong>' + bol.puesto + ' de ' + D.n + '</strong>, en el cuartil ' + bol.q + ' (de ' + PM.num(r[0], 2) + ' a ' + PM.num(r[1], 2) + ').',
+          'Rank <strong>' + bol.puesto + ' of ' + D.n + '</strong>, in quartile ' + bol.q + ' (from ' + PM.num(r[0], 2) + ' to ' + PM.num(r[1], 2) + ').');
         var filas = AREAS.map(function (ar, k) {
           var v = bol.ar[k], m = D.mediaArea[k];
           if (v == null) return '';
           return '<div class="ar-f"><span class="ar-n">' + ar[0] + '</span><span class="ar-v" style="color:' + PM.tx(c) + '">' + PM.num(v, 2) + '</span>' +
             '<span class="ar-b"><i style="width:' + v * 10 + '%;background:' + PM.col(c) + '"></i>' +
-            (m != null ? '<b style="left:' + m * 10 + '%" title="Promedio mundial: ' + PM.num(r2(m), 2) + '"></b>' : '') + '</span></div>';
+            (m != null ? '<b style="left:' + m * 10 + '%" title="' + T('Promedio mundial: ', 'World average: ') + PM.num(r2(m), 2) + '"></b>' : '') + '</span></div>';
         }).join('');
         var pie = filas ? '<div class="ar">' + filas + '</div><div class="ar-ley"><span><i style="background:' + PM.col(c) + '"></i>Bolivia</span>' +
-          '<span><b></b>Promedio de las ' + D.n + ' jurisdicciones</span></div>' : '<p class="pb-desc">Sin desglose por áreas en ' + estado.anio + ': antes de 1970 la serie trae sólo el índice general.</p>';
-        html += PM.pb(c, 'Bolivia en ' + estado.anio, PM.num(bol.s, 2), desc).replace(/<\/div>$/, pie + '</div>');
-      } else html += PM.pb(C.gris, 'Bolivia en ' + estado.anio, null, 'Sin dato para Bolivia en este año.');
-      html += PM.ctx('<strong>Escala:</strong> de 0 (menos libre) a 10 (más libre). Cada color reúne a una cuarta parte de las jurisdicciones medidas en el año. ' +
-        'Van como punto los territorios muy chicos para verse a esta escala (Singapur, Malta, Luxemburgo…) y los que el mapa base no dibuja aparte (Hong Kong, Taiwán).');
+          '<span><b></b>' + T('Promedio de las ' + D.n + ' jurisdicciones', 'Average of the ' + D.n + ' jurisdictions') + '</span></div>'
+          : '<p class="pb-desc">' + T('Sin desglose por áreas en ' + estado.anio + ': antes de 1970 la serie trae sólo el índice general.',
+            'No breakdown by area in ' + estado.anio + ': before 1970 the series includes only the overall index.') + '</p>';
+        html += PM.pb(c, T('Bolivia en ' + estado.anio, 'Bolivia in ' + estado.anio), PM.num(bol.s, 2), desc).replace(/<\/div>$/, pie + '</div>');
+      } else html += PM.pb(C.gris, T('Bolivia en ' + estado.anio, 'Bolivia in ' + estado.anio), null, T('Sin dato para Bolivia en este año.', 'No data for Bolivia in this year.'));
+      html += PM.ctx(T(
+        '<strong>Escala:</strong> de 0 (menos libre) a 10 (más libre). Cada color reúne a una cuarta parte de las jurisdicciones medidas en el año. ' +
+        'Van como punto los territorios muy chicos para verse a esta escala (Singapur, Malta, Luxemburgo…) y los que el mapa base no dibuja aparte (Hong Kong, Taiwán).',
+        '<strong>Scale:</strong> from 0 (least free) to 10 (most free). Each color groups one quarter of the jurisdictions measured in the year. ' +
+        'Territories too small to be seen at this scale (Singapore, Malta, Luxembourg…) and those the base map does not draw separately (Hong Kong, Taiwan) are shown as dots.'));
       document.getElementById('panel').innerHTML = html;
     }
 
@@ -359,15 +380,19 @@
     function tip(p) {
       var iso = p.componentType === 'geo' ? MAPA_ISO[p.name] : (p.data && p.data.iso);
       var D = datos(estado.anio), f = iso ? D.porIso[iso] : null, a = estado.anio;
-      var nom = iso ? nombre(iso) : (EN[p.name] || p.name);
+      // en inglés: el nombre original de la fuente si la jurisdicción está en el índice; si no, el del mapa base (world.json, en inglés)
+      var nom = PM.en ? ((iso && META[iso] && META[iso].name) || p.name) : (iso ? nombre(iso) : (EN[p.name] || p.name));
       if (!nom) return '';
-      if (!f) return PM.ttTitulo(nom) + '<div class="tt-sd">Sin dato en ' + a + '</div>';
+      if (!f) return PM.ttTitulo(nom) + '<div class="tt-sd">' + T('Sin dato en ' + a, 'No data in ' + a) + '</div>';
       var reg = META[iso] ? REGION[META[iso].region] : '', r = D.rq[f.q], corto = PM.pequeno(), faltan = 0;
-      var h = PM.ttTitulo(nom, reg) + PM.ttFila(QC[f.q], 'Índice EFW ' + a, PM.num(f.s, 2), 'area') + PM.ttFila(null, 'Puesto', f.puesto + ' de ' + D.n);
+      var h = PM.ttTitulo(nom, reg) + PM.ttFila(QC[f.q], T('Índice EFW ' + a, 'EFW index ' + a), PM.num(f.s, 2), 'area') + PM.ttFila(null, T('Puesto', 'Rank'), T(f.puesto + ' de ' + D.n, f.puesto + ' of ' + D.n));
       var areas = AREAS.map(function (ar, k) { if (f.ar[k] == null) { faltan++; return ''; } return filaArea(ar[corto ? 1 : 0], f.ar[k], QC[f.q]); }).join('');
-      if (areas) h += '<div class="tt-sec">Áreas (0 a 10)</div>' + areas;
-      return h + PM.ttPie(QN[f.q] + ': de ' + PM.num(r[0], 2) + ' a ' + PM.num(r[1], 2) + ' en ' + a +
-        (!areas ? ' · sin desglose por áreas' : faltan ? ' · ' + faltan + (faltan > 1 ? ' áreas' : ' área') + ' sin dato' : ''));
+      if (areas) h += '<div class="tt-sec">' + T('Áreas (0 a 10)', 'Areas (0 to 10)') + '</div>' + areas;
+      return h + PM.ttPie(T(
+        QN[f.q] + ': de ' + PM.num(r[0], 2) + ' a ' + PM.num(r[1], 2) + ' en ' + a +
+        (!areas ? ' · sin desglose por áreas' : faltan ? ' · ' + faltan + (faltan > 1 ? ' áreas' : ' área') + ' sin dato' : ''),
+        QN[f.q] + ': from ' + PM.num(r[0], 2) + ' to ' + PM.num(r[1], 2) + ' in ' + a +
+        (!areas ? ' · no breakdown by area' : faltan ? ' · ' + faltan + (faltan > 1 ? ' areas' : ' area') + ' with no data' : '')));
     }
     // En el teléfono el mapa es bajo: la ficha va DEBAJO del lienzo (sobre la línea de tiempo) y deja ver el país tocado
     function abajo(pt, params, dom, rect, size) {
@@ -438,8 +463,9 @@
     function boton() {
       var b = document.getElementById('play');
       b.innerHTML = estado.jugando ? ICONO_PAUSA : ICONO_PLAY;
-      b.setAttribute('aria-label', estado.jugando ? 'Pausar la animación' : 'Animar de ' + ANIOS[0] + ' a ' + ANIOS[ANIOS.length - 1]);
-      b.title = estado.jugando ? 'Pausar' : 'Animar ' + ANIOS[0] + '–' + ANIOS[ANIOS.length - 1];
+      b.setAttribute('aria-label', estado.jugando ? T('Pausar la animación', 'Pause the animation')
+        : T('Animar de ' + ANIOS[0] + ' a ' + ANIOS[ANIOS.length - 1], 'Animate from ' + ANIOS[0] + ' to ' + ANIOS[ANIOS.length - 1]));
+      b.title = estado.jugando ? T('Pausar', 'Pause') : T('Animar ' + ANIOS[0] + '–' + ANIOS[ANIOS.length - 1], 'Animate ' + ANIOS[0] + '–' + ANIOS[ANIOS.length - 1]);
       document.getElementById('anio').setAttribute('aria-live', estado.jugando ? 'off' : 'polite');   // sin anunciar cada cuadro
     }
     function jugar() {
@@ -480,12 +506,12 @@
     // ── Descargas: la leyenda de la imagen y la tabla del año mostrado ─────────────────────────
     PM.leyendaImagen = function () {
       return [1, 2, 3, 4].map(function (q) { return { name: QN[q], color: PM.col(QC[q]), forma: 'area' }; })
-        .concat([{ name: 'Sin dato', color: niebla(), forma: 'area' }]);
+        .concat([{ name: T('Sin dato', 'No data'), color: niebla(), forma: 'area' }]);
     };
     PM.tablaDatos = function () {
       var D = datos(estado.anio);
       return {
-        cols: ['País', 'ISO3', 'Región', 'Índice EFW ' + estado.anio, 'Puesto', 'Cuartil'].concat(AREAS.map(function (a) { return a[0]; })),
+        cols: [T('País', 'Country'), 'ISO3', T('Región', 'Region'), T('Índice EFW ' + estado.anio, 'EFW index ' + estado.anio), T('Puesto', 'Rank'), T('Cuartil', 'Quartile')].concat(AREAS.map(function (a) { return a[0]; })),
         filas: D.filas.map(function (f) {
           return [nombre(f.iso), f.iso, META[f.iso] ? REGION[META[f.iso].region] : '', f.s, f.puesto, f.q].concat(f.ar);
         })
@@ -495,16 +521,26 @@
     function preguntas() {
       var U = ANIOS[ANIOS.length - 1], D = datos(U), rq = D.rq;
       var cob = [ANIOS[0], 1970, 2000, U].filter(function (a) { return PANEL[a]; })
-        .map(function (a) { return '<strong>' + datos(a).n + '</strong> en ' + a; });
+        .map(function (a) { return T('<strong>' + datos(a).n + '</strong> en ' + a, '<strong>' + datos(a).n + '</strong> in ' + a); });
       var sinAreas = ANIOS.filter(function (a) { return !datos(a).filas.some(function (f) { return f.ar.some(function (v) { return v != null; }); }); });
       return [
-        ['¿Qué mide el índice de libertad económica?', 'El índice <strong>Economic Freedom of the World</strong> (EFW), que publica cada año el Fraser Institute, califica de 0 a 10 a hasta 165 jurisdicciones con <strong>45 componentes</strong> agrupados en cinco áreas: tamaño del gobierno, sistema legal y derechos de propiedad, moneda sana, libertad para comerciar internacionalmente y regulación. El puntaje general es el promedio de las cinco áreas.'],
-        ['¿Cómo se leen los colores?', 'Cada color reúne a <strong>una cuarta parte</strong> de las jurisdicciones medidas en el año elegido, ordenadas por puntaje: turquesa el cuartil más libre y rojo el menos libre. Los cortes cambian de un año a otro; en ' + U + ' el cuartil más libre va de <strong>' + PM.num(rq[1][0], 2) + '</strong> a ' + PM.num(rq[1][1], 2) +
-          ' y el menos libre, de ' + PM.num(rq[4][0], 2) + ' a <strong>' + PM.num(rq[4][1], 2) + '</strong>. El gris marca a los territorios sin dato ese año.'],
-        ['¿Por qué cambia la cantidad de países?', 'La cobertura del índice creció con el tiempo: ' + cob.join(', ') + '. ' +
+        [T('¿Qué mide el índice de libertad económica?', 'What does the economic freedom index measure?'), T(
+          'El índice <strong>Economic Freedom of the World</strong> (EFW), que publica cada año el Fraser Institute, califica de 0 a 10 a hasta 165 jurisdicciones con <strong>45 componentes</strong> agrupados en cinco áreas: tamaño del gobierno, sistema legal y derechos de propiedad, moneda sana, libertad para comerciar internacionalmente y regulación. El puntaje general es el promedio de las cinco áreas.',
+          'The <strong>Economic Freedom of the World</strong> (EFW) index, published every year by the Fraser Institute, rates up to 165 jurisdictions from 0 to 10 using <strong>45 components</strong> grouped into five areas: Size of Government, Legal System and Property Rights, Sound Money, Freedom to Trade Internationally, and Regulation. The overall score is the average of the five areas.')],
+        [T('¿Cómo se leen los colores?', 'How are the colors read?'), T(
+          'Cada color reúne a <strong>una cuarta parte</strong> de las jurisdicciones medidas en el año elegido, ordenadas por puntaje: turquesa el cuartil más libre y rojo el menos libre. Los cortes cambian de un año a otro; en ' + U + ' el cuartil más libre va de <strong>' + PM.num(rq[1][0], 2) + '</strong> a ' + PM.num(rq[1][1], 2) +
+          ' y el menos libre, de ' + PM.num(rq[4][0], 2) + ' a <strong>' + PM.num(rq[4][1], 2) + '</strong>. El gris marca a los territorios sin dato ese año.',
+          'Each color groups <strong>one quarter</strong> of the jurisdictions measured in the selected year, ranked by score: turquoise for the most free quartile and red for the least free. The cut-offs change from one year to the next; in ' + U + ' the most free quartile runs from <strong>' + PM.num(rq[1][0], 2) + '</strong> to ' + PM.num(rq[1][1], 2) +
+          ' and the least free, from ' + PM.num(rq[4][0], 2) + ' to <strong>' + PM.num(rq[4][1], 2) + '</strong>. Gray marks the territories with no data that year.')],
+        [T('¿Por qué cambia la cantidad de países?', 'Why does the number of countries change?'), T(
+          'La cobertura del índice creció con el tiempo: ' + cob.join(', ') + '. ' +
           (sinAreas.length ? 'Entre ' + sinAreas[0] + ' y ' + sinAreas[sinAreas.length - 1] + ' la serie trae sólo el puntaje general, sin el desglose por áreas. ' : '') +
           'Por eso el <strong>promedio mundial</strong> de dos años distintos no compara exactamente a los mismos países. ' +
-          'El mapa dibuja las fronteras actuales en todos los años: antes de 1990 algunos países tenían otras (Alemania, por ejemplo, antes de la reunificación).']
+          'El mapa dibuja las fronteras actuales en todos los años: antes de 1990 algunos países tenían otras (Alemania, por ejemplo, antes de la reunificación).',
+          'The coverage of the index grew over time: ' + cob.join(', ') + '. ' +
+          (sinAreas.length ? 'Between ' + sinAreas[0] + ' and ' + sinAreas[sinAreas.length - 1] + ' the series includes only the overall score, without the breakdown by area. ' : '') +
+          'That is why the <strong>world average</strong> of two different years does not compare exactly the same countries. ' +
+          'The map draws current borders in every year: before 1990 some countries had different ones (Germany, for example, before reunification).')]
       ];
     }
   })();

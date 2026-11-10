@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Top 10 vs Bottom 10: Perfil por Áreas · Populi</title>
+  <title data-en="Top 10 vs Bottom 10: Profile by Area · Populi">Top 10 vs Bottom 10: Perfil por Áreas · Populi</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,400&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet" />
@@ -30,12 +30,12 @@
 <body>
   <div class="wrap">
     <div class="sec-hd">
-      <div class="sec-title"><span class="accent-bar"></span>Top 10 vs Bottom 10: Perfil por Áreas</div>
-      <div class="sec-sub" id="bajada">Puntaje promedio en cada área del índice EFW (0 a 10) de las 10 jurisdicciones más libres y las 10 menos libres</div>
+      <div class="sec-title" data-en='<span class="accent-bar"></span>Top 10 vs Bottom 10: Profile by Area'><span class="accent-bar"></span>Top 10 vs Bottom 10: Perfil por Áreas</div>
+      <div class="sec-sub" id="bajada" data-en="Average score in each area of the EFW index (0 to 10) of the 10 freest jurisdictions and the 10 least free">Puntaje promedio en cada área del índice EFW (0 a 10) de las 10 jurisdicciones más libres y las 10 menos libres</div>
     </div>
 
     <div class="hz-bar">
-      <div class="hz-item"><span class="hz-lbl">Año</span><div class="hz-grp" id="b-anio"></div></div>
+      <div class="hz-item"><span class="hz-lbl" data-en="Year">Año</span><div class="hz-grp" id="b-anio"></div></div>
     </div>
 
     <div class="kpi-grid" id="kpis"></div>
@@ -43,10 +43,10 @@
     <div class="main-grid">
       <div class="chart-card">
         <div class="chart-ctrl"><div class="ley" id="leyenda"></div></div>
-        <div class="grafico" id="chart"><div class="loading"><div class="spinner"></div><span>Cargando datos…</span></div></div>
+        <div class="grafico" id="chart"><div class="loading"><div class="spinner"></div><span data-en="Loading data…">Cargando datos…</span></div></div>
       </div>
       <div class="panel">
-        <div class="panel-hd"><span class="panel-hd-t">Lectura del gráfico</span><span class="panel-hd-d" id="panel-fecha"></span></div>
+        <div class="panel-hd"><span class="panel-hd-t" data-en="Reading the chart">Lectura del gráfico</span><span class="panel-hd-d" id="panel-fecha"></span></div>
         <div class="panel-body" id="panel"></div>
       </div>
     </div>
@@ -57,27 +57,47 @@
 
   <script>
   (function () {
-    var C = PM.C, TOP = C.turquesa, BOT = C.rojo, BASE = 1980;
+    // tr('castellano', 'inglés'): con ?lang=en el gráfico sale en inglés (acá es `tr` porque `T` ya es una variable del guion)
+    var C = PM.C, tr = PM.t, TOP = C.turquesa, BOT = C.rojo, BASE = 1980;
+    // El marcado se traduce ya, sin esperar al fin de la carga de la página: la bajada lleva su pareja fija en el
+    // marcado y después la reescribe este guion (con el año y la cuenta); así la fija nunca pisa a la viva.
+    PM.traducir();
     // Nombres oficiales de las cinco áreas; en el teléfono el rótulo del eje parte en más líneas
     var AREAS = [
-      { nombre: 'Tamaño del gobierno', corto: 'Tamaño del gobierno', eje: ['Tamaño del gobierno'], ejeT: ['Tamaño del', 'gobierno'],
-        resta: 'el gasto de consumo del gobierno, las transferencias y subsidios, las empresas estatales y las tasas de impuesto altas' },
-      { nombre: 'Sistema legal y derechos de propiedad', corto: 'Sistema legal y propiedad', eje: ['Sistema legal y', 'derechos de propiedad'], ejeT: ['Sistema legal', 'y derechos de', 'propiedad'],
-        resta: 'los tribunales sin independencia, los derechos de propiedad débiles y los contratos que no se cumplen' },
-      { nombre: 'Moneda sana', corto: 'Moneda sana', eje: ['Moneda sana'], ejeT: ['Moneda', 'sana'],
-        resta: 'la inflación alta y volátil, la emisión excesiva y las trabas para tener moneda extranjera' },
-      { nombre: 'Libertad para comerciar internacionalmente', corto: 'Comercio internacional', eje: ['Libertad para comerciar', 'internacionalmente'], ejeT: ['Libertad para', 'comerciar', 'internacionalmente'],
-        resta: 'los aranceles, las barreras al comercio, el mercado paralelo de divisas y los controles de capital' },
-      { nombre: 'Regulación', corto: 'Regulación', eje: ['Regulación'], ejeT: ['Regulación'],
-        resta: 'las regulaciones pesadas sobre el crédito, el trabajo y las empresas' }
+      { nombre: tr('Tamaño del gobierno', 'Size of Government'), corto: tr('Tamaño del gobierno', 'Size of Government'),
+        eje: tr(['Tamaño del gobierno'], ['Size of Government']), ejeT: tr(['Tamaño del', 'gobierno'], ['Size of', 'Government']),
+        resta: tr('el gasto de consumo del gobierno, las transferencias y subsidios, las empresas estatales y las tasas de impuesto altas',
+          'government consumption spending, transfers and subsidies, state-owned enterprises and high tax rates') },
+      { nombre: tr('Sistema legal y derechos de propiedad', 'Legal System and Property Rights'), corto: tr('Sistema legal y propiedad', 'Legal System and Property'),
+        eje: tr(['Sistema legal y', 'derechos de propiedad'], ['Legal System and', 'Property Rights']), ejeT: tr(['Sistema legal', 'y derechos de', 'propiedad'], ['Legal System', 'and Property', 'Rights']),
+        resta: tr('los tribunales sin independencia, los derechos de propiedad débiles y los contratos que no se cumplen',
+          'courts that lack independence, weak property rights and contracts that are not enforced') },
+      { nombre: tr('Moneda sana', 'Sound Money'), corto: tr('Moneda sana', 'Sound Money'),
+        eje: tr(['Moneda sana'], ['Sound Money']), ejeT: tr(['Moneda', 'sana'], ['Sound', 'Money']),
+        resta: tr('la inflación alta y volátil, la emisión excesiva y las trabas para tener moneda extranjera',
+          'high and volatile inflation, excessive money issuance and obstacles to holding foreign currency') },
+      { nombre: tr('Libertad para comerciar internacionalmente', 'Freedom to Trade Internationally'), corto: tr('Comercio internacional', 'International Trade'),
+        eje: tr(['Libertad para comerciar', 'internacionalmente'], ['Freedom to Trade', 'Internationally']), ejeT: tr(['Libertad para', 'comerciar', 'internacionalmente'], ['Freedom', 'to Trade', 'Internationally']),
+        resta: tr('los aranceles, las barreras al comercio, el mercado paralelo de divisas y los controles de capital',
+          'tariffs, trade barriers, the parallel foreign exchange market and capital controls') },
+      { nombre: tr('Regulación', 'Regulation'), corto: tr('Regulación', 'Regulation'),
+        eje: tr(['Regulación'], ['Regulation']), ejeT: tr(['Regulación'], ['Regulation']),
+        resta: tr('las regulaciones pesadas sobre el crédito, el trabajo y las empresas',
+          'burdensome regulations on credit, labor and business') }
     ];
-    var PANEL, ES, ANIOS, ULT, estado = { anio: null }, grafico, cache = {};
+    var PANEL, ES, META, ANIOS, ULT, estado = { anio: null }, grafico, cache = {};
     var media = function (a) { return a.length ? a.reduce(function (s, v) { return s + v; }, 0) / a.length : null; };
     // Promedios a dos decimales, redondeando la mitad hacia arriba sobre el decimal exacto (6,035 → 6,04: en binario
     // 6,035 es 6,03499…). Las brechas son la resta de los promedios ya redondeados: la tabla cierra a mano.
     var r2 = function (v) { return v == null ? null : Math.round(v * 100 + 1e-7) / 100; };
-    var nombre = function (iso) { return ES[iso] || iso; };
-    var lista = function (fs) { return fs.map(function (f) { return nombre(f.iso); }).join(', '); };
+    // en castellano, el nombre del diccionario (paises_es.json); en inglés, el nombre ORIGINAL de la fuente (efw_country_meta.json)
+    var nombre = function (iso) { return PM.en ? ((META[iso] && META[iso].name) || iso) : (ES[iso] || iso); };
+    // En inglés la fuente escribe nombres con coma («Hong Kong SAR, China», «Venezuela, RB»): si alguno de la lista
+    // trae coma, los nombres se separan con punto y coma. En castellano, la coma de siempre.
+    var lista = function (fs) {
+      var ns = fs.map(function (f) { return nombre(f.iso); });
+      return ns.join(PM.en && ns.some(function (x) { return x.indexOf(',') >= 0; }) ? '; ' : ', ');
+    };
 
     // ── Grupos de un año: las 10 con el índice general más alto y las 10 con el más bajo ───────
     function grupo(a) {
@@ -100,8 +120,9 @@
         empate: n > 10 && (filas[9].s === filas[10].s || filas[n - 10].s === filas[n - 11].s) });
     }
 
-    PM.cargar(['efw_panel_map.json', 'paises_es.json']).then(function (r) {
-      PANEL = r[0]; ES = r[1].iso;
+    // los nombres en inglés (los originales de la fuente) se piden sólo para el gráfico en inglés
+    PM.cargar(['efw_panel_map.json', 'paises_es.json'].concat(PM.en ? ['efw_country_meta.json'] : [])).then(function (r) {
+      PANEL = r[0]; ES = r[1].iso; META = r[2] || {};
       ANIOS = Object.keys(PANEL).map(Number).sort(function (a, b) { return a - b; });
       ULT = ANIOS[ANIOS.length - 1]; estado.anio = ULT;
       PM.botonera(document.getElementById('b-anio'), [[String(ULT), String(ULT)], [String(BASE), String(BASE)]], String(ULT), function (v) {
@@ -113,15 +134,20 @@
       grafico = PM.montar(el, opciones);
       PM.alCambiarTema(textos);
       PM.preguntas(document.getElementById('preguntas'), preguntas());
-      document.getElementById('fuente').innerHTML = 'Fuente: <a href="https://www.fraserinstitute.org/economic-freedom" target="_blank" rel="noopener">Fraser Institute</a>, Economic Freedom of the World ' + (ULT + 2) + ' · Elaboración: Centro de Estudios POPULI';
+      document.getElementById('fuente').innerHTML = tr(
+        'Fuente: <a href="https://www.fraserinstitute.org/economic-freedom" target="_blank" rel="noopener">Fraser Institute</a>, Economic Freedom of the World ' + (ULT + 2) + ' · Elaboración: Centro de Estudios POPULI',
+        'Source: <a href="https://www.fraserinstitute.org/economic-freedom" target="_blank" rel="noopener">Fraser Institute</a>, Economic Freedom of the World ' + (ULT + 2) + ' · Analysis: Centro de Estudios POPULI');
     }).catch(function (e) { console.error(e); PM.error(document.getElementById('chart')); });
 
     function textos() {
       var G = grupo(estado.anio);
       document.getElementById('panel-fecha').textContent = estado.anio;
-      document.getElementById('bajada').textContent = 'Puntaje promedio en cada área del índice EFW (0 a 10) de las 10 jurisdicciones más libres y las 10 menos libres de ' +
-        estado.anio + ', entre ' + G.n + ' medidas';
-      document.getElementById('leyenda').innerHTML = [[TOP, 'Top 10 · las más libres'], [BOT, 'Bottom 10 · las menos libres']].map(function (x) {
+      document.getElementById('bajada').textContent = tr(
+        'Puntaje promedio en cada área del índice EFW (0 a 10) de las 10 jurisdicciones más libres y las 10 menos libres de ' +
+        estado.anio + ', entre ' + G.n + ' medidas',
+        'Average score in each area of the EFW index (0 to 10) of the 10 freest jurisdictions and the 10 least free in ' +
+        estado.anio + ', out of ' + G.n + ' measured');
+      document.getElementById('leyenda').innerHTML = [[TOP, tr('Top 10 · las más libres', 'Top 10 · the freest')], [BOT, tr('Bottom 10 · las menos libres', 'Bottom 10 · the least free')]].map(function (x) {
         return '<span class="ley-i"><span class="lp area" style="--k:' + PM.col(x[0]) + '"></span>' + x[1] + '</span>';
       }).join('');
       cifras(G); panel(G);
@@ -130,39 +156,54 @@
     function cifras(G) {
       var hasta = ANIOS.filter(function (a) { return a <= estado.anio; }), kMax = G.orden[0], kMin = G.orden[G.orden.length - 1];
       document.getElementById('kpis').innerHTML =
-        PM.kpi({ color: TOP, rotulo: 'Top 10 · más libres', valor: PM.num(G.sT, 2), delta: 'índice general medio', tono: 'neutro',
+        PM.kpi({ color: TOP, rotulo: tr('Top 10 · más libres', 'Top 10 · freest'), valor: PM.num(G.sT, 2), delta: tr('índice general medio', 'mean overall index'), tono: 'neutro',
           serie: hasta.map(function (a) { return grupo(a).sT; }) }) +
-        PM.kpi({ color: BOT, rotulo: 'Bottom 10 · menos libres', valor: PM.num(G.sB, 2), delta: 'índice general medio', tono: 'neutro',
+        PM.kpi({ color: BOT, rotulo: tr('Bottom 10 · menos libres', 'Bottom 10 · least free'), valor: PM.num(G.sB, 2), delta: tr('índice general medio', 'mean overall index'), tono: 'neutro',
           serie: hasta.map(function (a) { return grupo(a).sB; }) }) +
-        PM.kpi({ color: C.pizarra, rotulo: 'Mayor brecha', valor: PM.num(G.gap[kMax], 2), delta: AREAS[kMax].nombre, tono: 'neutro' }) +
-        PM.kpi({ color: C.pizarra, rotulo: 'Menor brecha', valor: PM.num(G.gap[kMin], 2), delta: AREAS[kMin].nombre, tono: 'neutro' });
+        PM.kpi({ color: C.pizarra, rotulo: tr('Mayor brecha', 'Widest gap'), valor: PM.num(G.gap[kMax], 2), delta: AREAS[kMax].nombre, tono: 'neutro' }) +
+        PM.kpi({ color: C.pizarra, rotulo: tr('Menor brecha', 'Narrowest gap'), valor: PM.num(G.gap[kMin], 2), delta: AREAS[kMin].nombre, tono: 'neutro' });
     }
 
     // ── Panel: cada cifra del texto sale del dato del año elegido ──────────────────────────────
     function panel(G) {
       var a = estado.anio, kMax = G.orden[0], k2 = G.orden[1], kMin = G.orden[G.orden.length - 1];
       var bajoTop = G.T.map(function (t, k) { return k; }).filter(function (k) { return G.T[k].m != null; }).sort(function (x, y) { return G.T[x].m - G.T[y].m; })[0];
-      var conv = 'El área donde el Top 10 y el Bottom 10 <strong>más se parecen</strong> es <strong>' + AREAS[kMin].nombre + '</strong>: brecha de solo <strong>' +
-        PM.num(G.gap[kMin], 2) + ' puntos</strong> en ' + a + ' (Top 10: ' + PM.num(G.T[kMin].m, 2) + '; Bottom 10: ' + PM.num(G.B[kMin].m, 2) + ').';
-      if (kMin === 0 && bajoTop === 0) conv += ' Es también el área donde el Top 10 puntúa más bajo, y en este índice un puntaje menor significa un Estado más grande. ' +
-        'No es casualidad: los países ricos del Top 10 <strong>pueden costear amplios Estados de bienestar</strong> porque sus altos puntajes en las otras cuatro áreas generan la riqueza necesaria.';
+      var conv = tr(
+        'El área donde el Top 10 y el Bottom 10 <strong>más se parecen</strong> es <strong>' + AREAS[kMin].nombre + '</strong>: brecha de solo <strong>' +
+        PM.num(G.gap[kMin], 2) + ' puntos</strong> en ' + a + ' (Top 10: ' + PM.num(G.T[kMin].m, 2) + '; Bottom 10: ' + PM.num(G.B[kMin].m, 2) + ').',
+        'The area where the Top 10 and the Bottom 10 are <strong>most alike</strong> is <strong>' + AREAS[kMin].nombre + '</strong>: a gap of only <strong>' +
+        PM.num(G.gap[kMin], 2) + ' points</strong> in ' + a + ' (Top 10: ' + PM.num(G.T[kMin].m, 2) + '; Bottom 10: ' + PM.num(G.B[kMin].m, 2) + ').');
+      if (kMin === 0 && bajoTop === 0) conv += tr(
+        ' Es también el área donde el Top 10 puntúa más bajo, y en este índice un puntaje menor significa un Estado más grande. ' +
+        'No es casualidad: los países ricos del Top 10 <strong>pueden costear amplios Estados de bienestar</strong> porque sus altos puntajes en las otras cuatro áreas generan la riqueza necesaria.',
+        ' It is also the area where the Top 10 scores lowest, and in this index a lower score means a larger state. ' +
+        'It is no coincidence: the rich countries of the Top 10 <strong>can afford extensive welfare states</strong> because their high scores in the other four areas generate the necessary wealth.');
       // los tres puntajes más bajos del Bottom 10 en el área de mayor brecha
       var peores = G.bot.filter(function (f) { return f.ar[kMax] != null; }).sort(function (x, y) { return x.ar[kMax] - y.ar[kMax]; }).slice(0, 3)
         .map(function (f) { return nombre(f.iso) + ' (' + PM.num(f.ar[kMax], 2) + ')'; });
-      var div = 'La mayor diferencia está en <strong>' + AREAS[kMax].nombre + '</strong>: brecha de <strong>' + PM.num(G.gap[kMax], 2) + ' puntos</strong>' +
+      var div = tr(
+        'La mayor diferencia está en <strong>' + AREAS[kMax].nombre + '</strong>: brecha de <strong>' + PM.num(G.gap[kMax], 2) + ' puntos</strong>' +
         (k2 != null ? ', seguida de ' + AREAS[k2].nombre + ' (' + PM.num(G.gap[k2], 2) + ')' : '') + '. En esta área restan puntaje ' + AREAS[kMax].resta +
-        (peores.length ? '; los puntajes más bajos del Bottom 10 son los de ' + peores.slice(0, -1).join(', ') + (peores.length > 1 ? ' y ' : '') + peores[peores.length - 1] : '') + '.';
+        (peores.length ? '; los puntajes más bajos del Bottom 10 son los de ' + peores.slice(0, -1).join(', ') + (peores.length > 1 ? ' y ' : '') + peores[peores.length - 1] : '') + '.',
+        'The largest difference is in <strong>' + AREAS[kMax].nombre + '</strong>: a gap of <strong>' + PM.num(G.gap[kMax], 2) + ' points</strong>' +
+        (k2 != null ? ', followed by ' + AREAS[k2].nombre + ' (' + PM.num(G.gap[k2], 2) + ')' : '') + '. In this area, the score is lowered by ' + AREAS[kMax].resta +
+        (peores.length ? '; the lowest scores in the Bottom 10 are those of ' + peores.slice(0, -1).join(', ') + (peores.length > 1 ? ' and ' : '') + peores[peores.length - 1] : '') + '.');
       // 1980 contra el último año: qué ya existía y qué cambió más
       var A = grupo(BASE), Z = grupo(ULT), kA = A.orden[A.orden.length - 1], kZ = Z.orden[Z.orden.length - 1];
       var cambio = Z.gap.map(function (g, k) { return g != null && A.gap[k] != null ? g - A.gap[k] : 0; });
       var kc = cambio.map(function (c, k) { return k; }).sort(function (x, y) { return Math.abs(cambio[y]) - Math.abs(cambio[x]); })[0];
-      var hist = (kA === kZ
+      var hist = tr((kA === kZ
         ? 'La convergencia en <strong>' + AREAS[kZ].nombre + '</strong> <strong>ya existía</strong> en ' + BASE + ' (brecha de ' + PM.num(A.gap[kA], 2) + '): no es un fenómeno reciente. '
         : 'En ' + BASE + ' el área más pareja era <strong>' + AREAS[kA].nombre + '</strong> (brecha de ' + PM.num(A.gap[kA], 2) + '); en ' + ULT + ' es ' + AREAS[kZ].nombre + ' (' + PM.num(Z.gap[kZ], 2) + '). ') +
         'Lo que más cambió es <strong>' + AREAS[kc].nombre + '</strong>: la brecha se ' + (cambio[kc] < 0 ? 'redujo' : 'amplió') + ' de <strong>' + PM.num(A.gap[kc], 2) +
-        '</strong> a <strong>' + PM.num(Z.gap[kc], 2) + '</strong> puntos' + (kc === 3 && cambio[kc] < 0 ? ', reflejo de la apertura comercial de las últimas décadas' : '') + '.';
-      if (a === BASE) hist += ' Use el botón ' + ULT + ' para ver el perfil actual.';
-      else hist += ' Use el botón ' + BASE + ' para comparar.';
+        '</strong> a <strong>' + PM.num(Z.gap[kc], 2) + '</strong> puntos' + (kc === 3 && cambio[kc] < 0 ? ', reflejo de la apertura comercial de las últimas décadas' : '') + '.',
+        (kA === kZ
+        ? 'The convergence in <strong>' + AREAS[kZ].nombre + '</strong> <strong>already existed</strong> in ' + BASE + ' (a gap of ' + PM.num(A.gap[kA], 2) + '): it is not a recent phenomenon. '
+        : 'In ' + BASE + ' the most even area was <strong>' + AREAS[kA].nombre + '</strong> (a gap of ' + PM.num(A.gap[kA], 2) + '); in ' + ULT + ' it is ' + AREAS[kZ].nombre + ' (' + PM.num(Z.gap[kZ], 2) + '). ') +
+        'What changed the most is <strong>' + AREAS[kc].nombre + '</strong>: the gap ' + (cambio[kc] < 0 ? 'narrowed' : 'widened') + ' from <strong>' + PM.num(A.gap[kc], 2) +
+        '</strong> to <strong>' + PM.num(Z.gap[kc], 2) + '</strong> points' + (kc === 3 && cambio[kc] < 0 ? ', a reflection of the trade opening of recent decades' : '') + '.');
+      if (a === BASE) hist += tr(' Use el botón ' + ULT + ' para ver el perfil actual.', ' Use the ' + ULT + ' button to see the current profile.');
+      else hist += tr(' Use el botón ' + BASE + ' para comparar.', ' Use the ' + BASE + ' button to compare.');
       // tabla: la brecha mínima y la máxima, marcadas
       var filas = AREAS.map(function (ar, k) {
         var g = G.gap[k], celda = g == null ? '—' : k === kMin ? PM.dt(TOP, PM.num(g, 2)) : k === kMax ? PM.dt(BOT, PM.num(g, 2)) : PM.num(g, 2);
@@ -171,21 +212,28 @@
       var notas = [];
       AREAS.forEach(function (ar, k) {
         [['Top 10', G.T[k]], ['Bottom 10', G.B[k]]].forEach(function (x) {
-          if (x[1].faltan.length) notas.push('En ' + ar.nombre + ', el promedio del ' + x[0] + ' cubre ' + x[1].n + ' de las 10 (sin dato: ' + lista(x[1].faltan) + ')');
+          if (x[1].faltan.length) notas.push(tr(
+            'En ' + ar.nombre + ', el promedio del ' + x[0] + ' cubre ' + x[1].n + ' de las 10 (sin dato: ' + lista(x[1].faltan) + ')',
+            'In ' + ar.nombre + ', the ' + x[0] + ' average covers ' + x[1].n + ' of the 10 (no data: ' + lista(x[1].faltan) + ')'));
         });
       });
-      var tabla = '<table class="br"><thead><tr><th>Área</th><th>Top 10</th><th>Bottom 10</th><th>Brecha</th></tr></thead><tbody>' + filas + '</tbody></table>' +
+      var tabla = '<table class="br"><thead><tr><th>' + tr('Área', 'Area') + '</th><th>Top 10</th><th>Bottom 10</th><th>' + tr('Brecha', 'Gap') + '</th></tr></thead><tbody>' + filas + '</tbody></table>' +
         (notas.length ? '<p class="br-nota">' + notas.join('. ') + '.</p>' : '');
-      var quien = '<p class="quien"><i style="background:' + PM.col(TOP) + '"></i><strong>Top 10:</strong> ' + lista(G.top) + '.</p>' +
-        '<p class="quien"><i style="background:' + PM.col(BOT) + '"></i><strong>Bottom 10:</strong> ' + lista(G.bot.slice().reverse()) + '.</p>' +
-        (G.empate ? '<p class="br-nota">Hay un empate en el corte del puesto 10: el grupo incluye al primero por código de país.</p>' : '');
+      // punto final de la lista; en inglés hay nombres de la fuente que ya terminan en punto («Congo, Dem. Rep.»): no se repite
+      var cierre = function (s) { return PM.en && /\.$/.test(s) ? s : s + '.'; };
+      var quien = '<p class="quien"><i style="background:' + PM.col(TOP) + '"></i><strong>Top 10:</strong> ' + cierre(lista(G.top)) + '</p>' +
+        '<p class="quien"><i style="background:' + PM.col(BOT) + '"></i><strong>Bottom 10:</strong> ' + cierre(lista(G.bot.slice().reverse())) + '</p>' +
+        (G.empate ? '<p class="br-nota">' + tr('Hay un empate en el corte del puesto 10: el grupo incluye al primero por código de país.',
+          'There is a tie at the rank 10 cut-off: the group includes the first by country code.') + '</p>' : '');
       document.getElementById('panel').innerHTML =
-        PM.pb(TOP, 'Convergencia en ' + AREAS[kMin].nombre, null, conv) +
-        PM.pb(BOT, 'Divergencia en ' + AREAS[kMax].nombre, null, div) +
+        PM.pb(TOP, tr('Convergencia en ' + AREAS[kMin].nombre, 'Convergence in ' + AREAS[kMin].nombre), null, conv) +
+        PM.pb(BOT, tr('Divergencia en ' + AREAS[kMax].nombre, 'Divergence in ' + AREAS[kMax].nombre), null, div) +
         PM.pb(C.pizarra, BASE + ' vs ' + ULT, null, hist) +
-        PM.pb(C.pizarra, 'Brecha por área · ' + a, null, null).replace(/<\/div>$/, tabla + '</div>') +
-        PM.pb(C.pizarra, 'Quiénes son · ' + a, null, null).replace(/<\/div>$/, quien + '</div>') +
-        PM.ctx('<strong>Implicación:</strong> imitar el tamaño del Estado de los países ricos sin replicar sus fortalezas institucionales (sistema legal, moneda sana, apertura comercial, regulación eficiente) es una receta para el fracaso. El Estado de bienestar es un <em>resultado</em> de la prosperidad, no su causa.');
+        PM.pb(C.pizarra, tr('Brecha por área · ' + a, 'Gap by area · ' + a), null, null).replace(/<\/div>$/, tabla + '</div>') +
+        PM.pb(C.pizarra, tr('Quiénes son · ' + a, 'Who they are · ' + a), null, null).replace(/<\/div>$/, quien + '</div>') +
+        PM.ctx(tr(
+          '<strong>Implicación:</strong> imitar el tamaño del Estado de los países ricos sin replicar sus fortalezas institucionales (sistema legal, moneda sana, apertura comercial, regulación eficiente) es una receta para el fracaso. El Estado de bienestar es un <em>resultado</em> de la prosperidad, no su causa.',
+          '<strong>Implication:</strong> imitating the size of the state of rich countries without replicating their institutional strengths (legal system, sound money, trade openness, efficient regulation) is a recipe for failure. The welfare state is a <em>result</em> of prosperity, not its cause.'));
     }
 
     // ── Radar: el radio y el centro se calculan para que ningún rótulo se corte ────────────────
@@ -218,8 +266,9 @@
     }
     function tip(p) {
       var G = grupo(estado.anio), esTop = p.seriesIndex === 0, V = esTop ? G.T : G.B, col = esTop ? TOP : BOT, chico = PM.pequeno();
-      var h = PM.ttTitulo(esTop ? 'Top 10 · las más libres' : 'Bottom 10 · las menos libres', estado.anio + ' · promedio de las 10, de 0 a 10') +
-        PM.ttFila(col, 'Índice general', PM.num(esTop ? G.sT : G.sB, 2), 'area');
+      var h = PM.ttTitulo(esTop ? tr('Top 10 · las más libres', 'Top 10 · the freest') : tr('Bottom 10 · las menos libres', 'Bottom 10 · the least free'),
+          tr(estado.anio + ' · promedio de las 10, de 0 a 10', estado.anio + ' · average of the 10, from 0 to 10')) +
+        PM.ttFila(col, tr('Índice general', 'Overall index'), PM.num(esTop ? G.sT : G.sB, 2), 'area');
       AREAS.forEach(function (ar, k) { h += PM.ttFila(null, chico ? ar.corto : ar.nombre, PM.num(V[k].m, 2)); });
       return chico ? h : h + PM.ttPie(lista(esTop ? G.top : G.bot.slice().reverse()));
     }
@@ -255,22 +304,22 @@
         },
         graphic: anillos,
         tooltip: PM.tooltip(tip, { trigger: 'item' }),
-        series: [serie('Top 10 · las más libres', G.T, TOP, 2), serie('Bottom 10 · las menos libres', G.B, BOT, 3)]
+        series: [serie(tr('Top 10 · las más libres', 'Top 10 · the freest'), G.T, TOP, 2), serie(tr('Bottom 10 · las menos libres', 'Bottom 10 · the least free'), G.B, BOT, 3)]
       };
     }
 
     // ── Descargas ────────────────────────────────────────────────────────────────────────────
     PM.imagen = { proporcion: 1 };   // imagen de descarga cuadrada: el radar es redondo
     PM.leyendaImagen = function () {
-      return [{ name: 'Top 10 · las más libres (' + estado.anio + ')', color: PM.col(TOP), forma: 'area' },
-        { name: 'Bottom 10 · las menos libres (' + estado.anio + ')', color: PM.col(BOT), forma: 'area' }];
+      return [{ name: tr('Top 10 · las más libres (' + estado.anio + ')', 'Top 10 · the freest (' + estado.anio + ')'), color: PM.col(TOP), forma: 'area' },
+        { name: tr('Bottom 10 · las menos libres (' + estado.anio + ')', 'Bottom 10 · the least free (' + estado.anio + ')'), color: PM.col(BOT), forma: 'area' }];
     };
     PM.tablaDatos = function () {
       var G = grupo(estado.anio), a = estado.anio;
       return {
-        cols: ['Área', 'Top 10 ' + a, 'Bottom 10 ' + a, 'Brecha ' + a],
+        cols: [tr('Área', 'Area'), 'Top 10 ' + a, 'Bottom 10 ' + a, tr('Brecha ' + a, 'Gap ' + a)],
         filas: AREAS.map(function (ar, k) { return [ar.nombre, G.T[k].m, G.B[k].m, G.gap[k]]; })
-          .concat([['Índice general', G.sT, G.sB, r2(G.sT - G.sB)], ['Top 10: ' + lista(G.top)], ['Bottom 10: ' + lista(G.bot.slice().reverse())]])
+          .concat([[tr('Índice general', 'Overall index'), G.sT, G.sB, r2(G.sT - G.sB)], ['Top 10: ' + lista(G.top)], ['Bottom 10: ' + lista(G.bot.slice().reverse())]])
       };
     };
 
@@ -279,13 +328,23 @@
       var siguen = function (x, y) { var s = {}; x.forEach(function (f) { s[f.iso] = 1; }); return y.filter(function (f) { return s[f.iso]; }); };
       var sT = siguen(A.top, Z.top), sB = siguen(A.bot, Z.bot);
       return [
-        ['¿Qué mide cada área?', '<p><strong>Tamaño del gobierno:</strong> gasto y transferencias del gobierno, empresas estatales y tasas de impuesto. <strong>Sistema legal y derechos de propiedad:</strong> independencia judicial, protección de la propiedad y cumplimiento de contratos. ' +
-          '<strong>Moneda sana:</strong> inflación, crecimiento del dinero y libertad para tener moneda extranjera.</p><p><strong>Libertad para comerciar internacionalmente:</strong> aranceles, barreras al comercio, tipo de cambio paralelo y controles de capital. <strong>Regulación:</strong> reglas sobre el crédito, el trabajo y las empresas. Cada área va de 0 a 10 y el índice general es su promedio.</p>'],
-        ['¿Por qué un puntaje alto en tamaño del gobierno significa un Estado más chico?', 'El índice mide <strong>libertad</strong>, no tamaño: en esta área puntúa más alto quien tiene menos gasto de consumo del gobierno, menos transferencias y subsidios, menos empresas estatales y tasas marginales de impuesto más bajas. ' +
-          'Por eso el ' + PM.num(Z.T[0].m, 2) + ' del Top 10 en ' + ULT + ', frente a su promedio de ' + PM.num(media(Z.T.slice(1).map(function (x) { return x.m; })), 2) + ' en las otras cuatro áreas, describe Estados relativamente grandes.'],
-        ['¿Cómo se arman el Top 10 y el Bottom 10?', 'Son las 10 jurisdicciones con el índice general más alto y las 10 con el más bajo de cada año: entre <strong>' + Z.n + '</strong> medidas en ' + ULT + ' y <strong>' + A.n + '</strong> en ' + BASE +
+        [tr('¿Qué mide cada área?', 'What does each area measure?'), tr(
+          '<p><strong>Tamaño del gobierno:</strong> gasto y transferencias del gobierno, empresas estatales y tasas de impuesto. <strong>Sistema legal y derechos de propiedad:</strong> independencia judicial, protección de la propiedad y cumplimiento de contratos. ' +
+          '<strong>Moneda sana:</strong> inflación, crecimiento del dinero y libertad para tener moneda extranjera.</p><p><strong>Libertad para comerciar internacionalmente:</strong> aranceles, barreras al comercio, tipo de cambio paralelo y controles de capital. <strong>Regulación:</strong> reglas sobre el crédito, el trabajo y las empresas. Cada área va de 0 a 10 y el índice general es su promedio.</p>',
+          '<p><strong>Size of Government:</strong> government spending and transfers, state-owned enterprises and tax rates. <strong>Legal System and Property Rights:</strong> judicial independence, protection of property and enforcement of contracts. ' +
+          '<strong>Sound Money:</strong> inflation, money growth and freedom to hold foreign currency.</p><p><strong>Freedom to Trade Internationally:</strong> tariffs, trade barriers, the parallel exchange rate and capital controls. <strong>Regulation:</strong> rules on credit, labor and business. Each area runs from 0 to 10 and the overall index is their average.</p>')],
+        [tr('¿Por qué un puntaje alto en tamaño del gobierno significa un Estado más chico?', 'Why does a high score in Size of Government mean a smaller state?'), tr(
+          'El índice mide <strong>libertad</strong>, no tamaño: en esta área puntúa más alto quien tiene menos gasto de consumo del gobierno, menos transferencias y subsidios, menos empresas estatales y tasas marginales de impuesto más bajas. ' +
+          'Por eso el ' + PM.num(Z.T[0].m, 2) + ' del Top 10 en ' + ULT + ', frente a su promedio de ' + PM.num(media(Z.T.slice(1).map(function (x) { return x.m; })), 2) + ' en las otras cuatro áreas, describe Estados relativamente grandes.',
+          'The index measures <strong>freedom</strong>, not size: in this area, the highest scores go to those with less government consumption spending, fewer transfers and subsidies, fewer state-owned enterprises and lower marginal tax rates. ' +
+          'That is why the ' + PM.num(Z.T[0].m, 2) + ' scored by the Top 10 in ' + ULT + ', against its average of ' + PM.num(media(Z.T.slice(1).map(function (x) { return x.m; })), 2) + ' in the other four areas, describes relatively large states.')],
+        [tr('¿Cómo se arman el Top 10 y el Bottom 10?', 'How are the Top 10 and the Bottom 10 put together?'), tr(
+          'Son las 10 jurisdicciones con el índice general más alto y las 10 con el más bajo de cada año: entre <strong>' + Z.n + '</strong> medidas en ' + ULT + ' y <strong>' + A.n + '</strong> en ' + BASE +
           '. Cada vértice del radar es el promedio simple de las 10 en esa área. Los grupos cambian: de las 10 más libres de ' + BASE + ', <strong>' + sT.length + '</strong> siguen en el Top 10 de ' + ULT + (sT.length ? ' (' + lista(sT) + ')' : '') +
-          '; del Bottom 10 repite' + (sB.length === 1 ? '' : 'n') + ' <strong>' + sB.length + '</strong>' + (sB.length ? ' (' + lista(sB) + ')' : '') + '.']
+          '; del Bottom 10 repite' + (sB.length === 1 ? '' : 'n') + ' <strong>' + sB.length + '</strong>' + (sB.length ? ' (' + lista(sB) + ')' : '') + '.',
+          'They are the 10 jurisdictions with the highest overall index and the 10 with the lowest in each year: out of <strong>' + Z.n + '</strong> measured in ' + ULT + ' and <strong>' + A.n + '</strong> in ' + BASE +
+          '. Each vertex of the radar is the simple average of the 10 in that area. The groups change: of the 10 freest in ' + BASE + ', <strong>' + sT.length + '</strong> ' + (sT.length === 1 ? 'is' : 'are') + ' still in the Top 10 in ' + ULT + (sT.length ? ' (' + lista(sT) + ')' : '') +
+          '; from the Bottom 10, <strong>' + sB.length + '</strong> ' + (sB.length === 1 ? 'repeats' : 'repeat') + (sB.length ? ' (' + lista(sB) + ')' : '') + '.')]
       ];
     }
   })();
