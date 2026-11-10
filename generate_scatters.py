@@ -25,7 +25,7 @@ scatters = [
         'file': 'scatter_gdp.html',
         'var': 'gdp_pc_ppp',
         'title': 'Libertad Económica y Renta per Cápita',
-        'subtitle': 'Promedio EFW @@PERIODO@@ vs PIB per cápita PPP (USD constantes)',
+        'subtitle': 'Promedio EFW @@PERIODO@@ vs PIB per cápita PPA (USD constantes)',
         'y_label': 'PIB per cápita PPP (USD)',
         'y_format': "v => '$' + (v >= 1000 ? Math.round(v).toLocaleString('es-BO') : v.toFixed(0))",
         'y_axis_fmt': "v => v >= 1000 ? '$'+(v/1000).toFixed(0)+'k' : '$'+v",
@@ -37,7 +37,7 @@ scatters = [
         'relation': 'Los países con <strong>mayor libertad económica sostenida</strong> muestran niveles de ingreso per cápita significativamente más altos. El cuartil más libre (EFW de {corte} o más) tiene un PIB per cápita promedio <strong>{razon} veces mayor</strong> que el menos libre.',
         'theory': 'La libertad económica —derechos de propiedad, moneda sana, libre comercio, regulación eficiente y gobierno limitado— facilita la <strong>acumulación de capital</strong>, la <strong>innovación</strong> y la <strong>asignación eficiente de recursos</strong>, motores fundamentales del crecimiento a largo plazo.',
         'source_detail': 'Fraser Institute EFW @@EDICION@@, World Bank WDI 2023',
-        'bol_text': "Bolivia (EFW promedio: <strong>{efw}</strong>, cuartil {q}) tiene un PIB per cápita PPP de <strong>{yval}</strong>. Se ubica en el rango medio-bajo de libertad económica, y su ingreso está por debajo del promedio latinoamericano ({lat}).",
+        'bol_text': "Bolivia (EFW promedio: <strong>{efw}</strong>, cuartil {q}) tiene un PIB per cápita PPA de <strong>{yval}</strong>. Se ubica en el rango medio-bajo de libertad económica, y su ingreso está por debajo del promedio latinoamericano ({lat}).",
         # inglés (?lang=en): la pareja de cada texto de arriba
         'title_en': 'Per Capita Income and Economic Freedom',
         'subtitle_en': 'EFW average @@PERIODO@@ vs. GDP per capita, PPP (constant USD)',
@@ -47,9 +47,12 @@ scatters = [
     },
     {
         'file': 'scatter_poverty.html',
+        # ⚠️ El nombre engaña: `poverty_365` es la línea de US$ 4,20 al día en PPA 2021 (la que el Banco Mundial publica
+        # desde junio de 2025 en WDI SI.POV.LMIC y la PIP), NO la vieja de US$ 3,65 en PPA 2017. Comprobado el 10-nov-2026
+        # contra la PIP: coincide exacto en Nigeria, Sudáfrica, Etiopía, Egipto, Filipinas, Turquía y Kenia.
         'var': 'poverty_365',
         'title': 'Libertad Económica y Pobreza',
-        'subtitle': 'Promedio EFW @@PERIODO@@ vs tasa de pobreza (menos de US$ 4,20 al día, PPA 2021)',
+        'subtitle': 'Promedio EFW @@PERIODO@@ vs Tasa de pobreza (menos de US$ 4,20 al día, PPA 2021)',
         'y_label': 'Pobreza (% de la población, < US$ 4,20 al día)',
         'y_format': "v => v.toFixed(1) + '%'",
         'y_axis_fmt': "v => v.toFixed(0) + '%'",
@@ -64,7 +67,7 @@ scatters = [
         'source_detail': 'Fraser Institute EFW @@EDICION@@, World Bank Poverty & Inequality Platform',
         'bol_text': "En Bolivia (EFW: <strong>{efw}</strong>), el <strong>{yval}</strong> de la población vive con menos de US$ 4,20 al día (PPA 2021). A pesar del crecimiento del PIB, el nivel limitado de libertad económica frena una reducción más rápida de la pobreza.",
         'title_en': 'Poverty and Economic Freedom',
-        'subtitle_en': 'EFW average @@PERIODO@@ vs. poverty rate (less than US$4.20 a day, 2021 PPP)',
+        'subtitle_en': 'EFW average @@PERIODO@@ vs. Poverty rate (less than US$4.20 a day, 2021 PPP)',
         'relation_en': 'There is an <strong>inverse relationship</strong> between economic freedom and poverty. The most free quartile has rates close to zero (<strong>{q1}</strong> on average), while the least free concentrates the highest (<strong>{q4}</strong>).',
         'theory_en': 'Trade openness, secure property rights and monetary stability generate <strong>formal jobs</strong>, <strong>productive investment</strong> and <strong>access to cheap imported goods</strong>, reducing absolute poverty through inclusive growth.',
         'bol_text_en': 'In Bolivia (EFW: <strong>{efw}</strong>), <strong>{yval}</strong> of the population lives on less than US$4.20 a day (2021 PPP). Despite GDP growth, the limited level of economic freedom holds back a faster reduction of poverty.',
@@ -96,7 +99,7 @@ scatters = [
         'file': 'scatter_infant_mort.html',
         'var': 'infant_mort',
         'title': 'Libertad Económica y Mortalidad Infantil',
-        'subtitle': 'Promedio EFW @@PERIODO@@ vs Mortalidad infantil (por 1000 nacidos vivos)',
+        'subtitle': 'Promedio EFW @@PERIODO@@ vs Mortalidad infantil (por 1.000 nacidos vivos)',
         'y_label': 'Mortalidad infantil (por 1000)',
         'y_format': "v => v.toFixed(1)",
         'y_axis_fmt': "v => v.toFixed(0)",
@@ -120,7 +123,7 @@ scatters = [
         'file': 'scatter_satisfaction.html',
         'var': 'life_satisfaction',
         'title': 'Libertad Económica y Satisfacción de Vida',
-        'subtitle': 'Promedio EFW @@PERIODO@@ vs Evaluación de vida (Cantril Ladder 0-10)',
+        'subtitle': 'Promedio EFW @@PERIODO@@ vs Evaluación de vida (Cantril Ladder 0–10)',
         'y_label': 'Satisfacción de vida (0-10)',
         'y_format': "v => v.toFixed(2)",
         'y_axis_fmt': "v => v.toFixed(1)",
@@ -129,15 +132,15 @@ scatters = [
         'reg_order': 2,
         'accent': '#DF5D25',
         'panel_hd_bg': '#9B2226', 'panel_hd_bg_dark': '#2A1410',
-        'relation': 'Las personas en países económicamente libres reportan <strong>mayor satisfacción vital</strong>. La relación es robusta incluso controlando por ingreso, sugiriendo que la libertad económica contribuye al bienestar subjetivo por vías adicionales al ingreso.',
+        'relation': 'Las personas en países económicamente libres reportan <strong>mayor satisfacción vital</strong>, lo que sugiere que la libertad económica contribuye al bienestar subjetivo.',
         'theory': 'La libertad económica aporta bienestar subjetivo a través de: <strong>sentido de autonomía</strong> sobre decisiones económicas propias, <strong>oportunidades de emprendimiento</strong>, <strong>menor corrupción</strong> y <strong>mayor confianza institucional</strong>.',
         'source_detail': 'Fraser Institute EFW @@EDICION@@, World Happiness Report 2026 (Cantril Ladder)',
-        'bol_text': "Bolivia (EFW: <strong>{efw}</strong>) tiene una satisfacción de vida de <strong>{yval}</strong>/10. Se ubica por debajo del promedio latinoamericano, una región que tradicionalmente reporta alta satisfacción relativa a su ingreso.",
+        'bol_text': "Bolivia (EFW: <strong>{efw}</strong>) tiene una satisfacción de vida de <strong>{yval}</strong>/10. Se ubica {vs_lat} promedio latinoamericano, una región que tradicionalmente reporta alta satisfacción relativa a su ingreso.",
         'title_en': 'Life Satisfaction and Economic Freedom',
-        'subtitle_en': 'EFW average @@PERIODO@@ vs. Life evaluation (Cantril Ladder 0-10)',
-        'relation_en': 'People in economically free countries report <strong>greater life satisfaction</strong>. The relationship is robust even when controlling for income, suggesting that economic freedom contributes to subjective well-being through channels beyond income.',
+        'subtitle_en': 'EFW average @@PERIODO@@ vs. Life evaluation (Cantril Ladder 0–10)',
+        'relation_en': 'People in economically free countries report <strong>greater life satisfaction</strong>, which suggests that economic freedom contributes to subjective well-being.',
         'theory_en': "Economic freedom contributes to subjective well-being through: a <strong>sense of autonomy</strong> over one's own economic decisions, <strong>entrepreneurial opportunities</strong>, <strong>less corruption</strong> and <strong>greater institutional trust</strong>.",
-        'bol_text_en': 'Bolivia (EFW: <strong>{efw}</strong>) has a life satisfaction of <strong>{yval}</strong>/10. It sits below the Latin American average, a region that traditionally reports high satisfaction relative to its income.',
+        'bol_text_en': 'Bolivia (EFW: <strong>{efw}</strong>) has a life satisfaction of <strong>{yval}</strong>/10. It sits {vs_lat} Latin American average, a region that traditionally reports high satisfaction relative to its income.',
     },
     {
         'file': 'scatter_epi.html',
@@ -155,12 +158,12 @@ scatters = [
         'relation': 'Los países más libres tienen <strong>mejor desempeño ambiental</strong>, contradiciendo la narrativa de que la liberalización económica destruye el medio ambiente. Los países del cuartil más libre puntúan en promedio <strong>{dif} puntos más</strong> en el EPI.',
         'theory': 'La <strong>Curva de Kuznets Ambiental</strong>: mayor ingreso permite invertir en tecnología limpia y regulación ambiental efectiva. Los <strong>derechos de propiedad claros</strong> internalizan externalidades. La <strong>apertura comercial</strong> difunde tecnologías limpias.',
         'source_detail': 'Fraser Institute EFW @@EDICION@@, Yale Environmental Performance Index 2024',
-        'bol_text': "Bolivia (EFW: <strong>{efw}</strong>) tiene un EPI de <strong>{yval}</strong>/100. El bajo puntaje refleja desafíos en protección de ecosistemas y calidad del aire, áreas donde la inseguridad jurídica y la falta de derechos de propiedad claros son factores clave.",
+        'bol_text': "Bolivia (EFW: <strong>{efw}</strong>) tiene un EPI de <strong>{yval}</strong>/100. El puntaje refleja desafíos en protección de ecosistemas y calidad del aire, áreas donde la inseguridad jurídica y la falta de derechos de propiedad claros son factores clave.",
         'title_en': 'Environmental Performance and Economic Freedom',
         'subtitle_en': 'EFW average @@PERIODO@@ vs. Environmental Performance Index 2024',
         'relation_en': 'The freest countries have <strong>better environmental performance</strong>, contradicting the narrative that economic liberalization destroys the environment. The countries in the most free quartile score on average <strong>{dif} points higher</strong> on the EPI.',
         'theory_en': 'The <strong>Environmental Kuznets Curve</strong>: higher income makes it possible to invest in clean technology and effective environmental regulation. <strong>Clear property rights</strong> internalize externalities. <strong>Trade openness</strong> spreads clean technologies.',
-        'bol_text_en': 'Bolivia (EFW: <strong>{efw}</strong>) has an EPI of <strong>{yval}</strong>/100. The low score reflects challenges in ecosystem protection and air quality, areas where legal uncertainty and the lack of clear property rights are key factors.',
+        'bol_text_en': 'Bolivia (EFW: <strong>{efw}</strong>) has an EPI of <strong>{yval}</strong>/100. The score reflects challenges in ecosystem protection and air quality, areas where legal uncertainty and the lack of clear property rights are key factors.',
     },
     {
         'file': 'scatter_corruption.html',
@@ -199,7 +202,7 @@ scatters = [
         'accent': '#005F73',
         'panel_hd_bg': '#0C4A6E', 'panel_hd_bg_dark': '#082F49',
         'relation': 'Las libertades económica y personal están <strong>positivamente correlacionadas</strong>. Los países que protegen la propiedad privada y el comercio libre tienden a proteger también la libertad de expresión, religión y asociación.',
-        'theory': '<strong>Hayek y Friedman</strong> argumentaron que la libertad económica es <strong>condición necesaria</strong> (aunque no suficiente) para la libertad política. La independencia económica del Estado reduce la capacidad del gobierno de reprimir la disidencia.',
+        'theory': '<strong>Hayek y Friedman</strong> argumentaron que la libertad económica es <strong>condición necesaria</strong> (aunque no suficiente) para la libertad política. La independencia económica respecto del Estado reduce la capacidad del gobierno de reprimir la disidencia.',
         'source_detail': 'Fraser Institute EFW @@EDICION@@, Human Freedom Index (Cato/Fraser) 2024',
         'bol_text': "Bolivia (EFW: <strong>{efw}</strong>) tiene un índice de libertad personal de <strong>{yval}</strong>/10. La libertad de prensa y la independencia judicial son áreas de preocupación, correlacionadas con el bajo puntaje de libertad económica.",
         'title_en': 'Personal Freedom and Economic Freedom',
@@ -222,7 +225,7 @@ scatters = [
         'accent': '#9B2226',
         'panel_hd_bg': '#701A75', 'panel_hd_bg_dark': '#4A044E',
         'relation': 'Los países más libres tienden a trabajar <strong>menos horas</strong> por año. Mayor productividad por hora permite alcanzar el mismo (o mayor) ingreso con menos tiempo de trabajo, liberando tiempo para ocio y familia.',
-        'theory': 'La <strong>alta productividad</strong> de economías libres (capital abundante, tecnología, eficiencia institucional) permite la <strong>reducción gradual de jornada</strong> sin sacrificar ingreso — el \\"dividendo de la libertad\\" en forma de tiempo.',
+        'theory': 'La <strong>alta productividad</strong> de economías libres (capital abundante, tecnología, eficiencia institucional) permite la <strong>reducción gradual de jornada</strong> sin sacrificar ingreso — el «dividendo de la libertad» en forma de tiempo.',
         'source_detail': 'Fraser Institute EFW @@EDICION@@, Penn World Table 11.0',
         'bol_text': "Bolivia (EFW: <strong>{efw}</strong>) tiene un promedio de <strong>{yval}</strong> horas trabajadas al año por trabajador, por encima del promedio latinoamericano ({lat}). La baja productividad obliga a jornadas extensas para subsistir.",
         'title_en': 'Hours Worked and Economic Freedom',
@@ -247,12 +250,12 @@ scatters = [
         'relation': 'La participación del decil más pobre en el ingreso nacional es <strong>similar</strong> independientemente del nivel de libertad económica. Sin embargo, dado que el PIB per cápita es mucho mayor en países libres, el <strong>ingreso absoluto</strong> de los más pobres es muy superior.',
         'theory': 'Los pobres en países libres tienen <strong>mayor ingreso absoluto</strong> (PIB per cápita alto × participación estable). La movilidad social y el acceso a mercados competitivos permiten que los ingresos bajos crezcan con la economía.',
         'source_detail': 'Fraser Institute EFW @@EDICION@@, World Bank WDI',
-        'bol_text': "En Bolivia (EFW: <strong>{efw}</strong>), el 10% más pobre recibe el <strong>{yval}</strong> del ingreso, en línea con el promedio latinoamericano ({lat}), una de las regiones más desiguales del mundo. Con un ingreso per cápita bajo, ese decil sigue siendo muy pobre en términos absolutos.",
+        'bol_text': "En Bolivia (EFW: <strong>{efw}</strong>), el 10% más pobre recibe el <strong>{yval}</strong> del ingreso, en línea con el promedio de América Latina ({lat}), una de las regiones más desiguales del mundo. Con un ingreso per cápita bajo, ese decil sigue siendo muy pobre en términos absolutos.",
         'title_en': 'Income of the Poorest 10% and Economic Freedom',
         'subtitle_en': 'EFW average @@PERIODO@@ vs. Share of the bottom decile in income',
         'relation_en': 'The share of the poorest decile in national income is <strong>similar</strong> regardless of the level of economic freedom. However, since GDP per capita is much higher in free countries, the <strong>absolute income</strong> of the poorest is far higher.',
         'theory_en': 'The poor in free countries have <strong>higher absolute income</strong> (high GDP per capita × stable share). Social mobility and access to competitive markets allow low incomes to grow with the economy.',
-        'bol_text_en': 'In Bolivia (EFW: <strong>{efw}</strong>), the poorest 10% receives <strong>{yval}</strong> of income, in line with the Latin American average ({lat}), one of the most unequal regions in the world. With a low per capita income, that decile remains very poor in absolute terms.',
+        'bol_text_en': 'In Bolivia (EFW: <strong>{efw}</strong>), the poorest 10% receives <strong>{yval}</strong> of income, in line with the average for Latin America ({lat}), one of the most unequal regions in the world. With a low per capita income, that decile remains very poor in absolute terms.',
     },
     {
         'file': 'scatter_democracy.html',
@@ -297,13 +300,13 @@ FORMATO = {
 # Nombre corto para el eje (el largo queda en la bajada), piso/techo naturales del indicador y, al final,
 # el mismo nombre corto en inglés (?lang=en)
 EJE = {
-    'gdp_pc_ppp': ('PIB per cápita PPP (USD)', '500', '200000', 'GDP per capita, PPP (USD)'),      # escala log: sin la década vacía de $1.000.000
+    'gdp_pc_ppp': ('PIB per cápita PPA (USD)', '500', '200000', 'GDP per capita, PPP (USD)'),      # escala log: sin la década vacía de $1.000.000
     'poverty_365': ('Pobreza (% de la población)', '0', 'null', 'Poverty (% of population)'),
     'life_exp': ('Esperanza de vida (años)', '50', '90', 'Life expectancy (years)'),
     'infant_mort': ('Mortalidad infantil (por 1.000)', '0', 'null', 'Infant mortality (per 1,000)'),
     'life_satisfaction': ('Satisfacción de vida (0–10)', 'null', 'null', 'Life satisfaction (0–10)'),
     'epi_score': ('Desempeño ambiental (EPI, 0–100)', 'null', 'null', 'Environmental performance (EPI, 0–100)'),
-    'cpi_score': ('Percepción de corrupción (CPI, 0–100)', 'null', 'null', 'Corruption perceptions (CPI, 0–100)'),
+    'cpi_score': ('Ausencia de corrupción (CPI, 0–100)', 'null', 'null', 'Absence of corruption (CPI, 0–100)'),   # en el CPI, más puntaje es menos corrupción
     'pf_score': ('Libertad personal (0–10)', 'null', 'null', 'Personal freedom (0–10)'),
     'hours_worked': ('Horas trabajadas al año', 'null', 'null', 'Hours worked per year'),
     'income_bottom10': ('Ingreso del 10% más pobre (% del total)', '0', 'null', 'Income of the poorest 10% (% of total)'),
@@ -312,7 +315,7 @@ EJE = {
 # En el teléfono, el eje que se come el ancho pasa a una unidad más corta («$100.000» → «100»): formato, nombre
 # corto en castellano y nombre corto en inglés
 EJE_MOVIL = {
-    'gdp_pc_ppp': ("function (v) { return PM.tick(v / 1000); }", 'PIB per cápita PPP (miles de USD)', 'GDP per capita, PPP (thousands of USD)'),
+    'gdp_pc_ppp': ("function (v) { return PM.tick(v / 1000); }", 'PIB per cápita PPA (miles de USD)', 'GDP per capita, PPP (thousands of USD)'),
 }
 # El acento va de fondo del botón activo: tiene que sostener texto blanco (≥ 3:1)
 ACENTO = {'#EE9B00': '#A86E00', '#94D2BD': '#0A9396', '#E57D22': '#DF5D25'}
@@ -378,6 +381,9 @@ TEMPLATE = r"""<!DOCTYPE html>
     // siete colores no se distinguen entre sí cuando las burbujas se mezclan.
     var QC = { 1: C.turquesa, 2: C.menta, 3: C.oro, 4: C.rojo };
     var QN = { 1: T('Cuartil 1 · más libre', 'Quartile 1 · most free'), 2: T('Cuartil 2', 'Quartile 2'), 3: T('Cuartil 3', 'Quartile 3'), 4: T('Cuartil 4 · menos libre', 'Quartile 4 · least free') };
+    // pie del tooltip: el cuartil con la frase entera en cada idioma
+    var QPIE = { 1: T('Cuartil 1 de libertad económica · el más libre', 'Economic freedom: Quartile 1 · most free'), 2: T('Cuartil 2 de libertad económica', 'Economic freedom: Quartile 2'),
+      3: T('Cuartil 3 de libertad económica', 'Economic freedom: Quartile 3'), 4: T('Cuartil 4 de libertad económica · el menos libre', 'Economic freedom: Quartile 4 · least free') };
     var REGIONES = [['Latin America & the Caribbean', T('América Latina y el Caribe', 'Latin America & the Caribbean')], ['North America', T('Norteamérica', 'North America')],
       ['Europe & Central Asia', T('Europa y Asia Central', 'Europe & Central Asia')], ['East Asia & Pacific', T('Asia Oriental y Pacífico', 'East Asia & Pacific')],
       ['South Asia', T('Asia del Sur', 'South Asia')], ['Middle East & North Africa', T('Medio Oriente y Norte de África', 'Middle East & North Africa')],
@@ -526,7 +532,8 @@ TEMPLATE = r"""<!DOCTYPE html>
 
     // Cifras del texto que dependen del dato: {q1} y {q4} (promedio de los cuartiles extremos), {razon}
     // (cuántas veces), {dif} (diferencia), {lat} (promedio de América Latina y el Caribe), {corte} (EFW
-    // mínimo del cuartil más libre), {pend} (pendiente con EFW de 6 o más), {efw}, {q}, {yval} (Bolivia)
+    // mínimo del cuartil más libre), {pend} (pendiente con EFW de 6 o más), {efw}, {q}, {yval} (Bolivia),
+    // {vs_lat} (Bolivia «por debajo del», «por encima del» o «en línea con el» promedio de América Latina)
     function pendiente(desde) {
       var p = PTS.filter(function (x) { return x.efw_avg >= desde; }), n = p.length, sx = 0, sy = 0, sxy = 0, sx2 = 0;
       p.forEach(function (x) { sx += x.efw_avg; sy += x[VAR]; sxy += x.efw_avg * x[VAR]; sx2 += x.efw_avg * x.efw_avg; });
@@ -539,6 +546,8 @@ TEMPLATE = r"""<!DOCTYPE html>
         .replace('{razon}', PM.num(Math.max(m1, m4) / Math.min(m1, m4), 1)).replace('{dif}', PM.num(Math.abs(m1 - m4), 1)).replace('{lat}', FMT(lat));
       if (t.indexOf('{pend}') >= 0) t = t.replace('{pend}', PM.num(pendiente(6), 1));
       if (BOL) t = t.replace('{efw}', PM.num(BOL.efw_avg, 2)).replace('{q}', BOL.efw_quartile).replace('{yval}', FMT(BOL[VAR]));
+      // la comparación con la región la decide el dato, al redondeo con que se muestra
+      if (BOL && t.indexOf('{vs_lat}') >= 0) t = t.replace('{vs_lat}', FMT(BOL[VAR]) === FMT(lat) ? T('en línea con el', 'in line with the') : BOL[VAR] < lat ? T('por debajo del', 'below the') : T('por encima del', 'above the'));
       return t;
     }
     function panel() {
@@ -597,7 +606,7 @@ TEMPLATE = r"""<!DOCTYPE html>
             PM.ttFila(null, Y_CORTO, FMT(v[1])) +
             PM.ttFila(null, T('Población', 'Population'), poblacion(v[2])) +
             PM.ttPie('<span style="display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;background:' +
-              PM.col(QC[v[5]]) + '"></span>' + T(QN[v[5]] + ' de libertad económica', 'Economic freedom: ' + QN[v[5]]));
+              PM.col(QC[v[5]]) + '"></span>' + QPIE[v[5]]);
         }, { trigger: 'item' }),
         series: [
           { type: 'scatter', data: datos, markArea: { silent: true, data: franjas }, emphasis: { focus: 'self', itemStyle: { opacity: 1 } } },

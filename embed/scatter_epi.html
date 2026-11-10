@@ -48,12 +48,15 @@
     var VAR = 'epi_score', Y_CORTO = T('Desempeño ambiental (EPI, 0–100)', 'Environmental performance (EPI, 0–100)'), LOG = false, Y_MIN = null, Y_MAX = null;
     var REG_TIPO = 'poly', REG_ORDEN = 2, ACENTO = '#0A9396';
     var FMT = function (v) { return PM.num(v, 1); }, FMT_EJE = PM.tick, FMT_EJE_M = PM.tick, Y_CORTO_M = T('Desempeño ambiental (EPI, 0–100)', 'Environmental performance (EPI, 0–100)');
-    var RELACION = T("Los países más libres tienen <strong>mejor desempeño ambiental</strong>, contradiciendo la narrativa de que la liberalización económica destruye el medio ambiente. Los países del cuartil más libre puntúan en promedio <strong>{dif} puntos más</strong> en el EPI.", "The freest countries have <strong>better environmental performance</strong>, contradicting the narrative that economic liberalization destroys the environment. The countries in the most free quartile score on average <strong>{dif} points higher</strong> on the EPI."), TEORIA = T("La <strong>Curva de Kuznets Ambiental</strong>: mayor ingreso permite invertir en tecnología limpia y regulación ambiental efectiva. Los <strong>derechos de propiedad claros</strong> internalizan externalidades. La <strong>apertura comercial</strong> difunde tecnologías limpias.", "The <strong>Environmental Kuznets Curve</strong>: higher income makes it possible to invest in clean technology and effective environmental regulation. <strong>Clear property rights</strong> internalize externalities. <strong>Trade openness</strong> spreads clean technologies."), BOL_TXT = T("Bolivia (EFW: <strong>{efw}</strong>) tiene un EPI de <strong>{yval}</strong>/100. El bajo puntaje refleja desafíos en protección de ecosistemas y calidad del aire, áreas donde la inseguridad jurídica y la falta de derechos de propiedad claros son factores clave.", "Bolivia (EFW: <strong>{efw}</strong>) has an EPI of <strong>{yval}</strong>/100. The low score reflects challenges in ecosystem protection and air quality, areas where legal uncertainty and the lack of clear property rights are key factors."), FUENTE_DET = "Fraser Institute EFW 2026, Yale Environmental Performance Index 2024";
+    var RELACION = T("Los países más libres tienen <strong>mejor desempeño ambiental</strong>, contradiciendo la narrativa de que la liberalización económica destruye el medio ambiente. Los países del cuartil más libre puntúan en promedio <strong>{dif} puntos más</strong> en el EPI.", "The freest countries have <strong>better environmental performance</strong>, contradicting the narrative that economic liberalization destroys the environment. The countries in the most free quartile score on average <strong>{dif} points higher</strong> on the EPI."), TEORIA = T("La <strong>Curva de Kuznets Ambiental</strong>: mayor ingreso permite invertir en tecnología limpia y regulación ambiental efectiva. Los <strong>derechos de propiedad claros</strong> internalizan externalidades. La <strong>apertura comercial</strong> difunde tecnologías limpias.", "The <strong>Environmental Kuznets Curve</strong>: higher income makes it possible to invest in clean technology and effective environmental regulation. <strong>Clear property rights</strong> internalize externalities. <strong>Trade openness</strong> spreads clean technologies."), BOL_TXT = T("Bolivia (EFW: <strong>{efw}</strong>) tiene un EPI de <strong>{yval}</strong>/100. El puntaje refleja desafíos en protección de ecosistemas y calidad del aire, áreas donde la inseguridad jurídica y la falta de derechos de propiedad claros son factores clave.", "Bolivia (EFW: <strong>{efw}</strong>) has an EPI of <strong>{yval}</strong>/100. The score reflects challenges in ecosystem protection and air quality, areas where legal uncertainty and the lack of clear property rights are key factors."), FUENTE_DET = "Fraser Institute EFW 2026, Yale Environmental Performance Index 2024";
     // Cuartiles del índice: escala ORDINAL de la marca (la misma del mapa), del más libre (turquesa)
     // al menos libre (rojo). Por región: modo Foco (la región elegida en rojo, el resto en gris tenue):
     // siete colores no se distinguen entre sí cuando las burbujas se mezclan.
     var QC = { 1: C.turquesa, 2: C.menta, 3: C.oro, 4: C.rojo };
     var QN = { 1: T('Cuartil 1 · más libre', 'Quartile 1 · most free'), 2: T('Cuartil 2', 'Quartile 2'), 3: T('Cuartil 3', 'Quartile 3'), 4: T('Cuartil 4 · menos libre', 'Quartile 4 · least free') };
+    // pie del tooltip: el cuartil con la frase entera en cada idioma
+    var QPIE = { 1: T('Cuartil 1 de libertad económica · el más libre', 'Economic freedom: Quartile 1 · most free'), 2: T('Cuartil 2 de libertad económica', 'Economic freedom: Quartile 2'),
+      3: T('Cuartil 3 de libertad económica', 'Economic freedom: Quartile 3'), 4: T('Cuartil 4 de libertad económica · el menos libre', 'Economic freedom: Quartile 4 · least free') };
     var REGIONES = [['Latin America & the Caribbean', T('América Latina y el Caribe', 'Latin America & the Caribbean')], ['North America', T('Norteamérica', 'North America')],
       ['Europe & Central Asia', T('Europa y Asia Central', 'Europe & Central Asia')], ['East Asia & Pacific', T('Asia Oriental y Pacífico', 'East Asia & Pacific')],
       ['South Asia', T('Asia del Sur', 'South Asia')], ['Middle East & North Africa', T('Medio Oriente y Norte de África', 'Middle East & North Africa')],
@@ -202,7 +205,8 @@
 
     // Cifras del texto que dependen del dato: {q1} y {q4} (promedio de los cuartiles extremos), {razon}
     // (cuántas veces), {dif} (diferencia), {lat} (promedio de América Latina y el Caribe), {corte} (EFW
-    // mínimo del cuartil más libre), {pend} (pendiente con EFW de 6 o más), {efw}, {q}, {yval} (Bolivia)
+    // mínimo del cuartil más libre), {pend} (pendiente con EFW de 6 o más), {efw}, {q}, {yval} (Bolivia),
+    // {vs_lat} (Bolivia «por debajo del», «por encima del» o «en línea con el» promedio de América Latina)
     function pendiente(desde) {
       var p = PTS.filter(function (x) { return x.efw_avg >= desde; }), n = p.length, sx = 0, sy = 0, sxy = 0, sx2 = 0;
       p.forEach(function (x) { sx += x.efw_avg; sy += x[VAR]; sxy += x.efw_avg * x[VAR]; sx2 += x.efw_avg * x.efw_avg; });
@@ -215,6 +219,8 @@
         .replace('{razon}', PM.num(Math.max(m1, m4) / Math.min(m1, m4), 1)).replace('{dif}', PM.num(Math.abs(m1 - m4), 1)).replace('{lat}', FMT(lat));
       if (t.indexOf('{pend}') >= 0) t = t.replace('{pend}', PM.num(pendiente(6), 1));
       if (BOL) t = t.replace('{efw}', PM.num(BOL.efw_avg, 2)).replace('{q}', BOL.efw_quartile).replace('{yval}', FMT(BOL[VAR]));
+      // la comparación con la región la decide el dato, al redondeo con que se muestra
+      if (BOL && t.indexOf('{vs_lat}') >= 0) t = t.replace('{vs_lat}', FMT(BOL[VAR]) === FMT(lat) ? T('en línea con el', 'in line with the') : BOL[VAR] < lat ? T('por debajo del', 'below the') : T('por encima del', 'above the'));
       return t;
     }
     function panel() {
@@ -273,7 +279,7 @@
             PM.ttFila(null, Y_CORTO, FMT(v[1])) +
             PM.ttFila(null, T('Población', 'Population'), poblacion(v[2])) +
             PM.ttPie('<span style="display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;background:' +
-              PM.col(QC[v[5]]) + '"></span>' + T(QN[v[5]] + ' de libertad económica', 'Economic freedom: ' + QN[v[5]]));
+              PM.col(QC[v[5]]) + '"></span>' + QPIE[v[5]]);
         }, { trigger: 'item' }),
         series: [
           { type: 'scatter', data: datos, markArea: { silent: true, data: franjas }, emphasis: { focus: 'self', itemStyle: { opacity: 1 } } },

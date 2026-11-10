@@ -15,7 +15,7 @@
   <div class="wrap">
     <div class="sec-hd">
       <div class="sec-title" data-en='<span class="accent-bar"></span>Infant Mortality and Economic Freedom'><span class="accent-bar"></span>Libertad Económica y Mortalidad Infantil</div>
-      <div class="sec-sub" data-en="EFW average 2000–2024 vs. Infant mortality (per 1,000 live births)">Promedio EFW 2000–2024 vs Mortalidad infantil (por 1000 nacidos vivos)</div>
+      <div class="sec-sub" data-en="EFW average 2000–2024 vs. Infant mortality (per 1,000 live births)">Promedio EFW 2000–2024 vs Mortalidad infantil (por 1.000 nacidos vivos)</div>
     </div>
 
     <div class="hz-bar">
@@ -54,6 +54,9 @@
     // siete colores no se distinguen entre sí cuando las burbujas se mezclan.
     var QC = { 1: C.turquesa, 2: C.menta, 3: C.oro, 4: C.rojo };
     var QN = { 1: T('Cuartil 1 · más libre', 'Quartile 1 · most free'), 2: T('Cuartil 2', 'Quartile 2'), 3: T('Cuartil 3', 'Quartile 3'), 4: T('Cuartil 4 · menos libre', 'Quartile 4 · least free') };
+    // pie del tooltip: el cuartil con la frase entera en cada idioma
+    var QPIE = { 1: T('Cuartil 1 de libertad económica · el más libre', 'Economic freedom: Quartile 1 · most free'), 2: T('Cuartil 2 de libertad económica', 'Economic freedom: Quartile 2'),
+      3: T('Cuartil 3 de libertad económica', 'Economic freedom: Quartile 3'), 4: T('Cuartil 4 de libertad económica · el menos libre', 'Economic freedom: Quartile 4 · least free') };
     var REGIONES = [['Latin America & the Caribbean', T('América Latina y el Caribe', 'Latin America & the Caribbean')], ['North America', T('Norteamérica', 'North America')],
       ['Europe & Central Asia', T('Europa y Asia Central', 'Europe & Central Asia')], ['East Asia & Pacific', T('Asia Oriental y Pacífico', 'East Asia & Pacific')],
       ['South Asia', T('Asia del Sur', 'South Asia')], ['Middle East & North Africa', T('Medio Oriente y Norte de África', 'Middle East & North Africa')],
@@ -202,7 +205,8 @@
 
     // Cifras del texto que dependen del dato: {q1} y {q4} (promedio de los cuartiles extremos), {razon}
     // (cuántas veces), {dif} (diferencia), {lat} (promedio de América Latina y el Caribe), {corte} (EFW
-    // mínimo del cuartil más libre), {pend} (pendiente con EFW de 6 o más), {efw}, {q}, {yval} (Bolivia)
+    // mínimo del cuartil más libre), {pend} (pendiente con EFW de 6 o más), {efw}, {q}, {yval} (Bolivia),
+    // {vs_lat} (Bolivia «por debajo del», «por encima del» o «en línea con el» promedio de América Latina)
     function pendiente(desde) {
       var p = PTS.filter(function (x) { return x.efw_avg >= desde; }), n = p.length, sx = 0, sy = 0, sxy = 0, sx2 = 0;
       p.forEach(function (x) { sx += x.efw_avg; sy += x[VAR]; sxy += x.efw_avg * x[VAR]; sx2 += x.efw_avg * x.efw_avg; });
@@ -215,6 +219,8 @@
         .replace('{razon}', PM.num(Math.max(m1, m4) / Math.min(m1, m4), 1)).replace('{dif}', PM.num(Math.abs(m1 - m4), 1)).replace('{lat}', FMT(lat));
       if (t.indexOf('{pend}') >= 0) t = t.replace('{pend}', PM.num(pendiente(6), 1));
       if (BOL) t = t.replace('{efw}', PM.num(BOL.efw_avg, 2)).replace('{q}', BOL.efw_quartile).replace('{yval}', FMT(BOL[VAR]));
+      // la comparación con la región la decide el dato, al redondeo con que se muestra
+      if (BOL && t.indexOf('{vs_lat}') >= 0) t = t.replace('{vs_lat}', FMT(BOL[VAR]) === FMT(lat) ? T('en línea con el', 'in line with the') : BOL[VAR] < lat ? T('por debajo del', 'below the') : T('por encima del', 'above the'));
       return t;
     }
     function panel() {
@@ -273,7 +279,7 @@
             PM.ttFila(null, Y_CORTO, FMT(v[1])) +
             PM.ttFila(null, T('Población', 'Population'), poblacion(v[2])) +
             PM.ttPie('<span style="display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;background:' +
-              PM.col(QC[v[5]]) + '"></span>' + T(QN[v[5]] + ' de libertad económica', 'Economic freedom: ' + QN[v[5]]));
+              PM.col(QC[v[5]]) + '"></span>' + QPIE[v[5]]);
         }, { trigger: 'item' }),
         series: [
           { type: 'scatter', data: datos, markArea: { silent: true, data: franjas }, emphasis: { focus: 'self', itemStyle: { opacity: 1 } } },

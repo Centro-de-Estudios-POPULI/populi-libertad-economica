@@ -45,15 +45,18 @@
   <script>
   (function () {
     var C = PM.C, T = PM.t;   // T('castellano', 'inglés'): con ?lang=en el gráfico sale en inglés
-    var VAR = 'cpi_score', Y_CORTO = T('Percepción de corrupción (CPI, 0–100)', 'Corruption perceptions (CPI, 0–100)'), LOG = false, Y_MIN = null, Y_MAX = null;
+    var VAR = 'cpi_score', Y_CORTO = T('Ausencia de corrupción (CPI, 0–100)', 'Absence of corruption (CPI, 0–100)'), LOG = false, Y_MIN = null, Y_MAX = null;
     var REG_TIPO = 'poly', REG_ORDEN = 2, ACENTO = '#9B2226';
-    var FMT = function (v) { return PM.num(v, 0); }, FMT_EJE = PM.tick, FMT_EJE_M = PM.tick, Y_CORTO_M = T('Percepción de corrupción (CPI, 0–100)', 'Corruption perceptions (CPI, 0–100)');
+    var FMT = function (v) { return PM.num(v, 0); }, FMT_EJE = PM.tick, FMT_EJE_M = PM.tick, Y_CORTO_M = T('Ausencia de corrupción (CPI, 0–100)', 'Absence of corruption (CPI, 0–100)');
     var RELACION = T("La correlación entre libertad económica y transparencia es de las <strong>más fuertes del análisis</strong>. El cuartil más libre promedia un CPI de <strong>{q1}</strong>, contra <strong>{q4}</strong> en el menos libre.", "The correlation between economic freedom and transparency is among the <strong>strongest in the analysis</strong>. The most free quartile averages a CPI of <strong>{q1}</strong>, against <strong>{q4}</strong> in the least free."), TEORIA = T("La libertad económica reduce la corrupción al <strong>limitar el poder discrecional</strong> de funcionarios. Menos regulaciones = menos oportunidades de soborno. <strong>Estado de derecho</strong> y <strong>derechos de propiedad</strong> refuerzan instituciones transparentes.", "Economic freedom reduces corruption by <strong>limiting the discretionary power</strong> of officials. Fewer regulations = fewer opportunities for bribery. The <strong>rule of law</strong> and <strong>property rights</strong> reinforce transparent institutions."), BOL_TXT = T("Bolivia (EFW: <strong>{efw}</strong>) tiene un CPI de <strong>{yval}</strong>/100, en el tercio inferior mundial. La concentración de poder estatal en la economía y la debilidad del Estado de derecho facilitan la corrupción sistémica.", "Bolivia (EFW: <strong>{efw}</strong>) has a CPI of <strong>{yval}</strong>/100, in the bottom third worldwide. The concentration of state power in the economy and the weakness of the rule of law facilitate systemic corruption."), FUENTE_DET = "Fraser Institute EFW 2026, Transparency International CPI 2024";
     // Cuartiles del índice: escala ORDINAL de la marca (la misma del mapa), del más libre (turquesa)
     // al menos libre (rojo). Por región: modo Foco (la región elegida en rojo, el resto en gris tenue):
     // siete colores no se distinguen entre sí cuando las burbujas se mezclan.
     var QC = { 1: C.turquesa, 2: C.menta, 3: C.oro, 4: C.rojo };
     var QN = { 1: T('Cuartil 1 · más libre', 'Quartile 1 · most free'), 2: T('Cuartil 2', 'Quartile 2'), 3: T('Cuartil 3', 'Quartile 3'), 4: T('Cuartil 4 · menos libre', 'Quartile 4 · least free') };
+    // pie del tooltip: el cuartil con la frase entera en cada idioma
+    var QPIE = { 1: T('Cuartil 1 de libertad económica · el más libre', 'Economic freedom: Quartile 1 · most free'), 2: T('Cuartil 2 de libertad económica', 'Economic freedom: Quartile 2'),
+      3: T('Cuartil 3 de libertad económica', 'Economic freedom: Quartile 3'), 4: T('Cuartil 4 de libertad económica · el menos libre', 'Economic freedom: Quartile 4 · least free') };
     var REGIONES = [['Latin America & the Caribbean', T('América Latina y el Caribe', 'Latin America & the Caribbean')], ['North America', T('Norteamérica', 'North America')],
       ['Europe & Central Asia', T('Europa y Asia Central', 'Europe & Central Asia')], ['East Asia & Pacific', T('Asia Oriental y Pacífico', 'East Asia & Pacific')],
       ['South Asia', T('Asia del Sur', 'South Asia')], ['Middle East & North Africa', T('Medio Oriente y Norte de África', 'Middle East & North Africa')],
@@ -202,7 +205,8 @@
 
     // Cifras del texto que dependen del dato: {q1} y {q4} (promedio de los cuartiles extremos), {razon}
     // (cuántas veces), {dif} (diferencia), {lat} (promedio de América Latina y el Caribe), {corte} (EFW
-    // mínimo del cuartil más libre), {pend} (pendiente con EFW de 6 o más), {efw}, {q}, {yval} (Bolivia)
+    // mínimo del cuartil más libre), {pend} (pendiente con EFW de 6 o más), {efw}, {q}, {yval} (Bolivia),
+    // {vs_lat} (Bolivia «por debajo del», «por encima del» o «en línea con el» promedio de América Latina)
     function pendiente(desde) {
       var p = PTS.filter(function (x) { return x.efw_avg >= desde; }), n = p.length, sx = 0, sy = 0, sxy = 0, sx2 = 0;
       p.forEach(function (x) { sx += x.efw_avg; sy += x[VAR]; sxy += x.efw_avg * x[VAR]; sx2 += x.efw_avg * x.efw_avg; });
@@ -215,6 +219,8 @@
         .replace('{razon}', PM.num(Math.max(m1, m4) / Math.min(m1, m4), 1)).replace('{dif}', PM.num(Math.abs(m1 - m4), 1)).replace('{lat}', FMT(lat));
       if (t.indexOf('{pend}') >= 0) t = t.replace('{pend}', PM.num(pendiente(6), 1));
       if (BOL) t = t.replace('{efw}', PM.num(BOL.efw_avg, 2)).replace('{q}', BOL.efw_quartile).replace('{yval}', FMT(BOL[VAR]));
+      // la comparación con la región la decide el dato, al redondeo con que se muestra
+      if (BOL && t.indexOf('{vs_lat}') >= 0) t = t.replace('{vs_lat}', FMT(BOL[VAR]) === FMT(lat) ? T('en línea con el', 'in line with the') : BOL[VAR] < lat ? T('por debajo del', 'below the') : T('por encima del', 'above the'));
       return t;
     }
     function panel() {
@@ -273,7 +279,7 @@
             PM.ttFila(null, Y_CORTO, FMT(v[1])) +
             PM.ttFila(null, T('Población', 'Population'), poblacion(v[2])) +
             PM.ttPie('<span style="display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;background:' +
-              PM.col(QC[v[5]]) + '"></span>' + T(QN[v[5]] + ' de libertad económica', 'Economic freedom: ' + QN[v[5]]));
+              PM.col(QC[v[5]]) + '"></span>' + QPIE[v[5]]);
         }, { trigger: 'item' }),
         series: [
           { type: 'scatter', data: datos, markArea: { silent: true, data: franjas }, emphasis: { focus: 'self', itemStyle: { opacity: 1 } } },

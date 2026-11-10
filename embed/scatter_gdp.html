@@ -15,7 +15,7 @@
   <div class="wrap">
     <div class="sec-hd">
       <div class="sec-title" data-en='<span class="accent-bar"></span>Per Capita Income and Economic Freedom'><span class="accent-bar"></span>Libertad Económica y Renta per Cápita</div>
-      <div class="sec-sub" data-en="EFW average 2000–2024 vs. GDP per capita, PPP (constant USD)">Promedio EFW 2000–2024 vs PIB per cápita PPP (USD constantes)</div>
+      <div class="sec-sub" data-en="EFW average 2000–2024 vs. GDP per capita, PPP (constant USD)">Promedio EFW 2000–2024 vs PIB per cápita PPA (USD constantes)</div>
     </div>
 
     <div class="hz-bar">
@@ -45,15 +45,18 @@
   <script>
   (function () {
     var C = PM.C, T = PM.t;   // T('castellano', 'inglés'): con ?lang=en el gráfico sale en inglés
-    var VAR = 'gdp_pc_ppp', Y_CORTO = T('PIB per cápita PPP (USD)', 'GDP per capita, PPP (USD)'), LOG = true, Y_MIN = 500, Y_MAX = 200000;
+    var VAR = 'gdp_pc_ppp', Y_CORTO = T('PIB per cápita PPA (USD)', 'GDP per capita, PPP (USD)'), LOG = true, Y_MIN = 500, Y_MAX = 200000;
     var REG_TIPO = 'poly', REG_ORDEN = 2, ACENTO = '#C71E1D';
-    var FMT = function (v) { return '$' + PM.num(v, 0); }, FMT_EJE = function (v) { return '$' + PM.tick(v); }, FMT_EJE_M = function (v) { return PM.tick(v / 1000); }, Y_CORTO_M = T('PIB per cápita PPP (miles de USD)', 'GDP per capita, PPP (thousands of USD)');
-    var RELACION = T("Los países con <strong>mayor libertad económica sostenida</strong> muestran niveles de ingreso per cápita significativamente más altos. El cuartil más libre (EFW de {corte} o más) tiene un PIB per cápita promedio <strong>{razon} veces mayor</strong> que el menos libre.", "Countries with <strong>greater sustained economic freedom</strong> show significantly higher levels of per capita income. The most free quartile (EFW of {corte} or higher) has an average GDP per capita <strong>{razon} times higher</strong> than the least free."), TEORIA = T("La libertad económica —derechos de propiedad, moneda sana, libre comercio, regulación eficiente y gobierno limitado— facilita la <strong>acumulación de capital</strong>, la <strong>innovación</strong> y la <strong>asignación eficiente de recursos</strong>, motores fundamentales del crecimiento a largo plazo.", "Economic freedom—property rights, sound money, free trade, efficient regulation and limited government—facilitates <strong>capital accumulation</strong>, <strong>innovation</strong> and the <strong>efficient allocation of resources</strong>, the fundamental drivers of long-term growth."), BOL_TXT = T("Bolivia (EFW promedio: <strong>{efw}</strong>, cuartil {q}) tiene un PIB per cápita PPP de <strong>{yval}</strong>. Se ubica en el rango medio-bajo de libertad económica, y su ingreso está por debajo del promedio latinoamericano ({lat}).", "Bolivia (average EFW: <strong>{efw}</strong>, quartile {q}) has a GDP per capita (PPP) of <strong>{yval}</strong>. It sits in the lower-middle range of economic freedom, and its income is below the Latin American average ({lat})."), FUENTE_DET = "Fraser Institute EFW 2026, World Bank WDI 2023";
+    var FMT = function (v) { return '$' + PM.num(v, 0); }, FMT_EJE = function (v) { return '$' + PM.tick(v); }, FMT_EJE_M = function (v) { return PM.tick(v / 1000); }, Y_CORTO_M = T('PIB per cápita PPA (miles de USD)', 'GDP per capita, PPP (thousands of USD)');
+    var RELACION = T("Los países con <strong>mayor libertad económica sostenida</strong> muestran niveles de ingreso per cápita significativamente más altos. El cuartil más libre (EFW de {corte} o más) tiene un PIB per cápita promedio <strong>{razon} veces mayor</strong> que el menos libre.", "Countries with <strong>greater sustained economic freedom</strong> show significantly higher levels of per capita income. The most free quartile (EFW of {corte} or higher) has an average GDP per capita <strong>{razon} times higher</strong> than the least free."), TEORIA = T("La libertad económica —derechos de propiedad, moneda sana, libre comercio, regulación eficiente y gobierno limitado— facilita la <strong>acumulación de capital</strong>, la <strong>innovación</strong> y la <strong>asignación eficiente de recursos</strong>, motores fundamentales del crecimiento a largo plazo.", "Economic freedom—property rights, sound money, free trade, efficient regulation and limited government—facilitates <strong>capital accumulation</strong>, <strong>innovation</strong> and the <strong>efficient allocation of resources</strong>, the fundamental drivers of long-term growth."), BOL_TXT = T("Bolivia (EFW promedio: <strong>{efw}</strong>, cuartil {q}) tiene un PIB per cápita PPA de <strong>{yval}</strong>. Se ubica en el rango medio-bajo de libertad económica, y su ingreso está por debajo del promedio latinoamericano ({lat}).", "Bolivia (average EFW: <strong>{efw}</strong>, quartile {q}) has a GDP per capita (PPP) of <strong>{yval}</strong>. It sits in the lower-middle range of economic freedom, and its income is below the Latin American average ({lat})."), FUENTE_DET = "Fraser Institute EFW 2026, World Bank WDI 2023";
     // Cuartiles del índice: escala ORDINAL de la marca (la misma del mapa), del más libre (turquesa)
     // al menos libre (rojo). Por región: modo Foco (la región elegida en rojo, el resto en gris tenue):
     // siete colores no se distinguen entre sí cuando las burbujas se mezclan.
     var QC = { 1: C.turquesa, 2: C.menta, 3: C.oro, 4: C.rojo };
     var QN = { 1: T('Cuartil 1 · más libre', 'Quartile 1 · most free'), 2: T('Cuartil 2', 'Quartile 2'), 3: T('Cuartil 3', 'Quartile 3'), 4: T('Cuartil 4 · menos libre', 'Quartile 4 · least free') };
+    // pie del tooltip: el cuartil con la frase entera en cada idioma
+    var QPIE = { 1: T('Cuartil 1 de libertad económica · el más libre', 'Economic freedom: Quartile 1 · most free'), 2: T('Cuartil 2 de libertad económica', 'Economic freedom: Quartile 2'),
+      3: T('Cuartil 3 de libertad económica', 'Economic freedom: Quartile 3'), 4: T('Cuartil 4 de libertad económica · el menos libre', 'Economic freedom: Quartile 4 · least free') };
     var REGIONES = [['Latin America & the Caribbean', T('América Latina y el Caribe', 'Latin America & the Caribbean')], ['North America', T('Norteamérica', 'North America')],
       ['Europe & Central Asia', T('Europa y Asia Central', 'Europe & Central Asia')], ['East Asia & Pacific', T('Asia Oriental y Pacífico', 'East Asia & Pacific')],
       ['South Asia', T('Asia del Sur', 'South Asia')], ['Middle East & North Africa', T('Medio Oriente y Norte de África', 'Middle East & North Africa')],
@@ -202,7 +205,8 @@
 
     // Cifras del texto que dependen del dato: {q1} y {q4} (promedio de los cuartiles extremos), {razon}
     // (cuántas veces), {dif} (diferencia), {lat} (promedio de América Latina y el Caribe), {corte} (EFW
-    // mínimo del cuartil más libre), {pend} (pendiente con EFW de 6 o más), {efw}, {q}, {yval} (Bolivia)
+    // mínimo del cuartil más libre), {pend} (pendiente con EFW de 6 o más), {efw}, {q}, {yval} (Bolivia),
+    // {vs_lat} (Bolivia «por debajo del», «por encima del» o «en línea con el» promedio de América Latina)
     function pendiente(desde) {
       var p = PTS.filter(function (x) { return x.efw_avg >= desde; }), n = p.length, sx = 0, sy = 0, sxy = 0, sx2 = 0;
       p.forEach(function (x) { sx += x.efw_avg; sy += x[VAR]; sxy += x.efw_avg * x[VAR]; sx2 += x.efw_avg * x.efw_avg; });
@@ -215,6 +219,8 @@
         .replace('{razon}', PM.num(Math.max(m1, m4) / Math.min(m1, m4), 1)).replace('{dif}', PM.num(Math.abs(m1 - m4), 1)).replace('{lat}', FMT(lat));
       if (t.indexOf('{pend}') >= 0) t = t.replace('{pend}', PM.num(pendiente(6), 1));
       if (BOL) t = t.replace('{efw}', PM.num(BOL.efw_avg, 2)).replace('{q}', BOL.efw_quartile).replace('{yval}', FMT(BOL[VAR]));
+      // la comparación con la región la decide el dato, al redondeo con que se muestra
+      if (BOL && t.indexOf('{vs_lat}') >= 0) t = t.replace('{vs_lat}', FMT(BOL[VAR]) === FMT(lat) ? T('en línea con el', 'in line with the') : BOL[VAR] < lat ? T('por debajo del', 'below the') : T('por encima del', 'above the'));
       return t;
     }
     function panel() {
@@ -273,7 +279,7 @@
             PM.ttFila(null, Y_CORTO, FMT(v[1])) +
             PM.ttFila(null, T('Población', 'Population'), poblacion(v[2])) +
             PM.ttPie('<span style="display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;background:' +
-              PM.col(QC[v[5]]) + '"></span>' + T(QN[v[5]] + ' de libertad económica', 'Economic freedom: ' + QN[v[5]]));
+              PM.col(QC[v[5]]) + '"></span>' + QPIE[v[5]]);
         }, { trigger: 'item' }),
         series: [
           { type: 'scatter', data: datos, markArea: { silent: true, data: franjas }, emphasis: { focus: 'self', itemStyle: { opacity: 1 } } },

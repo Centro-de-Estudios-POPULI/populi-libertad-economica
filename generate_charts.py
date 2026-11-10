@@ -24,7 +24,7 @@ salen en inglés con el nombre original de la fuente: las tablas EN y EN_REGION,
 """
 import json
 import math
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import Decimal, ROUND_CEILING, ROUND_HALF_UP
 from html import escape
 from pathlib import Path
 
@@ -233,6 +233,21 @@ def pais_en(iso, en_frase=False):
     """Nombre en inglés de un país: el de la fuente; con en_frase=True, con «the» donde hace falta."""
     n = meta.get(iso, {}).get('name', iso)
     return 'the ' + n if en_frase and n in CON_THE else n
+
+
+# Países en castellano (paises_es.json) que dentro de una frase llevan artículo: los que se nombran con un sustantivo
+# común («la República Centroafricana», «el Reino Unido», «los Países Bajos»). Los de uso optativo (Estados Unidos,
+# India, Líbano…) van sin él, como en el resto de los textos.
+CON_ARTICULO = {'República Centroafricana': 'la', 'República Dominicana': 'la', 'República del Congo': 'la',
+                'R. D. del Congo': 'la', 'Unión Soviética': 'la', 'Reino Unido': 'el', 'Países Bajos': 'los',
+                'Emiratos Árabes Unidos': 'los'}
+
+
+def pais_es(iso, en_frase=False):
+    """Nombre en castellano de un país; con en_frase=True, con su artículo donde el castellano lo pide (el país sale
+    del dato: no se sabe de antemano cuál es). Tras «de» o «a», quien arma la frase contrae «el» (del, al)."""
+    n = NOMBRE[iso]
+    return f'{CON_ARTICULO[n]} {n}' if en_frase and n in CON_ARTICULO else n
 # El acento va de fondo del botón activo: sostiene texto blanco (menta → turquesa, oro → su paso oscuro)
 ACENTO = {'areas': '#005F73', 'evolucion': '#9B2226', 'bolivia': '#C71E1D', 'paises': '#0A9396', 'pib': '#A86E00'}
 
@@ -536,14 +551,14 @@ def gen_areas_regiones():
            f'<strong>{nom(ancha[3])}</strong> (de {num(ancha[1])} a {num(ancha[2])}) y la menor, en <strong>{nom(angosta[3])}</strong> '
            f'(de {num(angosta[1])} a {num(angosta[2])}), donde además el orden se invierte: {a1[0]["nombre"]} '
            f'({num(a1[0]["a"][0])}) y {a1[1]["nombre"]} ({num(a1[1]["a"][0])}) superan a {eca["nombre"]} ({num(eca["a"][0])}), '
-           'porque esa área premia el gasto, las transferencias y los impuestos bajos.',
+           'porque esa área premia que el gasto, las transferencias y los impuestos sean bajos.',
            f'<strong>{filas[0]["nombre"].en}</strong> ({ne(filas[0]["s"])}) and <strong>{filas[1]["nombre"].en}</strong> '
            f'({ne(filas[1]["s"])}) lead; <strong>{filas[-2]["nombre"].en}</strong> ({ne(filas[-2]["s"])}) and '
            f'<strong>{filas[-1]["nombre"].en}</strong> ({ne(filas[-1]["s"])}) come last. The widest gap between regions is in '
            f'<strong>{nom(ancha[3]).en}</strong> (from {ne(ancha[1])} to {ne(ancha[2])}) and the narrowest, in '
            f'<strong>{nom(angosta[3]).en}</strong> (from {ne(angosta[1])} to {ne(angosta[2])}), where the order is also '
            f'reversed: {a1[0]["nombre"].en} ({ne(a1[0]["a"][0])}) and {a1[1]["nombre"].en} ({ne(a1[1]["a"][0])}) outscore '
-           f'{eca["nombre"].en} ({ne(eca["a"][0])}), because that area rewards low spending, transfers and taxes.')],
+           f'{eca["nombre"].en} ({ne(eca["a"][0])}), because that area rewards low spending, low transfers and low taxes.')],
         [T('América Latina y el Caribe', 'Latin America & the Caribbean'),
          T(f'Con <strong>{num(lac["s"])}</strong>, la región es la {ORDINAL[ilac + 1]} de '
            f'{CARDINAL[len(filas)]}. Su área más débil es <strong>{nom(lac_orden[0])}</strong> ({num(lac["a"][lac_orden[0]])}), '
@@ -565,11 +580,11 @@ def gen_areas_regiones():
         efw_que(n_total),
         [T('¿Por qué una región pobre puede puntuar alto en Tamaño del gobierno?', 'Why can a poor region score high in Size of Government?'),
          T('Porque el área mide cuánto del ingreso pasa por el Estado: consumo e inversión pública, transferencias y '
-           'subsidios, empresas estatales e impuestos marginales. Un Estado chico puntúa alto aunque el país sea pobre, y los '
+           'subsidios, empresas estatales y tasas marginales de impuestos. Un Estado chico puntúa alto aunque el país sea pobre, y los '
            f'Estados de bienestar puntúan bajo: {eca["nombre"]} marca {num(eca["a"][0])} en esa área y {num(eca["a"][2])} en '
            'Moneda sana.',
            'Because the area measures how much of income passes through the state: government consumption and investment, '
-           'transfers and subsidies, state-owned enterprises and marginal taxes. A small state scores high even if the '
+           'transfers and subsidies, state-owned enterprises and marginal tax rates. A small state scores high even if the '
            f'country is poor, and welfare states score low: {eca["nombre"].en} scores {ne(eca["a"][0])} in that area and '
            f'{ne(eca["a"][2])} in Sound Money.')],
         [T('¿Por qué promedios simples?', 'Why simple averages?'),
@@ -729,6 +744,10 @@ def gen_evolucion_mundial():
     otra = max(x for k, x in sube.items() if k != 'a3')
     verificar(sube['a3'] > 2 * otra and sube['a3'] / 5 > (ultimo - post[a_fondo]) / 2,
               'la recuperación la explica sobre todo Moneda sana')
+    # «Ninguna otra área subió más de …»: la cota es el máximo de las otras áreas redondeado HACIA ARRIBA a dos
+    # decimales (0,0637 → 0,07), para que la frase sea cierta también con todos los decimales del dato
+    cota = float(Decimal(repr(fino(otra))).quantize(Decimal('0.01'), rounding=ROUND_CEILING))
+    verificar(0 < otra <= cota, 'alguna otra área también subió, y no más que la cota del texto')
     mejora = max(range(5), key=lambda j: v(area[AREAS[j]['k']], a_ult) - v(area[AREAS[j]['k']], 1980))
     quieta = min(range(5), key=lambda j: max(area[AREAS[j]['k']]) - min(area[AREAS[j]['k']]))
     ka, kq = AREAS[mejora]['k'], AREAS[quieta]['k']
@@ -758,7 +777,16 @@ def gen_evolucion_mundial():
     grandes = sorted((i for i, d in panel[ULTIMO].items() if d.get('s') is not None and pob.get(i, {}).get('2022')),
                      key=lambda i: -pob[i]['2022'])[:8]
     bajo = [i for i in grandes if panel[ULTIMO][i]['s'] < ultimo]
-    verificar(grandes[0] in bajo, 'el país más poblado puntúa por debajo del promedio simple')
+    # El texto nombra a UNO DE LOS DOS más poblados que puntúe por debajo del promedio simple, sin decir que es «el más
+    # poblado»: los pesos son la población de 2022 y la frase habla del último año del índice. Los demás van en la lista.
+    gigantes = [i for i in grandes[:2] if i in bajo]
+    verificar(gigantes, 'uno de los dos países más poblados puntúa por debajo del promedio simple')
+    gigante = gigantes[0]
+    otros_bajo = [i for i in bajo if i != gigante]
+    verificar(otros_bajo, 'otros de los ocho más poblados también puntúan por debajo del promedio')
+    # Años del índice posteriores al último de la base de población: son los que se ponderan con la población de 2022
+    tras_pob = [a for a in anios if a > 2022]
+    verificar(tras_pob and max(int(a) for a in pob[gigante]) == 2022, 'la población de Maddison llega a 2022 y el índice sigue')
     qp = [x for x in pond if x is not None]
     a_pico_p = [a for a, x in zip(anios, pond) if x is not None][qp.index(max(qp))]
     verificar(a_pico_p == a_pico and pond[-1] < pond[anios.index(2020)] < pond[anios.index(2019)],
@@ -796,13 +824,13 @@ def gen_evolucion_mundial():
            f'{ne(pico - ultimo)} below the {a_pico} maximum.')],
         [T('Ponderado por población', 'Population-weighted'),
          T(f'Si cada país pesa según su población, el promedio es menor: <strong>{num(pond[-1])}</strong> '
-           f'en {a_ult}, frente a {num(ultimo)} del promedio simple. Lo empuja hacia abajo <strong>{nom(grandes[0])}</strong>, el país '
-           f'más poblado, con {num(panel[ULTIMO][grandes[0]]["s"])}, junto con {lista([nom(i) for i in bajo[1:]])}, también entre los '
+           f'en {a_ult}, frente a {num(ultimo)} del promedio simple. Lo empuja hacia abajo <strong>{nom(gigante)}</strong>, uno de los '
+           f'dos países más poblados, con {num(panel[ULTIMO][gigante]["s"])}, junto con {lista([nom(i) for i in otros_bajo])}, también entre los '
            f'ocho más poblados y por debajo del promedio. Siguió el mismo camino: máximo en {a_pico_p} ({num(max(qp))}) y caída con '
            f'el COVID-19.',
            f'If each country is weighted by its population, the average is lower: <strong>{ne(pond[-1])}</strong> '
-           f'in {a_ult}, compared with {ne(ultimo)} for the simple average. It is pulled down by <strong>{nom_en(grandes[0])}</strong>, '
-           f'the most populous country, at {ne(panel[ULTIMO][grandes[0]]["s"])}, along with {lista_en([nom_en(i) for i in bajo[1:]])}, '
+           f'in {a_ult}, compared with {ne(ultimo)} for the simple average. It is pulled down by <strong>{nom_en(gigante)}</strong>, '
+           f'one of the two most populous countries, at {ne(panel[ULTIMO][gigante]["s"])}, along with {lista_en([nom_en(i) for i in otros_bajo])}, '
            f'also among the eight most populous and below the average. It followed the same path: a maximum in {a_pico_p} '
            f'({ne(max(qp))}) and a drop with COVID-19.')],
         [T('Áreas', 'Areas'),
@@ -817,13 +845,13 @@ def gen_evolucion_mundial():
          T(f'<strong>Fuente:</strong> Fraser Institute, Economic Freedom of the World: {INFORME} Annual Report. Promedio simple '
            f'de las jurisdicciones con dato cada año: {n[0]} en 1970, {v(n, 1995)} en 1995, {v(n, 2000)} en 2000 y {n[-1]} desde '
            f'{a_tot}; la línea de los mismos {len(fijos)} países descuenta la entrada de países nuevos. El ponderado usa la '
-           f'población del Maddison Project Database 2023 (la de 2022 para {a_ult}); quedan fuera {len(sin_pob)} jurisdicciones '
+           f'población del Maddison Project Database 2023 (la de 2022 para {lista([str(a) for a in tras_pob])}); quedan fuera {len(sin_pob)} jurisdicciones '
            f'sin ese dato, que suman menos del {max(1, round(peso_sin * 100 + 0.5))} % de la población. Cada área promedia los '
            f'países con dato en esa área. Hasta 2000 los datos son quinquenales.',
            f'<strong>Source:</strong> Fraser Institute, Economic Freedom of the World: {INFORME} Annual Report. Simple average '
            f'of the jurisdictions with data each year: {n[0]} in 1970, {v(n, 1995)} in 1995, {v(n, 2000)} in 2000 and {n[-1]} since '
            f'{a_tot}; the line for the same {len(fijos)} countries strips out the entry of new countries. The weighted average uses '
-           f'the population from the Maddison Project Database 2023 (that of 2022 for {a_ult}); {len(sin_pob)} jurisdictions '
+           f'the population from the Maddison Project Database 2023 (that of 2022 for {lista_en([str(a) for a in tras_pob])}); {len(sin_pob)} jurisdictions '
            f'without that data are left out, which add up to less than {max(1, round(peso_sin * 100 + 0.5))}% of the population. '
            f'Each area averages the countries with data in that area. Up to 2000 the data are five-yearly.')],
     ]
@@ -847,13 +875,13 @@ def gen_evolucion_mundial():
            f'{a_m3} y anuló la mejora de otras áreas (entre 2020 y {a_ult}, Libertad para comerciar internacionalmente subió '
            f'{num(rec["a4"])} puntos y Tamaño del gobierno, {num(rec["a1"])}). Con la inflación en baja, Moneda sana volvió a '
            f'{num(m3[a_ult])} en {a_ult}: sube {num(sube["a3"])} puntos desde {a_fondo}, y ninguna otra área subió más de '
-           f'{num(otra)}. El promedio ({num(ultimo)}) ya supera al de 2020 ({num(v(mundo, 2020))}), pero no al de {a_pico} '
+           f'{num(cota)}. El promedio ({num(ultimo)}) ya supera al de 2020 ({num(v(mundo, 2020))}), pero no al de {a_pico} '
            f'({num(pico)}).',
            f'Only in part. The inflation of 2021–2022 took Sound Money from {ne(m3[2019])} in 2019 to {ne(m3[a_m3])} in '
            f'{a_m3} and wiped out the improvement in other areas (between 2020 and {a_ult}, Freedom to Trade Internationally rose '
            f'{ne(rec["a4"])} points and Size of Government, {ne(rec["a1"])}). With inflation coming down, Sound Money returned to '
            f'{ne(m3[a_ult])} in {a_ult}: it is up {ne(sube["a3"])} points since {a_fondo}, and no other area rose by more than '
-           f'{ne(otra)}. The average ({ne(ultimo)}) is already above that of 2020 ({ne(v(mundo, 2020))}), but not that of {a_pico} '
+           f'{ne(cota)}. The average ({ne(ultimo)}) is already above that of 2020 ({ne(v(mundo, 2020))}), but not that of {a_pico} '
            f'({ne(pico)}).')],
     ]
     datos = {
@@ -955,13 +983,13 @@ def gen_bolivia_efw():
     p = [
         [T('Trayectoria histórica', 'Historical path'),
          T(f'Bolivia se estancó en la franja baja durante los años 70 (de {num(bol[0])} en {anios[0]} a '
-           f'{num(v(bol, 1980))} en 1980) y tocó su mínimo en <strong>1985</strong> ({num(piso)}), entre dictaduras militares e '
-           f'hiperinflación: ese año Moneda sana marcó {num(m85)} de 10. El <strong>Plan de Estabilización de 1985</strong> '
+           f'{num(v(bol, 1980))} en 1980) y tocó su mínimo en <strong>1985</strong> ({num(piso)}), tras las dictaduras militares y en '
+           f'plena hiperinflación: ese año Moneda sana marcó {num(m85)} de 10. El <strong>Plan de Estabilización de 1985</strong> '
            f'(DS 21060) marcó el giro: el puntaje subió hasta su máximo en <strong>{a_pico}</strong> ({num(pico)}), cuando '
            f'Bolivia ocupaba el puesto {p_pico} de {n_pico}.',
            f'Bolivia stagnated in the low range during the 1970s (from {ne(bol[0])} in {anios[0]} to '
-           f'{ne(v(bol, 1980))} in 1980) and hit its minimum in <strong>1985</strong> ({ne(piso)}), amid military dictatorships '
-           f'and hyperinflation: that year Sound Money scored {ne(m85)} out of 10. The <strong>1985 Stabilization Plan</strong> '
+           f'{ne(v(bol, 1980))} in 1980) and hit its minimum in <strong>1985</strong> ({ne(piso)}), after the military dictatorships '
+           f'and in the midst of hyperinflation: that year Sound Money scored {ne(m85)} out of 10. The <strong>1985 Stabilization Plan</strong> '
            f'(Supreme Decree 21060) marked the turning point: the score rose to its maximum in <strong>{a_pico}</strong> '
            f'({ne(pico)}), when Bolivia held rank {p_pico} of {n_pico}.')],
         [T('Período reciente', 'Recent period'),
@@ -1493,6 +1521,15 @@ def gen_comparativa_paises():
     tam = [sum(1 for d in paises.values() if d['q'] == q) for q in (1, 2, 3, 4)]
     n70 = len(valores(ANIOS[0]))
     a_tot = min(int(y) for y in ANIOS if len(valores(y)) == n)
+    # La serie es quinquenal hasta un año y anual desde entonces (1970, 1975 … 1995, 2000, 2001 …): el año sale del
+    # dato y la frase es UNA, la misma en el panel y en la pregunta
+    pasos = [b - a for a, b in zip(anios, anios[1:])]
+    k_anual = pasos.index(1)
+    verificar(k_anual > 0 and all(d == 5 for d in pasos[:k_anual]) and all(d == 1 for d in pasos[k_anual:]),
+              'la serie es quinquenal hasta un año y anual desde entonces')
+    a_anual = anios[k_anual]
+    serie_es = f'Hasta {a_anual} la serie es quinquenal y desde entonces, anual'
+    serie_en = f'Until {a_anual} the series is five-yearly and from then on, annual'
 
     # Cada texto con su pareja en inglés: T('castellano', 'inglés'); las cifras del inglés, con num_en()
     p = [
@@ -1521,11 +1558,11 @@ def gen_comparativa_paises():
            f'rank <strong>{p_bol} of {n}</strong> in {ULTIMO}.')],
         ['ctx',
          T(f'<strong>Fuente:</strong> Fraser Institute, Economic Freedom of the World: {INFORME} Annual Report. El cuartil es el '
-           f'de {ULTIMO}, por puesto (con el puntaje a dos decimales, los empates comparten puesto). Hasta 2000 los datos son '
-           'quinquenales; cada serie empieza cuando el país entra en el índice.',
+           f'de {ULTIMO}, por puesto (con el puntaje a dos decimales, los empates comparten puesto). {serie_es}; '
+           'cada serie empieza cuando el país entra en el índice.',
            f'<strong>Source:</strong> Fraser Institute, Economic Freedom of the World: {INFORME} Annual Report. The quartile is '
-           f'that of {ULTIMO}, by rank (with the score at two decimals, ties share a rank). Until 2000 the data are '
-           'five-yearly; each series begins when the country enters the index.')],
+           f'that of {ULTIMO}, by rank (with the score at two decimals, ties share a rank). {serie_en}; '
+           'each series begins when the country enters the index.')],
     ]
     preguntas = [
         efw_que(n),
@@ -1538,9 +1575,9 @@ def gen_comparativa_paises():
            'of the badge: turquoise, mint, gold and red, the same scale as the map.')],
         [T('¿Por qué algunas series empiezan tarde?', 'Why do some series start late?'),
          T(f'El índice calificaba a {n70} países en 1970 y llegó a {n} en {a_tot}: '
-           'cada país entra cuando hay datos suficientes para calificarlo. Hasta 1995 la serie es quinquenal y desde 2000, anual.',
+           f'cada país entra cuando hay datos suficientes para calificarlo. {serie_es}.',
            f'The index rated {n70} countries in 1970 and reached {n} in {a_tot}: '
-           'each country enters when there are enough data to rate it. Until 1995 the series is five-yearly and from 2000, annual.')],
+           f'each country enters when there are enough data to rate it. {serie_en}.')],
     ]
     lista = sorted(paises.values(), key=lambda d: d['i'])
     datos = {
@@ -1587,6 +1624,10 @@ def gen_comparativa_pib():
     verificar(2.5 < r50 < 3.5 and rhoy > 5, 'en 1950 Bolivia triplicaba el PIB per cápita de Corea del Sur')
     a_bol = min(int(a) for a in gdp['BOL'])
     a_bol2 = min(int(a) for a in gdp['BOL'] if int(a) > a_bol)
+    # Cuánto se multiplicó el ingreso de cada uno: cada lapso va explícito en la frase (primer año con dato de ese
+    # país y último de la base), porque no son el mismo y sin los años no se pueden comparar
+    a_kor = min(int(a) for a, x in gdp['KOR'].items() if x)
+    verificar(g('BOL', a_bol) and g('BOL', ultimo) and g('KOR', ultimo), 'Bolivia y Corea del Sur tienen dato en los extremos de su lapso')
     verificar(g('VEN', 1950) > g('CHL', 1950) and g('VEN', ultimo) < g('BOL', ultimo) < g('CHL', ultimo),
               'Venezuela era más rica que Chile en 1950 y hoy está por debajo de Bolivia')
     asia, latam = ['KOR', 'SGP', 'HKG', 'JPN'], ['ARG', 'CHL', 'VEN', 'URY', 'MEX']
@@ -1613,7 +1654,7 @@ def gen_comparativa_pib():
         [T('Dos siglos de divergencia', 'Two centuries of divergence'),
          T(f'En {a0} el país más rico de la base ({NOMBRE[hi0[1]]}, {usd(hi0[0])}) tenía un ingreso '
            f'{num(hi0[0] / lo0[0], 1)} veces el del más pobre ({NOMBRE[lo0[1]]}, {usd(lo0[0])}); en {ultimo}, la distancia entre '
-           f'{NOMBRE[hi1[1]]} y {NOMBRE[lo1[1]]} es de {num(hi1[0] / lo1[0], 0)} veces. <strong>Venezuela</strong> era más rica que '
+           f'{pais_es(hi1[1], True)} y {pais_es(lo1[1], True)} es de {num(hi1[0] / lo1[0], 0)} veces. <strong>Venezuela</strong> era más rica que '
            f'Chile en 1950 ({usd(g("VEN", 1950))} frente a {usd(g("CHL", 1950))}); en {ultimo} está por debajo de Bolivia.',
            f'In {a0} the richest country in the database ({nombre_en(hi0[1])}, {usd_en(hi0[0])}) had an income '
            f'{num_en(hi0[0] / lo0[0], 1)} times that of the poorest ({nombre_en(lo0[1])}, {usd_en(lo0[0])}); in {ultimo}, the gap between '
@@ -1623,13 +1664,15 @@ def gen_comparativa_pib():
          T(f'Bolivia tiene datos desde {a_bol} ({usd(g("BOL", a_bol))}). En 1950 su PIB per cápita '
            f'<strong>triplicaba</strong> al de Corea del Sur ({usd(g("BOL", 1950))} frente a {usd(g("KOR", 1950))}); en {ultimo} el '
            f'coreano es <strong>{num(rhoy, 1)} veces</strong> el boliviano ({usd(g("KOR", ultimo))} frente a '
-           f'{usd(g("BOL", ultimo))}). En {ultimo - a_bol} años el ingreso boliviano se multiplicó por '
-           f'{num(g("BOL", ultimo) / g("BOL", a_bol), 1)}; el coreano, por {num(g("KOR", ultimo) / g("KOR", a0), 0)} desde {a0}.',
+           f'{usd(g("BOL", ultimo))}). Entre {a_bol} y {ultimo} ({ultimo - a_bol} años) el ingreso boliviano se multiplicó por '
+           f'{num(g("BOL", ultimo) / g("BOL", a_bol), 1)}; el coreano, entre {a_kor} y {ultimo} ({ultimo - a_kor} años), por '
+           f'{num(g("KOR", ultimo) / g("KOR", a_kor), 0)}.',
            f'Bolivia has data since {a_bol} ({usd_en(g("BOL", a_bol))}). In 1950 its GDP per capita was '
            f'<strong>three times</strong> that of South Korea ({usd_en(g("BOL", 1950))} versus {usd_en(g("KOR", 1950))}); in {ultimo} '
            f"Korea's is <strong>{num_en(rhoy, 1)} times</strong> Bolivia's ({usd_en(g('KOR', ultimo))} versus "
-           f'{usd_en(g("BOL", ultimo))}). In {ultimo - a_bol} years Bolivian income multiplied by '
-           f'{num_en(g("BOL", ultimo) / g("BOL", a_bol), 1)}; Korean income, by {num_en(g("KOR", ultimo) / g("KOR", a0), 0)} since {a0}.')],
+           f'{usd_en(g("BOL", ultimo))}). Between {a_bol} and {ultimo} ({ultimo - a_bol} years) Bolivian income multiplied by '
+           f'{num_en(g("BOL", ultimo) / g("BOL", a_bol), 1)}; Korean income, between {a_kor} and {ultimo} ({ultimo - a_kor} years), by '
+           f'{num_en(g("KOR", ultimo) / g("KOR", a_kor), 0)}.')],
         [T('El milagro asiático', 'The Asian miracle'),
          T('Corea del Sur, Singapur, Hong Kong y Japón partieron en 1950 de niveles parecidos o inferiores '
            f'a los de América Latina: el más alto de los cuatro ({usd(max(g(i, 1950) for i in asia))}) no llegaba al de Argentina '
